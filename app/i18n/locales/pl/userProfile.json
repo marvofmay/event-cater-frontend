@@ -1,4 +1,5 @@
 {
+    "technicalAccountMessage": "To konto należy do pracownika technicznego systemu. Email: {{email}}",
     "data": {
         "main": "podstawowe",
         "title": "dane użytkownika",
