@@ -34,8 +34,6 @@ import useDeleteMultipleRoleMutation from '@/app/hooks/role/useDeleteMultipleRol
 import useImportRolesFromXLSXMutation from '@/app/hooks/role/importRolesFromXLSXMutation';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
-import modules from '@/app/fakeData/Modules';
-import permissions from '@/app/fakeData/Permissions';
 import moment from 'moment';
 import { useUser } from "@/app/context/userContext";
 import { SortDirection } from '@/app/types/SortDirection';
@@ -393,14 +391,14 @@ const RolesTable = () => {
                 role={selectedRole}
                 onClose={closeModal}
                 onSave={handleUpdate} />}
-            {modalType === 'permission' && <EditPermissionRoleModal
+            {/* {modalType === 'permission' && <EditPermissionRoleModal
                 open={true}
                 selectedRole={selectedRole}
                 onClose={closeModal}
                 onSave={handleUpdate}
                 modules={modules}
                 permissions={permissions}
-            />}
+            />} */}
             {hasPermission("roles.create") && modalType === 'importFromXLSX' && <ImportRolesFromXLSXModal
                 open={true}
                 onClose={closeModal}

@@ -7,13 +7,10 @@ import TaskIcon from '@mui/icons-material/Task';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import DescriptionIcon from '@mui/icons-material/Description';
-import FlightIcon from '@mui/icons-material/Flight';
-import RequestPageIcon from '@mui/icons-material/RequestPage';
 import DashboardIcon from '@mui/icons-material/Dashboard';;
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import FeedbackIcon from '@mui/icons-material/Feedback';
 import SettingsIcon from "@mui/icons-material/Settings"
 import { useUser } from "@/app/context/userContext";
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 
 const moduleIcons: Record<string, React.ReactNode> = {
     company: <DashboardIcon fontSize="inherit" color="inherit" />,
@@ -22,12 +19,8 @@ const moduleIcons: Record<string, React.ReactNode> = {
     calendar: <CalendarTodayIcon fontSize="inherit" color="inherit" />,
     notes: <StickyNote2Icon fontSize="inherit" color="inherit" />,
     documents: <DescriptionIcon fontSize="inherit" color="inherit" />,
-    trips: <FlightIcon fontSize="inherit" color="inherit" />,
-    requests: <RequestPageIcon fontSize="inherit" color="inherit" />,
-    substitutions: <SwapHorizIcon fontSize="inherit" color="inherit" />,
-    feedback: <FeedbackIcon fontSize="inherit" color="inherit" />,
+    file_manager: <FolderOpenIcon fontSize="inherit" color="inherit" />,
 };
-
 
 const Items: React.FC = () => {
     const { t } = useTranslation();
