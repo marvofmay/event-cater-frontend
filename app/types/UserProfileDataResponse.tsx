@@ -6,9 +6,14 @@ export interface UserProfileDataResponse {
             uuid: string;
             firstName: string;
             lastName: string;
-            position: string;
-            role: string;
-            contractType: string;
+            employment: {
+                position: string;
+                role: string;
+                contractType: string;
+                employmentFrom: string;
+                employmentTo: string | null;
+                parentEmployee: string | null;
+            }
             address?: {
                 street: string;
                 postcode: string;
@@ -20,6 +25,10 @@ export interface UserProfileDataResponse {
                 data: string;
                 active: boolean;
             }[];
+            avatar: {
+                avatarType: 'default' | 'custom';
+                avatarPath?: string | null;
+            }
         };
     };
 }

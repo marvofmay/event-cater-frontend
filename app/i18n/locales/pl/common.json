@@ -1,7 +1,5 @@
 {
-    "welcome": {
-        "message": "Witaj w aplikacji React"
-    },
+    "welcome": "Witaj",
     "message": {
         "somethingWentWrong": "Coś poszło nie tak",
         "errorWhileTryingToLogIn": "Błąd podczas próby logowania",
@@ -16,6 +14,7 @@
         "manage": "zarządzanie",
         "settings": "ustawienia",
         "userProfile": "profil użytkownika",
+        "me": "profil użytkownika",
         "companies": "firmy",
         "departments": "departamenty",
         "employees": "pracownicy",

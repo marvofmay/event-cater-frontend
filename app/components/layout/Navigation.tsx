@@ -63,7 +63,7 @@ const Navigation: React.FC = () => {
         <AppBar position="static" sx={{ backgroundColor: "#34495e" }}>
             <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Link href="/" color="inherit" underline="none">
-                    <Image src="/icons/hr-app-logo.png" alt="Logo" width={100} height={100} />
+                    <Image src="/icons/event-cater-logo.png" alt="Logo" width={100} height={100} />
                 </Link>
 
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>

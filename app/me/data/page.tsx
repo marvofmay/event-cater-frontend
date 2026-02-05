@@ -7,11 +7,12 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import { useUser } from "@/app/context/userContext";
 import { useRouter } from "next/navigation";
 
-import MainData from "@/app/components/userProfile/MainData";
+import { MainData } from "@/app/components/userProfile/MainData/MainData";
 import AvatarForm from "@/app/components/userProfile/Avatar";
-import AddressData from "@/app/components/userProfile/AddressData";
-import AdditionalData from "@/app/components/userProfile/AdditionalData";
+import AddressData from "@/app/components/userProfile/AddressData/AddressData";
+import AdditionalData from "@/app/components/userProfile/ContactData/ContactlData";
 import useUserProfileDataQuery from '@/app/hooks/userProfile/useUserProfileDataQuery';
+import EmploymentData from "@/app/components/userProfile/EmploymentData";
 
 const queryClient = new QueryClient();
 
@@ -64,14 +65,10 @@ const InnerDataContent: React.FC = () => {
             <main>
                 <Box display="flex" justifyContent="center" alignItems="center">
                     <Box width="90%">
-                        <Typography variant="h6" gutterBottom>{t('role.list.title')}</Typography>
+                        <Typography variant="h6" gutterBottom>  {t('userProfile.data.title')}</Typography>
                         <Box className="grid grid-rows-[5px_1fr_5px] justify-items-center min-h-screen p-1 sm:p-1">
                             <main className="flex flex-col gap-6 row-start-2 items-center w-full h-full">
                                 <Box className="w-full p-4 sm:p-6 bg-white shadow-md rounded-lg">
-                                    <Typography variant="h4" className="text-center mb-6 font-bold">
-                                        {t('userProfile.data.title')}
-                                    </Typography>
-
                                     {isTechnicalAccount ? (
                                         <Box className="p-4 bg-gray-100 rounded-md shadow text-center">
                                             <Typography variant="body1">
@@ -79,19 +76,24 @@ const InnerDataContent: React.FC = () => {
                                             </Typography>
                                         </Box>
                                     ) : (
-                                        <Box className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                        <Box className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                                             <Box className="p-4 bg-gray-100 rounded-md shadow">
                                                 <Typography variant="h6" className="mb-2 text-center">
                                                     {t('userProfile.data.main')}
                                                 </Typography>
                                                 <MainData data={userData} />
                                             </Box>
-
+                                            <Box className="p-4 bg-gray-100 rounded-md shadow">
+                                                <Typography variant="h6" className="mb-2 text-center">
+                                                    {t('userProfile.data.employment')}
+                                                </Typography>
+                                                <EmploymentData data={userData?.employee?.employment} />
+                                            </Box>
                                             <Box className="p-4 bg-gray-100 rounded-md shadow">
                                                 <Typography variant="h6" className="mb-2 text-center">
                                                     {t('userProfile.data.avatar')}
                                                 </Typography>
-                                                <AvatarForm />
+                                                <AvatarForm data={userData?.employee?.avatar} />
                                             </Box>
 
                                             <Box className="p-4 bg-gray-100 rounded-md shadow">
@@ -103,7 +105,7 @@ const InnerDataContent: React.FC = () => {
 
                                             <Box className="p-4 bg-gray-100 rounded-md shadow">
                                                 <Typography variant="h6" className="mb-2 text-center">
-                                                    {t('userProfile.data.additional')}
+                                                    {t('userProfile.data.contact')}
                                                 </Typography>
                                                 <AdditionalData data={userData?.employee?.contacts} />
                                             </Box>

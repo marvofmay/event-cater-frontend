@@ -6,6 +6,7 @@ import Employee from "../types/Employee";
 import User from "../types/User";
 import { useRouter } from "next/navigation";
 import { useTranslation } from 'react-i18next';
+import { jwtDecode } from "jwt-decode";
 
 interface UserContextType {
     user: User | null;
@@ -25,7 +26,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 function decodeJwt(token: string): any {
     try {
-        return JSON.parse(atob(token.split(".")[1]));
+        return jwtDecode(token);
     } catch {
         return null;
     }

@@ -36,7 +36,7 @@ test.describe('After login', () => {
         await page.goto(`${baseUrl}/`);
 
         // Navigation
-        const navLinks = ['STRONA GŁÓWNA', 'INFORMACJE', 'HR APP'];
+        const navLinks = ['STRONA GŁÓWNA', 'INFORMACJE'];
         for (const text of navLinks) {
             const link = page.getByRole('link', { name: text, exact: false });
             await expect(link).toBeVisible();

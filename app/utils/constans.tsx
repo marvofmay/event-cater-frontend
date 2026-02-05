@@ -1,4 +1,4 @@
-const APP_NAME = "HR APP";
+const APP_NAME = "EventCater";
 
 const SERVICE_COMPANY_URL =
     typeof window !== "undefined" && window.location.hostname === "localhost"
