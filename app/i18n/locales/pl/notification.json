@@ -1,44 +1,68 @@
 {
-    "list": {
-        "title": "Lista powiadomień",
-        "loading": {
-            "failed": "Nie udało się pobrać listy powadomień"
-        }
-    },
-    "settings": {
-        "title": "Ustawienia powiadomień",
-        "channel": "Kanał",
-        "channels": "Kanały"
-    },
-    "button": {
-        "settings": "ustawienia"
-    },
-    "modal": {
-        "settings": {
-            "title": "ustawienia powiadomień"
-        }
-    },
-    "table": {
-        "column": {
-            "title": "tytuł",
-            "message": "wiadomosć",
-            "source": "źródło",
-            "receivedAt": "otrzymano",
-            "readAt": "przeczytano",
-            "createdAt": "utworzono",
-            "deletedAt": "usunięto",
-            "actions": "akcje"
-        }
-    },
-    "form": {
-        "field": {
-            "title": "tytuł",
-            "message": "wiadomosć",
-            "receivedAt": "otrzymano",
-            "readAt": "przeczytano",
-            "createdAt": "utworzono",
-            "deletedAt": "usunięto",
-            "actions": "akcje"
-        }
+  "list": {
+    "title": "Lista powiadomień",
+    "loading": {
+      "failed": "Nie udało się pobrać listy powadomień"
     }
+  },
+  "settings": {
+    "title": "Ustawienia powiadomień",
+    "channel": "Kanał",
+    "channels": "Kanały"
+  },
+  "button": {
+    "settings": "ustawienia",
+    "deleteChecked": "usuń zaznaczone powiadomienia",
+    "markAsReadChecked": "oznacz zaznaczone powiadomienia jako przeczytane"
+  },
+  "delete": {
+    "multiple": {
+      "error": "Usuwanie powiadomień zostało zakończone niepowodzeniem"
+    }
+  },
+  "markAsRead": {
+    "title": "Oznacz powiadomienie jako przeczytane",
+    "multiple": {
+      "error": "Oznaczanie powiadomień jako przeczytane, zostało zakończone niepowodzeniem"
+    }
+  },
+  "modal": {
+    "settings": {
+      "title": "ustawienia powiadomień"
+    },
+    "delete": {
+      "title": "Usuwanie powiadomienia",
+      "question": "Czy na pewno chcesz usunąć to powiadomienie"
+    },
+    "preview": {
+      "title": "Podgląd powiadomienia"
+    },
+    "markAsRead": {
+      "title": "Oznacz powiadomienie jako przeczytane",
+      "question": "Czy na pewno chcesz oznaczyć to powiadomienie jako przeczytane"
+    }
+  },
+  "table": {
+    "column": {
+      "title": "tytuł",
+      "message": "wiadomosć",
+      "source": "źródło",
+      "receivedAt": "otrzymano",
+      "readAt": "przeczytano",
+      "createdAt": "utworzono",
+      "deletedAt": "usunięto",
+      "actions": "akcje"
+    }
+  },
+  "form": {
+    "field": {
+      "title": "tytuł",
+      "message": "wiadomosć",
+      "receivedAt": "otrzymano",
+      "readAt": "przeczytano",
+      "createdAt": "utworzono",
+      "deletedAt": "usunięto",
+      "actions": "akcje"
+    }
+  }
 }

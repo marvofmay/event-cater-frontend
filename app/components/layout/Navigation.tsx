@@ -14,139 +14,171 @@ import { useUser } from "@/app/context/userContext";
 import ManageListNavigation from "../manage/navigation/List";
 import SettingsListNavigation from "../settings/navigation/List";
 import UserProfileNavigation from "../user/UserProfileNavigation";
-import { SERVICE_MERCURE_URL } from '@/app/utils/constans';
-
+import { SERVICE_MERCURE_URL } from "@/app/utils/constans";
 
 const navLinks = [
-    { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
-    { href: "/info", label: "Info", activePath: "/info", icon: <InfoIcon />, name: "info" },
+  { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
+  {
+    href: "/info",
+    label: "Info",
+    activePath: "/info",
+    icon: <InfoIcon />,
+    name: "info",
+  },
 ];
 
 const Navigation: React.FC = () => {
-    const pathname = usePathname();
-    const { t } = useTranslation();
-    const { isAuthenticated, hasModule, hasAccess, user } = useUser();
-    const [notificationCount, setNotificationCount] = useState(0);
-    const [hydrated, setHydrated] = useState(false);
+  const pathname = usePathname();
+  const { t } = useTranslation();
+  const { isAuthenticated, hasModule, hasAccess, user } = useUser();
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
 
-    useEffect(() => {
-        setHydrated(true);
-    }, []);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
-    useEffect(() => {
-        if (!isAuthenticated || !user?.uuid || !hydrated) return;
+  useEffect(() => {
+    if (!isAuthenticated || !user?.uuid || !hydrated) return;
 
-        if (typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
 
-        const url = new URL(SERVICE_MERCURE_URL);
-        url.searchParams.append("topic", `user.${user.uuid}`);
+    const url = new URL(SERVICE_MERCURE_URL);
+    url.searchParams.append("topic", `user.${user.uuid}`);
 
-        const es = new EventSource(url.toString());
+    const es = new EventSource(url.toString());
 
-        es.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.payload?.subscriberType === "internal") {
-                setNotificationCount((prev) => prev + 1);
-            }
-        };
+    es.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.payload?.subscriberType === "internal") {
+        setNotificationCount((prev) => prev + 1);
+      }
+    };
 
-        es.onerror = (err) => console.error("Błąd Mercure:", err);
+    es.onerror = (event) => {
+      console.error("Mercure error:", event);
+      console.error("readyState:", es.readyState);
+    };
 
-        return () => es.close();
-    }, [isAuthenticated, user, hydrated]);
+    return () => es.close();
+  }, [isAuthenticated, user, hydrated]);
 
-    if (!hydrated) {
-        return null;
-    }
+  if (!hydrated) {
+    return null;
+  }
 
-    return (
-        <AppBar position="static" sx={{ backgroundColor: "#34495e" }}>
-            <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Link href="/" color="inherit" underline="none">
-                    <Image src="/icons/event-cater-logo.png" alt="Logo" width={100} height={100} />
-                </Link>
+  return (
+    <AppBar position="static" sx={{ backgroundColor: "#34495e" }}>
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Link href="/" color="inherit" underline="none">
+          <Image
+            src="/icons/event-cater-logo.png"
+            alt="Logo"
+            width={100}
+            height={100}
+          />
+        </Link>
 
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    {navLinks.map((link) =>
-                        isAuthenticated ? (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                color="inherit"
-                                underline="none"
-                                sx={{
-                                    backgroundColor:
-                                        pathname === link.activePath ? "rgba(255, 255, 255, 0.3)" : "transparent",
-                                    borderRadius: "4px",
-                                }}
-                            >
-                                <Button color="inherit">
-                                    {link.icon} {t(`navigation.${link.label.toLowerCase()}`)}
-                                </Button>
-                            </Link>
-                        ) : null
-                    )}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {navLinks.map((link) =>
+            isAuthenticated ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                color="inherit"
+                underline="none"
+                sx={{
+                  backgroundColor:
+                    pathname === link.activePath
+                      ? "rgba(255, 255, 255, 0.3)"
+                      : "transparent",
+                  borderRadius: "4px",
+                }}
+              >
+                <Button color="inherit">
+                  {link.icon} {t(`navigation.${link.label.toLowerCase()}`)}
+                </Button>
+              </Link>
+            ) : null,
+          )}
 
-                    {isAuthenticated && (
-                        <>
-                            {hasAccess('manage') && <ManageListNavigation />}
-                            {hasAccess('settings') && <SettingsListNavigation />}
-                        </>
-                    )}
+          {isAuthenticated && (
+            <>
+              {hasAccess("manage") && <ManageListNavigation />}
+              {hasAccess("settings") && <SettingsListNavigation />}
+            </>
+          )}
 
-                    {isAuthenticated && hasAccess("notifications") && (
-                        <Link
-                            href="/notifications"
-                            color="inherit"
-                            underline="none"
-                            sx={{
-                                backgroundColor: pathname === "/notifications" ? "rgba(255,255,255,0.3)" : "transparent",
-                                borderRadius: "4px",
-                            }}
-                        >
-                            <Button color="inherit">
-                                <Badge badgeContent={notificationCount} color="error">
-                                    <CircleNotificationsIcon />
-                                </Badge>
-                            </Button>
-                        </Link>
-                    )}
+          {isAuthenticated && hasAccess("notifications") && (
+            <Link
+              href="/notifications"
+              color="inherit"
+              underline="none"
+              sx={{
+                backgroundColor:
+                  pathname === "/notifications"
+                    ? "rgba(255,255,255,0.3)"
+                    : "transparent",
+                borderRadius: "4px",
+              }}
+            >
+              <Button color="inherit">
+                <Badge badgeContent={notificationCount} color="error">
+                  <CircleNotificationsIcon />
+                </Badge>
+              </Button>
+            </Link>
+          )}
 
-                    {isAuthenticated && hasModule("company") && hasAccess("messages") && (
-                        <Link
-                            href="/messages"
-                            color="inherit"
-                            underline="none"
-                            sx={{
-                                backgroundColor: pathname === "/messages" ? "rgba(255,255,255,0.3)" : "transparent",
-                                borderRadius: "4px",
-                            }}
-                        >
-                            <Button color="inherit">
-                                <EmailIcon />
-                            </Button>
-                        </Link>
-                    )}
+          {isAuthenticated && hasModule("company") && hasAccess("messages") && (
+            <Link
+              href="/messages"
+              color="inherit"
+              underline="none"
+              sx={{
+                backgroundColor:
+                  pathname === "/messages"
+                    ? "rgba(255,255,255,0.3)"
+                    : "transparent",
+                borderRadius: "4px",
+              }}
+            >
+              <Button color="inherit">
+                <EmailIcon />
+              </Button>
+            </Link>
+          )}
 
-                    {isAuthenticated ? <UserProfileNavigation /> : (
-                        <Link
-                            href="/login"
-                            color="inherit"
-                            underline="none"
-                            sx={{
-                                backgroundColor: pathname === "/login" ? "rgba(255,255,255,0.3)" : "transparent",
-                                borderRadius: "4px",
-                            }}
-                        >
-                            <Button color="inherit">
-                                <LoginIcon /> {t("login")}
-                            </Button>
-                        </Link>
-                    )}
-                </div>
-            </Toolbar>
-        </AppBar>
-    );
+          {isAuthenticated ? (
+            <UserProfileNavigation />
+          ) : (
+            <Link
+              href="/login"
+              color="inherit"
+              underline="none"
+              sx={{
+                backgroundColor:
+                  pathname === "/login"
+                    ? "rgba(255,255,255,0.3)"
+                    : "transparent",
+                borderRadius: "4px",
+              }}
+            >
+              <Button color="inherit">
+                <LoginIcon /> {t("login")}
+              </Button>
+            </Link>
+          )}
+        </div>
+      </Toolbar>
+    </AppBar>
+  );
 };
 
 export default Navigation;
