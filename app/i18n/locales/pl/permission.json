@@ -38,5 +38,18 @@
         "edit": {
             "title": "Edycja uprawnień roli"
         }
+    },
+    "action": {
+        "create": "tworzenie",
+        "update": "edycja",
+        "delete": "usuwanie",
+        "restore": "przywracanie",
+        "view": "podgląd",
+        "list": "lista",
+        "import": "import",
+        "pdf": "PDF",
+        "assign_permission_to_access_role": "przypisywanie uprawnień do dostępu",
+        "assign_access_to_role": "przypisywanie dostępów do roli",
+        "settings": "ustawienia"
     }
 }

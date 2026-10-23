@@ -23,7 +23,7 @@ async function globalSetup(config: FullConfig) {
 
     await page.goto(`${baseUrl}/login`);
 
-    await page.fill('input[name="email"]', 'admin.hrapp@gmail.com');
+    await page.fill('input[name="email"]', 'admin.ec@gmail.com');
     await page.fill('input[name="password"]', 'Admin123!');
     await page.click('button[type="submit"]');
 

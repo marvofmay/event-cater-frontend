@@ -1,4 +1,4 @@
-const APP_NAME = "HR APP";
+const APP_NAME = "EventCater";
 
 // Browser requests pass through the Next.js API proxy, including cloud preview hosts.
 const SERVICE_COMPANY_URL = "";

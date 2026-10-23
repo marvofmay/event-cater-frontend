@@ -24,7 +24,7 @@ import Employee from '@/app/types/Employee';
 import CreateEmployeeModal from '@/app/components/employee/modal/Create';
 //import EditEmployeeModal from '@/app/components/employee/modal/Edit';
 import PreviewEmployeeModal from '@/app/components/employee/modal/Preview';
-//import ImportEmployeesFromXLSXModal from '@/app/components/employee/modal/ImportEmployeesFromXLSX';
+import ImportEmployeesFromXLSXModal from '@/app/components/employee/modal/ImportEmployeesFromXLSX';
 import DeleteEmployeeModal from '@/app/components/employee/modal/Delete';
 import DeleteMultipleEmployeesModal from '@/app/components/employee/modal/DeleteMultiple';
 import useEmployeesQuery from '@/app/hooks/employee/useEmployeesQuery';
@@ -32,7 +32,7 @@ import useAddEmployeeMutation from '@/app/hooks/employee/useAddEmployeeMutation'
 //import useUpdateEmployeeMutation from '@/app/hooks/employee/useUpdateEmployeeMutation';
 import useDeleteEmployeeMutation from '@/app/hooks/employee/useDeleteEmployeeMutation';
 import useDeleteMultipleEmployeeMutation from '@/app/hooks/employee/useDeleteMultipleEmployeeMutation';
-//import useImportEmployeesFromXLSXMutation from '@/app/hooks/employee/importEmployeesFromXLSXMutation';
+import useImportEmployeesFromXLSXMutation from '@/app/hooks/employee/importEmployeesFromXLSXMutation';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import moment from 'moment';
@@ -55,7 +55,7 @@ const EmployeesTable = () => {
     // const { mutate: updateEmployeeMutate } = useUpdateEmployeeMutation();
     const { mutate: deleteEmployeeMutate } = useDeleteEmployeeMutation();
     const { mutate: deleteMultipleEmployeeMutate } = useDeleteMultipleEmployeeMutation();
-    // const { mutate: importEmployeesFromXLSXMutate } = useImportEmployeesFromXLSXMutation();
+    const { mutate: importEmployeesFromXLSXMutate } = useImportEmployeesFromXLSXMutation();
     const { t } = useTranslation();
     const { hasPermission } = useUser();
 
@@ -139,21 +139,20 @@ const EmployeesTable = () => {
     //     });
     // };
 
-    // const handleImportEmployeesFromXLSX = async (file: File): Promise<void> => {
-    //     return new Promise((resolve, reject) => {
-    //         importEmployeesFromXLSXMutate(file, {
-    //             onSuccess: (message: string) => {
-    //                 toast.success(message);
-    //                 refetch();
-    //                 resolve();
-    //             },
-    //             onError: (error: object) => {
-    //                 toast.error(t('common.message.somethingWentWrong'));
-    //                 reject(error);
-    //             },
-    //         });
-    //     });
-    // };
+    const handleImportEmployeesFromXLSX = async (file: File): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            importEmployeesFromXLSXMutate(file, {
+                onSuccess: (message: string) => {
+                    toast.success(message);
+                    resolve();
+                },
+                onError: (error: object) => {
+                    toast.error(t('common.message.somethingWentWrong'));
+                    reject(error);
+                },
+            });
+        });
+    };
 
     const toggleSelectAll = () => {
         setSelected(allSelected ? [] : employees.map(employee => employee.uuid));
@@ -372,12 +371,12 @@ const EmployeesTable = () => {
                 onAddEmployee={handleAdd}
             />}
 
-            {/* {hasPermission("employees.create") && modalType === 'importFromXLSX' && <ImportEmployeesFromXLSXModal
+            {hasPermission("employees.create") && modalType === 'importFromXLSX' && <ImportEmployeesFromXLSXModal
                 open={true}
                 onClose={closeModal}
                 onImportEmployeesFromXLSX={handleImportEmployeesFromXLSX}
                 allowedTypes={["xlsx"]}
-            />} */}
+            />}
 
             {hasPermission("employees.preview") && modalType === 'preview' && <PreviewEmployeeModal
                 open={true}

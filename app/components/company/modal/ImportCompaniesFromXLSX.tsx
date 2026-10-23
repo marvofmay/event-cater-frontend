@@ -48,6 +48,7 @@ const ImportCompaniesFromXLSXModal: React.FC<ImportCompaniesFromXLSXProps> = ({ 
             allowedTypes={allowedTypes}
             title={t('company.modal.import.title')}
             errorsAPI={errorsAPI}
+            sampleFileUrl="/samples/companies-import-example.xlsx"
         />
     );
 };

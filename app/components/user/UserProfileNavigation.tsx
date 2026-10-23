@@ -6,9 +6,9 @@ import '../../i18n/i18n';
 import { useTranslation } from 'react-i18next';
 
 const menuItems = [
-    { label: "Settings", href: "/user/settings", key: "companies" },
-    { label: "UserData", href: "/user/data", key: "employees" },
-    { label: "Logout", href: "/user/logout", key: "roles" },
+    { label: "Settings", href: "/me/settings", key: "companies" },
+    { label: "UserData", href: "/me/data", key: "employees" },
+    { label: "Logout", href: "/me/logout", key: "roles" },
 ];
 
 const UserProfileNavigation: React.FC = () => {

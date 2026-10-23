@@ -26,8 +26,6 @@ import usePositionsQuery from '@/app/hooks/position/usePositionsQuery';
 import useContractTypesQuery from '@/app/hooks/contractType/useContractTypesQuery';
 import useRolesQuery from '@/app/hooks/role/useRolesQuery';
 import useEmployeesQuery from '@/app/hooks/employee/useEmployeesQuery';
-import useParentCompanyOptionsQuery from '@/app/hooks/company/useParentCompanyOptionsQuery';
-import useParentDepartmentOptionsQuery from '@/app/hooks/department/useParentDepartmentOptionsQuery';
 import useCompaniesQuery from '@/app/hooks/company/useCompaniesQuery';
 import useDepartmentsQuery from '@/app/hooks/department/useDepartmentsQuery';
 import EmployeePayload from '@/app/types/EmployeePayload';

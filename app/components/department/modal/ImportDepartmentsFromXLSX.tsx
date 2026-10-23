@@ -48,6 +48,7 @@ const ImportDepartmentsFromXLSXModal: React.FC<ImportDepartmentsFromXLSXProps> =
             allowedTypes={allowedTypes}
             title={t('department.modal.import.title')}
             errorsAPI={errorsAPI}
+            sampleFileUrl="/samples/departments-import-example.xlsx"
         />
     );
 };

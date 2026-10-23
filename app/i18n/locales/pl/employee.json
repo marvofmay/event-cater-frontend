@@ -15,6 +15,9 @@
         "delete": {
             "title": "Potwierdzenie usunięcia pracownika",
             "question": "Czy na pewno chcesz usunąć pracownika"
+        },
+        "import": {
+            "title": "Import pracowników"
         }
     },
     "settings": {
