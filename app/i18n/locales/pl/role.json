@@ -21,6 +21,10 @@
         },
         "import": {
             "title": "Import ról z pliku XLSX"
+        },
+        "assignAccesses": {
+            "title": "Przypisz dostępy i uprawnienia roli",
+            "role": "Rola: {{name}}"
         }
     },
     "settings": {
@@ -38,6 +42,10 @@
     "update": {
         "success": "Rola została zaktualizowane",
         "error": "Nioczekiwany błąd podczas aktualizacji roli"
+    },
+    "assign": {
+        "success": "Dostępy i uprawnienia roli zostały zaktualizowane",
+        "error": "Błąd podczas przypisywania dostępów i uprawnień roli"
     },
     "delete": {
         "success": "Rola została usunięta",

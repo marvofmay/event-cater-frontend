@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { AppBar, Toolbar, Button, Link, Badge } from "@mui/material";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -14,7 +14,7 @@ import { useUser } from "@/app/context/userContext";
 import ManageListNavigation from "../manage/navigation/List";
 import SettingsListNavigation from "../settings/navigation/List";
 import UserProfileNavigation from "../user/UserProfileNavigation";
-import { SERVICE_MERCURE_URL } from "@/app/utils/constans";
+import { SERVICE_COMPANY_URL, SERVICE_MERCURE_URL } from "@/app/utils/constans";
 
 const navLinks = [
   { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
@@ -38,6 +38,33 @@ const Navigation: React.FC = () => {
     setHydrated(true);
   }, []);
 
+  const loadUnreadCount = useCallback(async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+
+    try {
+      const response = await fetch(
+        `${SERVICE_COMPANY_URL}/api/notification-messages/unread-count`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const body = await response.json();
+      setNotificationCount(body?.data?.unreadCount ?? 0);
+    } catch {
+      // badge stays at last known value
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.uuid || !hydrated) return;
+
+    loadUnreadCount();
+  }, [isAuthenticated, user, hydrated, pathname, loadUnreadCount]);
+
   useEffect(() => {
     if (!isAuthenticated || !user?.uuid || !hydrated) return;
 
@@ -51,7 +78,7 @@ const Navigation: React.FC = () => {
     es.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.payload?.subscriberType === "internal") {
-        setNotificationCount((prev) => prev + 1);
+        loadUnreadCount();
       }
     };
 
@@ -61,7 +88,7 @@ const Navigation: React.FC = () => {
     };
 
     return () => es.close();
-  }, [isAuthenticated, user, hydrated]);
+  }, [isAuthenticated, user, hydrated, loadUnreadCount]);
 
   if (!hydrated) {
     return null;

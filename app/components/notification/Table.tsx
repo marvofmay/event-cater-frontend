@@ -24,6 +24,7 @@ import DeleteMultipleNotificationsModal from "@/app/components/notification/moda
 import useNotificationsQuery from "@/app/hooks/notification/useNotificationsQuery";
 import useDeleteNotificationMutation from "@/app/hooks/notification/useDeleteNotificationMutation";
 import useDeleteMultipleNotificationMutation from "@/app/hooks/notification/useDeleteMultipleNotificationMutation";
+import useMarkAsReadNotificationMutation from "@/app/hooks/notification/markAsReadNotificationMutate";
 
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
@@ -51,6 +52,8 @@ const NotificationsTable = () => {
     useDeleteMultipleNotificationMutation();
   const { mutate: markAsReadMultipleNotificationMutate } =
     useMarkAsReadMultipleNotificationMutation();
+  const { mutate: markAsReadNotificationMutate } =
+    useMarkAsReadNotificationMutation();
   const { t } = useTranslation();
   const { hasPermission } = useUser();
 
@@ -184,6 +187,30 @@ const NotificationsTable = () => {
         },
         onError: (error: object) => {
           toast.error(t("notification.markAsRead.multiple.error"));
+          reject(error);
+        },
+      });
+    });
+  };
+
+  const handleMarkAsRead = (
+    notificationToMarkAsRead: Notification,
+  ): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      markAsReadNotificationMutate(notificationToMarkAsRead, {
+        onSuccess: (message: string) => {
+          toast.success(message);
+
+          refetch().then((freshData) => {
+            if (!freshData.data?.items?.length && page > 1) {
+              setPage(page - 1);
+            }
+          });
+
+          resolve();
+        },
+        onError: (error: object) => {
+          toast.error(t("notification.markAsRead.error"));
           reject(error);
         },
       });
@@ -487,6 +514,7 @@ const NotificationsTable = () => {
           open={true}
           selectedNotification={selectedNotification}
           onClose={closeModal}
+          onMarkAsReadConfirm={handleMarkAsRead}
         />
       )}
     </div>

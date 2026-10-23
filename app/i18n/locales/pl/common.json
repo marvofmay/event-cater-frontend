@@ -38,7 +38,8 @@
     "system": "system",
     "notes": "notatki",
     "documents": "dokumenty",
-    "messages": "wiadomości"
+    "messages": "wiadomości",
+    "file_manager": "menadżer plików"
   },
   "button": {
     "cancel": "anuluj",
@@ -49,6 +50,7 @@
     "save": "zapisz",
     "search": "szukaj",
     "chooseFile": "wskaż plik",
+    "downloadSampleFile": "Pobierz przykładowy plik",
     "sendFile": "prześlij plik",
     "markAsRead": "oznacz jako przeczytane"
   },
@@ -85,6 +87,7 @@
   "uploadFile": "Wgraj plik",
   "view": "pdogląd",
   "edit": "edycja",
+  "assignAccessesToRole": "przypisz dostępy i uprawnienia",
   "assignDepartmentsToPosition": "przypiywanie departamentów",
   "delete": "usuwanie",
   "loading": "Ładowanie...",

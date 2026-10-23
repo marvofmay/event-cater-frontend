@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from 'react-i18next';
 
@@ -21,6 +22,7 @@ interface UploadFileProps {
     allowedTypes?: string[];
     title: string | undefined;
     errorsAPI?: Record<string, string[]>;
+    sampleFileUrl?: string;
 }
 
 const defaultAllowedTypes = ["xlsx", "csv", "jpeg", "png", "jpg", "pdf", "doc", "docx"];
@@ -31,7 +33,8 @@ const UploadFileModal: React.FC<UploadFileProps> = ({
     onUploadFile,
     allowedTypes = defaultAllowedTypes,
     title,
-    errorsAPI = {}
+    errorsAPI = {},
+    sampleFileUrl,
 }) => {
     const { t } = useTranslation();
 
@@ -116,6 +119,19 @@ const UploadFileModal: React.FC<UploadFileProps> = ({
                             {t('common.button.chooseFile')}
                         </Button>
                     </label>
+
+                    {sampleFileUrl && (
+                        <Button
+                            href={sampleFileUrl}
+                            download
+                            variant="outlined"
+                            startIcon={<FileDownloadOutlinedIcon />}
+                            fullWidth
+                            sx={{ mt: 2 }}
+                        >
+                            {t('common.button.downloadSampleFile')}
+                        </Button>
+                    )}
 
                     {selectedFile && (
                         <TextField

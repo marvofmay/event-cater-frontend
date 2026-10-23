@@ -4,20 +4,16 @@ import Notification from "@/app/types/Notification";
 import { useTranslation } from "react-i18next";
 import { SERVICE_COMPANY_URL } from "@/app/utils/constans";
 
-const markAsReadMultipleNotification = async (
-  notificationsToMarkAsRead: Notification[],
+const markAsReadNotification = async (
+  notificationToMarkAsRead: Notification,
   token: string,
 ): Promise<string> => {
   try {
-    const notificationsUUIDs = {
-      notificationsUUIDs: notificationsToMarkAsRead.map((item) => item.uuid),
-    };
-
-    console.log(notificationsUUIDs);
+    console.log(notificationToMarkAsRead);
 
     const response = await axios.patch(
-      `${SERVICE_COMPANY_URL}/api/notifications/read`,
-      notificationsUUIDs,
+      `${SERVICE_COMPANY_URL}/api/notification-messages/${notificationToMarkAsRead.uuid}/read`,
+      {},
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -36,21 +32,21 @@ const markAsReadMultipleNotification = async (
   }
 };
 
-const useMarkAsReadMultipleNotificationMutation = () => {
+const useMarkAsReadNotificationMutation = () => {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: (notificationsToMarkAsRead: Notification[]) => {
+    mutationFn: (notificationToMarkAsRead: Notification) => {
       const token = localStorage.getItem("auth_token");
 
       if (!token) {
         throw new Error(t("common.message.tokenIsMissing"));
       }
 
-      return markAsReadMultipleNotification(notificationsToMarkAsRead, token);
+      return markAsReadNotification(notificationToMarkAsRead, token);
     },
     onSuccess: async () => {},
   });
 };
 
-export default useMarkAsReadMultipleNotificationMutation;
+export default useMarkAsReadNotificationMutation;

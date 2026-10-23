@@ -25,7 +25,7 @@ import PreviewRoleModal from '@/app/components/role/modal/Preview';
 import ImportRolesFromXLSXModal from '@/app/components/role/modal/ImportRolesFromXLSX';
 import DeleteRoleModal from '@/app/components/role/modal/Delete';
 import DeleteMultipleRolesModal from '@/app/components/role/modal/DeleteMultiple';
-import EditPermissionRoleModal from '@/app/components/permission/modal/EditPermissionRole';
+import AssignRoleAccessesModal from '@/app/components/role/modal/AssignAccesses';
 import useRolesQuery from '@/app/hooks/role/useRolesQuery';
 import useAddRoleMutation from '@/app/hooks/role/useAddRoleMutation';
 import useUpdateRoleMutation from '@/app/hooks/role/useUpdateRoleMutation';
@@ -344,11 +344,11 @@ const RolesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("roles.assign_permission_to_access_role") && (
-                                            <Tooltip title={t('common.assignDepartmentsToPosition')} placement="top">
+                                        {hasPermission("roles.assign_access_to_role") || hasPermission("roles.assign_permission_to_access_role") ? (
+                                            <Tooltip title={t('common.assignAccessesToRole')} placement="top">
                                                 <IconButton onClick={() => openModal('permission', role)}><Key /> </IconButton>
                                             </Tooltip>
-                                        )}
+                                        ) : null}
                                         {hasPermission("roles.delete") && (
                                             <Tooltip title={t('common.delete')} placement="top">
                                                 <IconButton onClick={() => openModal('delete', role)}><Delete /></IconButton>
@@ -391,14 +391,16 @@ const RolesTable = () => {
                 role={selectedRole}
                 onClose={closeModal}
                 onSave={handleUpdate} />}
-            {/* {modalType === 'permission' && <EditPermissionRoleModal
-                open={true}
-                selectedRole={selectedRole}
-                onClose={closeModal}
-                onSave={handleUpdate}
-                modules={modules}
-                permissions={permissions}
-            />} */}
+            {(hasPermission("roles.assign_access_to_role") || hasPermission("roles.assign_permission_to_access_role")) && modalType === 'permission' && (
+                <AssignRoleAccessesModal
+                    open={true}
+                    selectedRole={selectedRole}
+                    onClose={closeModal}
+                    onSaved={(message: string) => {
+                        toast.success(message);
+                    }}
+                />
+            )}
             {hasPermission("roles.create") && modalType === 'importFromXLSX' && <ImportRolesFromXLSXModal
                 open={true}
                 onClose={closeModal}

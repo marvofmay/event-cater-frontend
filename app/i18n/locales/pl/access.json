@@ -1,0 +1,22 @@
+{
+  "companies": "firmy",
+  "departments": "departamenty",
+  "employees": "pracownicy",
+  "industries": "branże",
+  "roles": "role",
+  "positions": "stanowiska",
+  "contract_types": "formy zatrudnienia",
+  "imports": "importy",
+  "manage": "zarządzanie",
+  "settings": "ustawienia",
+  "messages": "wiadomości",
+  "notifications": "powiadomienia",
+  "notification_channels": "kanały powiadomień",
+  "notification_events": "zdarzenia powiadomień",
+  "notification_templates": "szablony powiadomień",
+  "notification_messages": "wiadomości powiadomień",
+  "accesses": "dostępy",
+  "permissions": "uprawnienia",
+  "notes": "notatki",
+  "file_manager": "menedżer plików"
+}
