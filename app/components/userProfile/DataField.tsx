@@ -4,5 +4,3 @@ export const DataField = ({ label, value }: { label: string; value?: string }) =
         <p className="text-xs text-gray-700 font-medium">{value || 'N/D'}</p>
     </div>
 );
-
-

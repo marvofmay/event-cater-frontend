@@ -39,7 +39,14 @@
     "notes": "notatki",
     "documents": "dokumenty",
     "messages": "wiadomości",
-    "file_manager": "menadżer plików"
+    "file_manager": "menadżer plików",
+    "catering": "catering",
+    "events": "wydarzenia",
+    "venues": "miejsca obsługi",
+    "equipment": "sprzęt",
+    "supplies": "produkty",
+    "templates": "szablony",
+    "kitchen": "kuchnia"
   },
   "button": {
     "cancel": "anuluj",

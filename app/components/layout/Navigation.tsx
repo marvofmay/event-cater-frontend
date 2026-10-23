@@ -137,6 +137,11 @@ const Navigation: React.FC = () => {
 
           {isAuthenticated && (
             <>
+              {(hasModule("events") || hasModule("kitchen")) && (
+                <Link href={hasModule("events") ? "/catering/events" : "/catering/kitchen"} color="inherit" underline="none">
+                  <Button color="inherit">Catering</Button>
+                </Link>
+              )}
               {hasAccess("manage") && <ManageListNavigation />}
               {hasAccess("settings") && <SettingsListNavigation />}
             </>

@@ -91,7 +91,7 @@ export default function SignIn() {
         const passwordData = String(data.get('password') ?? '');
 
         try {
-            await login(emailData, passwordData);
+            await login(emailData, passwordData, String(data.get('tenantSlug') || 'default'));
         } catch (err: unknown) {
             if (
                 typeof err === 'object' &&
@@ -168,6 +168,10 @@ export default function SignIn() {
                                 gap: 2,
                             }}
                         >
+                            <FormControl>
+                                <FormLabel htmlFor="tenantSlug">Kod firmy</FormLabel>
+                                <TextField id="tenantSlug" name="tenantSlug" defaultValue="default" required helperText="Kod otrzymany od administratora systemu" inputProps={{pattern: '[a-z0-9][a-z0-9-]{1,62}', maxLength: 63}} />
+                            </FormControl>
                             <FormControl>
                                 <FormLabel htmlFor="email">{t('loginForm.label.email')}</FormLabel>
                                 <TextField

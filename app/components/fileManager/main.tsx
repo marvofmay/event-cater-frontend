@@ -11,7 +11,7 @@ type FileItem = {
   id: string;
   type: "file" | "folder";
   size?: number;
-  date?: string | Date;
+  date?: Date;
 };
 
 const API_URL = `${SERVICE_COMPANY_URL}/api/files`;

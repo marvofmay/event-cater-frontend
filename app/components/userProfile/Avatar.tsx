@@ -138,4 +138,3 @@ const AvatarForm: React.FC<AvatarFormProps> = ({ data }) => {
 };
 
 export default AvatarForm;
-

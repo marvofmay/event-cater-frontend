@@ -37,4 +37,3 @@ const MainDataView: React.FC<{
 };
 
 export default MainDataView;
-

@@ -27,4 +27,3 @@ const ContactData: React.FC<ContactMainDataProps> = ({ data }) => {
 };
 
 export default ContactData;
-

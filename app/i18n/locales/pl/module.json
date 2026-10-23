@@ -12,5 +12,9 @@
   "trip": "delegacje",
   "request": "wnioski pracownicze",
   "substitution": "zastępstwa",
-  "file_manager": "menedżer plików"
+  "file_manager": "menedżer plików",
+  "events": "Wydarzenia",
+  "equipment": "Sprzęt",
+  "supplies": "Produkty i materiały",
+  "kitchen": "Kuchnia"
 }

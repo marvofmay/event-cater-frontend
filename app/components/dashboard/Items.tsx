@@ -14,6 +14,10 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 
 const moduleIcons: Record<string, React.ReactNode> = {
+  events: <CalendarTodayIcon fontSize="inherit" />,
+  equipment: <DescriptionIcon fontSize="inherit" />,
+  supplies: <TaskIcon fontSize="inherit" />,
+  kitchen: <TaskIcon fontSize="inherit" />,
   company: <DashboardIcon fontSize="inherit" />,
   system: <SettingsIcon fontSize="inherit" />,
   tasks: <TaskIcon fontSize="inherit" />,
@@ -30,12 +34,12 @@ const Items: React.FC = () => {
   return (
     <div className="w-full min-h-[60vh] flex justify-center items-center px-4">
       <div
-        className="grid 
-        grid-cols-2 
-        sm:grid-cols-3 
-        md:grid-cols-4 
-        lg:grid-cols-5 
-        gap-8 
+        className="grid
+        grid-cols-2
+        sm:grid-cols-3
+        md:grid-cols-4
+        lg:grid-cols-5
+        gap-8
         justify-items-center"
       >
         {modules.map((moduleName, index) => (
@@ -46,8 +50,8 @@ const Items: React.FC = () => {
           >
             <div
               className="relative flex flex-col items-center justify-center
-              w-24 h-24 
-              sm:w-32 sm:h-32 
+              w-24 h-24
+              sm:w-32 sm:h-32
               md:w-40 md:h-40
               rounded-full
               bg-[#34495e]

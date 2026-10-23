@@ -14,7 +14,7 @@ interface UserContextType {
   isAuthenticated: boolean;
   loading: boolean;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, tenantSlug?: string) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (permissionName: string) => boolean;
   hasAccess: (accessName: string) => boolean;
@@ -51,7 +51,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (storedToken) {
       const payload = decodeJwt(storedToken);
-      if (payload) {
+      if (payload && payload.exp * 1000 > Date.now()) {
+        document.cookie = `tenant_slug=${encodeURIComponent(payload.tenantSlug || "default")}; Path=/; SameSite=Lax`;
         setToken(storedToken);
         setUser(payload.user ?? null);
         setEmployee(payload.employee ?? null);
@@ -64,12 +65,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, tenantSlug = "default") => {
     setLoading(true);
 
     const res = await fetch(`${SERVICE_COMPANY_URL}/api/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Tenant": tenantSlug },
       body: JSON.stringify({ email, password }),
     });
 
@@ -87,6 +88,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     localStorage.setItem("auth_token", data.token);
+    document.cookie = `tenant_slug=${encodeURIComponent(tenantSlug)}; Path=/; SameSite=Lax`;
 
     setToken(data.token);
     const payload = decodeJwt(data.token);
