@@ -49,6 +49,9 @@ export function TemplatesPage() {
   return (
     <Permission name="preparation_templates.list">
       <Panel title="Szablony kompletacji">
+        <Typography color="text.secondary" mb={2}>
+          Gotowe listy sprzętu i materiałów do wielokrotnego użycia. Aby użyć szablonu, otwórz wydarzenie, przejdź do zakładki Kompletacja i wybierz „Zastosuj szablon do listy”.
+        </Typography>
         <Typography mb={2}>
           Stałe ilości albo przeliczenie na liczbę gości z zapasem. Przykład: 1
           warnik na 50 gości, 1 zestaw kawowy na osobę + 10% zapasu.

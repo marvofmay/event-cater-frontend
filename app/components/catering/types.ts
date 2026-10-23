@@ -32,9 +32,17 @@ export interface CatalogItem {
   code: string;
   name: string;
   category: string;
+  categoryUuid?: string;
+  slangName?: string | null;
+  stockQuantity?: number;
   unit: string;
   description?: string | null;
   active: boolean;
+  version: number;
+}
+export interface EquipmentCategory {
+  uuid: string;
+  name: string;
   version: number;
 }
 export interface EmployeeOption {

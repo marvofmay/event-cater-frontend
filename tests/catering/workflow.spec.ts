@@ -72,6 +72,12 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
       page.getByRole("cell", { name: venueName, exact: true }),
     ).toBeVisible();
 
+    const equipmentCategoryName = "Testy techniczne " + code;
+    const categoryResponse = await page.request.post("/api/equipment-categories", {
+      headers: { Authorization: "Bearer " + token },
+      data: { name: equipmentCategoryName },
+    });
+    expect(categoryResponse.status()).toBe(201);
     for (const item of [
       {
         route: "equipment",
@@ -91,8 +97,14 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
         .getByRole("button", { name: "Dodaj pozycję", exact: true })
         .click();
       await dialog.getByLabel("Kod").fill(item.code);
-      await dialog.getByLabel("Nazwa").fill(item.name);
-      await dialog.getByLabel("Kategoria").fill("Testy techniczne");
+      await dialog.getByLabel(/^Nazwa(?:\s*\*)?$/).fill(item.name);
+      if (item.route === "equipment") {
+        await dialog.getByRole("combobox", { name: "Kategoria sprzętu" }).click();
+        await page.getByRole("option", { name: equipmentCategoryName, exact: true }).click();
+        await dialog.getByLabel("Ilość posiadana").fill("200");
+      } else {
+        await dialog.getByLabel("Kategoria").fill("Testy techniczne");
+      }
       const response = page.waitForResponse(
         (r) =>
           r.url().endsWith("/api" + item.path) &&

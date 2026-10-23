@@ -5,6 +5,7 @@ import { useRemote } from "./api";
 export interface LookupItem {
   uuid: string;
   name: string;
+  slangName?: string | null;
   code?: string;
   unit?: string;
   kind?: string;
@@ -51,6 +52,7 @@ export function Lookup({
       filterOptions={(items) => items}
       getOptionLabel={(item) =>
         item.name +
+        (item.slangName ? " (" + item.slangName + ")" : "") +
         (item.code ? " · " + item.code : "") +
         (item.location?.city ? " · " + item.location.city : "")
       }

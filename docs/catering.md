@@ -1,11 +1,14 @@
 # Obsługa cateringu
 
+Osobny moduł `/module/file_manager` jest demonstracją interfejsu z przykładowymi danymi. Operacje na jego drzewie są lokalne dla otwartego widoku i nie zapisują plików ani folderów na serwerze. Prywatne materiały wydarzeń korzystają z niezależnego, działającego API załączników wydarzenia.
+
 Nowe widoki dla przyjęć i wydarzeń obsługiwanych wyjazdowo lub w bazie firmy:
 
 - `/catering/events` — lista, filtry i tworzenie wydarzenia;
 - `/catering/events/{uuid}` — dane, zapisane miejsce, kontakty, menu, zespół, kompletacja, kuchnia, prywatne zdjęcia/filmy i historia;
 - `/catering/venues` — baza powtarzających się miejsc obsługi, adresy, kontakty i instrukcje logistyczne;
 - `/catering/equipment` — katalog sprzętu;
+- `/catering/equipment/categories` — dodawanie, edycja i usuwanie nieużywanych kategorii sprzętu;
 - `/catering/supplies` — produkty i materiały zużywalne;
 - `/catering/templates` — szablony kompletacji: ilości stałe lub na liczbę gości z zapasem;
 - `/catering/kitchen` — dzienny plan produkcji z oddzielnymi kartami wydarzeń.
@@ -13,6 +16,8 @@ Nowe widoki dla przyjęć i wydarzeń obsługiwanych wyjazdowo lub w bazie firmy
 Kafelki istniejącego pulpitu Wydarzenia, Sprzęt, Produkty i Kuchnia prowadzą do tych ekranów. Nawigacja i działania korzystają z uprawnień obecnego `UserProvider`; backend niezależnie sprawdza każde żądanie. Po dodaniu modułów lub uprawnień należy ponownie się zalogować, żeby odświeżyć uprawnienia zapisane w JWT.
 
 ## Typowy przebieg
+
+Najpierw dodaj kategorie sprzętu (np. Meble, Zastawa) przez „Sprzęt → Kategorie sprzętu”. W pozycji sprzętu wybierz kategorię, wpisz posiadaną ilość w wybranej jednostce oraz opcjonalną nazwę slangową używaną przez pracowników. Nazwa slangowa jest widoczna w podpowiedziach i uwzględniana przy wyszukiwaniu. Ilość posiadana nie jest automatycznie pomniejszana przez wydarzenia. Dotychczasowe pozycje po migracji mają ilość 0 do uzupełnienia; istniejące kategorie są zachowane.
 
 Zapisz obsłużone miejsce w bazie (również ze starego wydarzenia), a przy nowym wydarzeniu wybierz je z podpowiedzi. Adres zostaje wczytany do edytowalnego formularza. Wczytanie miejsca w istniejącym wydarzeniu pozwala jawnie zastąpić kontakty. Zmiana katalogu nie zmienia historii przyjęć.
 

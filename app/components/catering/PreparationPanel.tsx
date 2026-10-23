@@ -259,9 +259,13 @@ function PreparationContent({
       {plan &&
         hasPermission("preparation_templates.view") &&
         hasPermission("preparation_templates.list") && (
-          <Stack direction="row" gap={2} my={2}>
+          <Stack gap={1} my={2}>
+            <Typography variant="body2" color="text.secondary">
+              Szablon to gotowa lista sprzętu i materiałów. Zastosowanie dodaje jej pozycje do tego wydarzenia; późniejsza edycja szablonu nie zmienia tej listy.
+            </Typography>
+            <Stack direction="row" gap={2}>
             <Lookup
-              label="Szablon kompletacji"
+              label="Szablon kompletacji dla tego wydarzenia"
               path="/preparation-templates"
               value={template}
               onChange={setTemplate}
@@ -286,6 +290,7 @@ function PreparationContent({
             >
               Zastosuj szablon do listy
             </Button>
+            </Stack>
           </Stack>
         )}
       <TableContainer>
