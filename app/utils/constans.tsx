@@ -1,9 +1,7 @@
 const APP_NAME = "HR APP";
 
-const SERVICE_COMPANY_URL =
-    typeof window !== "undefined" && window.location.hostname === "localhost"
-        ? process.env.NEXT_PUBLIC_API_URL_HOST! // browser
-        : process.env.NEXT_PUBLIC_API_URL_DOCKER!; // doceker/playwright
+// Browser requests pass through the Next.js API proxy, including cloud preview hosts.
+const SERVICE_COMPANY_URL = "";
 
 const SERVICE_MERCURE_URL = "http://localhost:3001/.well-known/mercure";
 

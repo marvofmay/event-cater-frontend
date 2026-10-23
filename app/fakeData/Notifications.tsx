@@ -1,34 +1,28 @@
-import Notification from '../types/Notification';
+import Notification from "../types/Notification";
 
 const notifications: Notification[] = [
-    {
-        uuid: '1',
-        moduleName: 'Tasks',
-        moduleRecordUUID: '121',
-        type: 'TASK_CREATED',
-        title: 'New task',
-        message: 'New task...',
-        source: 'internal',
-        active: true,
-        status: 'sent',
-        readedAt: null,
-        createdAt: new Date().toISOString(),
-        deletedAt: null,
+  {
+    uuid: "1",
+    receivedAt: new Date().toISOString(),
+    readAt: null,
+    message: {
+      uuid: "message-1",
+      title: "New task",
+      content: "New task...",
+      channelCode: "intenal",
     },
-    {
-        uuid: '2',
-        moduleName: 'Tasks',
-        moduleRecordUUID: '121',
-        type: 'TASK_DONE',
-        title: 'Task',
-        message: 'Task...',
-        source: 'internal',
-        active: true,
-        status: 'sent',
-        readedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        deletedAt: null,
+  },
+  {
+    uuid: "2",
+    receivedAt: new Date().toISOString(),
+    readAt: new Date().toISOString(),
+    message: {
+      uuid: "message-2",
+      title: "Task",
+      content: "Task...",
+      channelCode: "intenal",
     },
+  },
 ];
 
 export default notifications;

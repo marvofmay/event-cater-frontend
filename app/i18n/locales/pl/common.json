@@ -38,7 +38,14 @@
         "system": "system",
         "notes": "notatki",
         "documents": "dokumenty",
-        "messages": "wiadomości"
+        "messages": "wiadomości",
+        "catering": "catering",
+        "events": "wydarzenia",
+        "venues": "miejsca obsługi",
+        "equipment": "sprzęt",
+        "supplies": "produkty",
+        "templates": "szablony",
+        "kitchen": "kuchnia"
     },
     "button": {
         "cancel": "anuluj",

@@ -16,6 +16,10 @@ import SettingsIcon from "@mui/icons-material/Settings"
 import { useUser } from "@/app/context/userContext";
 
 const moduleIcons: Record<string, React.ReactNode> = {
+    events: <CalendarTodayIcon fontSize="inherit" />,
+    equipment: <RequestPageIcon fontSize="inherit" />,
+    supplies: <TaskIcon fontSize="inherit" />,
+    kitchen: <TaskIcon fontSize="inherit" />,
     company: <DashboardIcon fontSize="inherit" color="inherit" />,
     system: <SettingsIcon fontSize="inherit" color="inherit" />,
     tasks: <TaskIcon fontSize="inherit" color="inherit" />,
