@@ -43,6 +43,7 @@
     "table": {
         "column": {
             "name": "nazwa",
+            "departments": "Dział",
             "description": "opis",
             "active": "aktywne",
             "createdAt": "utworzono",

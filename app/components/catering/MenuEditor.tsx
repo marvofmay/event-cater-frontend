@@ -1,4 +1,6 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import { RowAction } from "../common/RowAction";
 import { useState } from "react";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import { MenuItem } from "./types";
@@ -93,18 +95,15 @@ export function MenuEditor({
             disabled={disabled}
           />
           {!disabled && (
-            <Button
-              sx={{ alignSelf: "end" }}
+            <RowAction action="delete" label="Usuń potrawę"
               onClick={() => onChange(items.filter((_, i) => i !== index))}
-            >
-              Usuń potrawę
-            </Button>
+            />
           )}
         </Stack>
       ))}
       {!items.length && <Typography>Nie dodano jeszcze potraw.</Typography>}
       {!disabled && (
-        <Button
+        <Button color="success" variant="contained" startIcon={<AddIcon fontSize="medium" />}
           sx={{ alignSelf: "start" }}
           onClick={() => onChange([...items, blankDish()])}
         >

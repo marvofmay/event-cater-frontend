@@ -338,7 +338,7 @@ const DepartmentsTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("departments.edit") && (
+                                        {hasPermission("departments.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', department)}><Edit /></IconButton>
                                             </Tooltip>
@@ -384,7 +384,7 @@ const DepartmentsTable = () => {
                 allowedTypes={["xlsx"]}
             />}
 
-            {hasPermission("departments.preview") && modalType === 'preview' && <PreviewDepartmentModal
+            {hasPermission("departments.view") && modalType === 'preview' && <PreviewDepartmentModal
                 open={true}
                 selectedDepartment={selectedDepartment}
                 onClose={closeModal}
@@ -396,7 +396,7 @@ const DepartmentsTable = () => {
                 onClose={closeModal}
                 onDeleteConfirm={handleDelete} />}
 
-            {hasPermission("departments.edit") && modalType === 'edit' && <EditDepartmentModal
+            {hasPermission("departments.update") && modalType === 'edit' && <EditDepartmentModal
                 open={true}
                 department={selectedDepartment}
                 onClose={closeModal}

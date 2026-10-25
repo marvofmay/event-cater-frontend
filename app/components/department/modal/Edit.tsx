@@ -92,6 +92,7 @@ const EditDepartmentModal: React.FC<EditDepartmentModalProps> = ({ open, onClose
         emails: Yup.array()
             .of(
                 Yup.string()
+                    .trim()
                     .email(t('validation.invalidEmail'))
                     .nullable()
             )
@@ -592,10 +593,10 @@ const EditDepartmentModal: React.FC<EditDepartmentModalProps> = ({ open, onClose
                                     </Box>
                                 </DialogContent>
                                 <DialogActions>
-                                    <Button onClick={onClose} variant="contained" sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}>
+                                    <Button color="primary" onClick={onClose} variant="contained" >
                                         {t('common.button.cancel')}
                                     </Button>
-                                    <Button type="submit" variant="contained" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
+                                    <Button color="primary" type="submit" variant="contained" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
                                         {t('common.button.save')}
                                     </Button>
                                 </DialogActions>

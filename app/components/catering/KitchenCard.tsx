@@ -1,4 +1,6 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import { RowAction } from "../common/RowAction";
 import { useState } from "react";
 import {
   Alert,
@@ -95,7 +97,6 @@ export function KitchenCard({
           wydarzenie zakończono.
         </Alert>
       )}
-      <Feedback error={action.error} success={action.success} />
       {order.pendingRevision && (
         <Panel title="Propozycja zmiany do uzgodnienia">
           <Typography mb={1}>{order.pendingRevision.reason}</Typography>
@@ -465,7 +466,7 @@ function KitchenProgressRow({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 />
-                <Button type="submit" disabled={busy}>
+                <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={busy}>
                   Zapisz wykonanie
                 </Button>
               </Stack>
@@ -682,7 +683,9 @@ function KitchenPlanEditor({
                 value={line.notes ?? ""}
                 onChange={(e) => update(i, { notes: e.target.value })}
               />
-              <Button
+              <RowAction
+                action="delete"
+                label="Usuń pozycję"
                 onClick={() =>
                   setPlan({
                     ...plan,
@@ -693,12 +696,10 @@ function KitchenPlanEditor({
                   (line.preparedPortions ?? 0) > 0 ||
                   (line.handedOverPortions ?? 0) > 0
                 }
-              >
-                Usuń pozycję
-              </Button>
+              />
             </Stack>
           ))}
-          <Button
+          <Button color="success" variant="contained" startIcon={<AddIcon fontSize="medium" />}
             onClick={() =>
               setPlan({ ...plan, lines: [...plan.lines, newLine()] })
             }
@@ -721,7 +722,7 @@ function KitchenPlanEditor({
                 ? "Zapisz kartę roboczą"
                 : "Przekaż propozycję do akceptacji kuchni"}
             </Button>
-            <Button onClick={onCancel}>Anuluj edycję</Button>
+            <Button color="primary" variant="contained" onClick={onCancel}>Anuluj edycję</Button>
           </Stack>
         </Stack>
       </fieldset>

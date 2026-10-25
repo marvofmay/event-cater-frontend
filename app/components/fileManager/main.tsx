@@ -5,6 +5,7 @@ import { Alert } from "@mui/material";
 import { Locale } from "@svar-ui/react-core";
 import { Filemanager, Willow } from "@svar-ui/react-filemanager";
 import "@svar-ui/react-filemanager/all.css";
+import "./theme.css";
 import plSvar from "@/app/i18n/svar/pl";
 
 type FileItem = {
@@ -46,6 +47,7 @@ export default function MainFileManager() {
   ]);
 
   return (
+    <div className="eventcater-file-manager">
     <Locale words={plSvar}>
       <Willow>
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -58,5 +60,6 @@ export default function MainFileManager() {
         </div>
       </Willow>
     </Locale>
+    </div>
   );
 }

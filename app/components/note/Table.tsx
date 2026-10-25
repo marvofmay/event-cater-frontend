@@ -317,7 +317,7 @@ const NotesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("notes.edit") && (
+                                        {hasPermission("notes.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', note)}><Edit /></IconButton>
                                             </Tooltip>
@@ -356,13 +356,13 @@ const NotesTable = () => {
                 onAddNote={handleAdd}
             />}
 
-            {hasPermission("notes.preview") && modalType === 'preview' && <PreviewNoteModal
+            {hasPermission("notes.view") && modalType === 'preview' && <PreviewNoteModal
                 open={true}
                 selectedNote={selectedNote}
                 onClose={closeModal}
             />}
 
-            {hasPermission("notes.edit") && modalType === 'edit' && <EditNoteModal
+            {hasPermission("notes.update") && modalType === 'edit' && <EditNoteModal
                 open={true}
                 note={selectedNote}
                 onClose={closeModal}

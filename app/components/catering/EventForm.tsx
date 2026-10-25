@@ -3,11 +3,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button, Stack, TextField, Alert, Typography } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
-import { useApi, useAction, eventDateTime, localDateTime, today } from "./api";
+import { useApi, useAction, eventDateTime, localDateTime } from "./api";
 import { EventDetails, Venue } from "./types";
 import { LocationEditor, emptyLocation } from "./LocationEditor";
 import { Lookup, LookupItem } from "./Lookup";
-import { Feedback, Panel } from "./ui";
+import { Panel } from "./ui";
 export function EventForm({
   initial,
   onSaved,
@@ -21,7 +21,7 @@ export function EventForm({
   const action = useAction();
   const { hasPermission } = useUser();
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [date, setDate] = useState(initial?.date ?? today());
+  const [date, setDate] = useState(initial?.date ?? "");
   const [timezone, setTimezone] = useState(
     initial?.timezone ?? "Europe/Warsaw",
   );
@@ -38,11 +38,24 @@ export function EventForm({
       ? { uuid: initial.coordinatorUuid, name: "Zapisany koordynator" }
       : null,
   );
-  const [ready, setReady] = useState(localDateTime(initial?.readyAt, timezone));
-  const [start, setStart] = useState(
-    localDateTime(initial?.startsAt, timezone),
+  const [readyDate, setReadyDate] = useState(
+    localDateTime(initial?.readyAt, timezone).slice(0, 10) || date,
   );
-  const [end, setEnd] = useState(localDateTime(initial?.endsAt, timezone));
+  const [startDate, setStartDate] = useState(
+    localDateTime(initial?.startsAt, timezone).slice(0, 10) || date,
+  );
+  const [endDate, setEndDate] = useState(
+    localDateTime(initial?.endsAt, timezone).slice(0, 10) || date,
+  );
+  const [ready, setReady] = useState(
+    localDateTime(initial?.readyAt, timezone).slice(11, 16),
+  );
+  const [start, setStart] = useState(
+    localDateTime(initial?.startsAt, timezone).slice(11, 16),
+  );
+  const [end, setEnd] = useState(
+    localDateTime(initial?.endsAt, timezone).slice(11, 16),
+  );
   const [venue, setVenue] = useState<Venue | null>(null);
   const [selected, setSelected] = useState<LookupItem | null>(null);
   const [created, setCreated] = useState<EventDetails | null>(null);
@@ -96,9 +109,9 @@ export function EventForm({
               customerName,
               location,
               coordinatorUuid: coordinator?.uuid ?? null,
-              readyAt: eventDateTime(ready, timezone),
-              startsAt: eventDateTime(start, timezone),
-              endsAt: eventDateTime(end, timezone),
+              readyAt: eventDateTime(ready && readyDate ? readyDate + "T" + ready : "", timezone),
+              startsAt: eventDateTime(start && startDate ? startDate + "T" + start : "", timezone),
+              endsAt: eventDateTime(end && endDate ? endDate + "T" + end : "", timezone),
               ...(initial ? { version: initial.version } : {}),
             };
             let result = await api<EventDetails>(
@@ -117,7 +130,7 @@ export function EventForm({
             }
             onDirty?.(false);
             onSaved(result);
-          });
+          }, initial ? "Zapisano dane wydarzenia." : "Utworzono wydarzenie.");
         }}
       >
         <fieldset
@@ -138,7 +151,18 @@ export function EventForm({
                 label="Data wydarzenia"
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  const nextDate = e.target.value;
+                  const shiftDate = (value: string) => {
+                    if (!nextDate || !date || !value) return nextDate;
+                    const offset = Date.parse(value) - Date.parse(date);
+                    return new Date(Date.parse(nextDate) + offset).toISOString().slice(0, 10);
+                  };
+                  setReadyDate(shiftDate(readyDate));
+                  setStartDate(shiftDate(startDate));
+                  setEndDate(shiftDate(endDate));
+                  setDate(nextDate);
+                }}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
               <TextField
@@ -174,27 +198,47 @@ export function EventForm({
                 required
               />
             </Stack>
-            <Typography variant="subtitle2">
-              Harmonogram — godziny w strefie {timezone}
-            </Typography>
-            <Stack direction={{ xs: "column", md: "row" }} gap={2}>
-              {[
-                ["Gotowość cateringu", ready, setReady],
-                ["Początek wydawania", start, setStart],
-                ["Koniec obsługi", end, setEnd],
-              ].map(([label, value, setter]) => (
-                <TextField
-                  key={label as string}
-                  label={label as string}
-                  type="datetime-local"
-                  value={value as string}
-                  onChange={(e) =>
-                    (setter as (v: string) => void)(e.target.value)
-                  }
-                  slotProps={{ inputLabel: { shrink: true } }}
-                />
-              ))}
-            </Stack>
+            {date && (
+              <>
+                <Typography variant="subtitle2">
+                  Harmonogram — godziny w strefie {timezone}
+                </Typography>
+                <Stack direction={{ xs: "column", md: "row" }} gap={2}>
+                  {[
+                    {
+                      label: "Gotowość cateringu", dateLabel: "Data gotowości cateringu",
+                      value: ready, setter: setReady, scheduleDate: readyDate, dateSetter: setReadyDate,
+                    },
+                    {
+                      label: "Początek wydawania", dateLabel: "Data początku wydawania",
+                      value: start, setter: setStart, scheduleDate: startDate, dateSetter: setStartDate,
+                    },
+                    {
+                      label: "Koniec obsługi", dateLabel: "Data końca obsługi",
+                      value: end, setter: setEnd, scheduleDate: endDate, dateSetter: setEndDate,
+                    },
+                  ].map(({ label, dateLabel, value, setter, scheduleDate, dateSetter }) => (
+                    <Stack key={label} gap={1} sx={{ flex: 1 }}>
+                      <TextField
+                        label={dateLabel}
+                        type="date"
+                        value={scheduleDate}
+                        onChange={(event) => dateSetter(event.target.value)}
+                        required={!!value}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                      <TextField
+                        label={label}
+                        type="time"
+                        value={value}
+                        onChange={(event) => setter(event.target.value)}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Stack>
+                  ))}
+                </Stack>
+              </>
+            )}
             <LocationEditor value={location} onChange={setLocation} />
             <TextField
               label="Opis wydarzenia"
@@ -204,10 +248,10 @@ export function EventForm({
               onChange={(e) => setDescription(e.target.value)}
             />
             {canSave && (
-              <Button
+              <Button color="primary"
                 variant="contained"
                 type="submit"
-                sx={{ alignSelf: "start" }}
+                sx={[{ alignSelf: "start" }, { backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }]}
               >
                 {initial ? "Zapisz dane wydarzenia" : "Utwórz wydarzenie"}
               </Button>
@@ -215,7 +259,6 @@ export function EventForm({
           </Stack>
         </fieldset>
       </form>
-      <Feedback error={action.error} success={action.success} />
       {created && action.error && (
         <Alert severity="warning">
           Wydarzenie zostało utworzone, ale nie udało się zapisać kontaktów.{" "}

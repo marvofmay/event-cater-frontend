@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState, useRef } from "react";
+import { toast } from "react-toastify";
+import { beginPendingOperation, isWriteMethod } from "@/app/utils/pendingOperations";
 import { useUser } from "@/app/context/userContext";
 
 export class ApiError extends Error {
@@ -32,6 +34,8 @@ export function useApi() {
   return useCallback(
     async <T>(path: string, method = "GET", body?: unknown): Promise<T> => {
       if (!token) throw new ApiError(401, "Zaloguj się, aby kontynuować.");
+      const complete = isWriteMethod(method) ? beginPendingOperation() : () => {};
+      try {
       const multipart = body instanceof FormData;
       const response = await fetch("/api" + path, {
         method,
@@ -49,8 +53,11 @@ export function useApi() {
               ? body
               : JSON.stringify(body),
       });
-      if (!response.ok) return failure(response);
-      return response.json() as Promise<T>;
+      if (!response.ok) return await failure(response);
+      return await response.json() as T;
+      } finally {
+        complete();
+      }
     },
     [token],
   );
@@ -99,29 +106,31 @@ export function useAction() {
   const pending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const run = async (
     action: () => Promise<void>,
     message = "Zapisano zmiany.",
   ) => {
     if (pending.current) return false;
     pending.current = true;
+    const complete = beginPendingOperation();
     setBusy(true);
     setError("");
-    setSuccess("");
     try {
       await action();
-      setSuccess(message);
+      if (message) toast.success(message);
       return true;
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd połączenia");
+      const message = error instanceof Error ? error.message : "Błąd połączenia";
+      setError(message);
+      toast.error(message);
       return false;
     } finally {
+      complete();
       pending.current = false;
       setBusy(false);
     }
   };
-  return { busy, error, success, run };
+  return { busy, error, run };
 }
 export async function downloadPrivate(
   path: string,

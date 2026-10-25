@@ -1,4 +1,6 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import { RowAction } from "../common/RowAction";
 import { useState } from "react";
 import {
   Alert,
@@ -24,13 +26,13 @@ import {
 import { EventDetails, Preparation, PreparationLine, Template } from "./types";
 import {
   Feedback,
-  FieldSelect,
   Loading,
   Panel,
   Status,
   unitLabels,
 } from "./ui";
 import { Lookup, LookupItem } from "./Lookup";
+import { PreparationLookup } from "./PreparationLookup";
 export function PreparationPanel({
   event,
   onChanged,
@@ -49,7 +51,7 @@ export function PreparationPanel({
   };
   return (
     <Panel title="Kompletacja i załadunek cateringu">
-      <Feedback error={remote.error || action.error} success={action.success} />
+      <Feedback error={remote.error} />
       {remote.loading && <Loading />}
       {remote.data && (
         <PreparationContent
@@ -90,9 +92,6 @@ function PreparationContent({
     localDateTime(data.deadlineAt, event.timezone),
   );
   const [notes, setNotes] = useState(data.notes ?? "");
-  const [kind, setKind] = useState(
-    can("plan_event_equipment") ? "equipment" : "consumable",
-  );
   const [item, setItem] = useState<LookupItem | null>(null);
   const [quantity, setQuantity] = useState("1");
   const [template, setTemplate] = useState<LookupItem | null>(null);
@@ -165,7 +164,7 @@ function PreparationContent({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
-              <Button disabled={action.busy} type="submit">
+              <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" disabled={action.busy} type="submit">
                 Zapisz odpowiedzialność i termin
               </Button>
             </Stack>
@@ -178,8 +177,11 @@ function PreparationContent({
             onSubmit={(e) => {
               e.preventDefault();
               action.run(async () => {
-                if (!item) throw new Error("Wybierz pozycję z katalogu.");
-                if (kind === "equipment") {
+                if (
+                  !item ||
+                  (item.kind !== "equipment" && item.kind !== "consumable")
+                ) throw new Error("Wybierz pozycję z katalogu.");
+                if (item.kind === "equipment") {
                   await api(
                     "/events/" + event.uuid + "/equipment/" + item.uuid,
                     "PUT",
@@ -199,28 +201,10 @@ function PreparationContent({
             }}
           >
             <Stack direction="row" gap={2} flexWrap="wrap">
-              <FieldSelect
-                label="Rodzaj pozycji"
-                value={kind}
-                options={{
-                  ...(can("plan_event_equipment")
-                    ? { equipment: "Sprzęt" }
-                    : {}),
-                  ...(plan ? { consumable: "Produkt / materiał" } : {}),
-                }}
-                onChange={(v) => {
-                  setKind(v);
-                  setItem(null);
-                }}
-              />
-              <Lookup
-                key={kind}
+              <PreparationLookup
                 label="Wyszukaj rzecz z katalogu"
-                path={
-                  kind === "equipment"
-                    ? "/equipment/options"
-                    : "/consumables/options"
-                }
+                equipment={can("plan_event_equipment")}
+                consumables={plan}
                 value={item}
                 onChange={setItem}
               />
@@ -241,13 +225,13 @@ function PreparationContent({
                   },
                 }}
               />
-              <Button
+              <Button color="success" variant="contained" startIcon={<AddIcon fontSize="medium" />}
                 type="submit"
                 disabled={
                   action.busy ||
                   !item ||
-                  (kind === "equipment" && !can("plan_event_equipment")) ||
-                  (kind === "consumable" && !plan)
+                  (item?.kind === "equipment" && !can("plan_event_equipment")) ||
+                  (item?.kind === "consumable" && !plan)
                 }
               >
                 Dodaj / zmień ilość w planie
@@ -316,7 +300,6 @@ function PreparationContent({
           </TableBody>
         </Table>
       </TableContainer>
-      <Feedback error={action.error} success={action.success} />
       <Stack direction="row" gap={1} flexWrap="wrap" my={2}>
         {plan && data.status === "draft" && (
           <Button disabled={action.busy} onClick={() => command("approve")}>
@@ -445,7 +428,7 @@ function PreparationRow({
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
               />
-              <Button
+              <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained"
                 disabled={action.busy}
                 onClick={() =>
                   action.run(async () =>
@@ -545,13 +528,12 @@ function PreparationRow({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
-              <Button type="submit" disabled={action.busy}>
+              <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>
                 Zapisz ilości
               </Button>
             </Stack>
           </form>
         )}
-        <Feedback error={action.error} />
       </TableCell>
       <TableCell>
         {canRemove &&
@@ -561,6 +543,7 @@ function PreparationRow({
               <Typography>Usunąć pozycję z planu?</Typography>
               <Button
                 color="error"
+                variant="contained"
                 disabled={action.busy}
                 onClick={() =>
                   action.run(async () => {
@@ -583,7 +566,7 @@ function PreparationRow({
               <Button onClick={() => setRemove(false)}>Zostaw</Button>
             </Stack>
           ) : (
-            <Button onClick={() => setRemove(true)}>Usuń z planu</Button>
+            <RowAction action="delete" label="Usuń z planu" onClick={() => setRemove(true)} />
           ))}
       </TableCell>
     </TableRow>

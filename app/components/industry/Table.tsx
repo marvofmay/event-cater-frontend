@@ -337,7 +337,7 @@ const IndustriesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("industries.edit") && (
+                                        {hasPermission("industries.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', industry)}><Edit /></IconButton>
                                             </Tooltip>
@@ -370,7 +370,7 @@ const IndustriesTable = () => {
                 />
             )}
 
-            {hasPermission("industries.preview") && modalType === 'preview' && <PreviewIndustryModal
+            {hasPermission("industries.view") && modalType === 'preview' && <PreviewIndustryModal
                 open={true}
                 selectedIndustry={selectedIndustry}
                 onClose={closeModal}
@@ -380,7 +380,7 @@ const IndustriesTable = () => {
                 onClose={closeModal}
                 onAddIndustry={handleAdd}
             />}
-            {hasPermission("industries.edit") && modalType === 'edit' && <EditIndustryModal
+            {hasPermission("industries.update") && modalType === 'edit' && <EditIndustryModal
                 open={true}
                 industry={selectedIndustry}
                 onClose={closeModal}

@@ -1,4 +1,10 @@
 {
+  "events": "wydarzenia",
+  "venues": "baza miejsc",
+  "preparation_templates": "szablony przygotowania",
+  "equipment": "sprzęt",
+  "consumables": "produkty i materiały",
+  "orders": "produkcja kuchni",
   "companies": "firmy",
   "departments": "departamenty",
   "employees": "pracownicy",

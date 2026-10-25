@@ -332,7 +332,7 @@ const EmployeesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {/* {hasPermission("employees.edit") && (
+                                        {/* {hasPermission("employees.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', employee)}><Edit /></IconButton>
                                             </Tooltip>
@@ -378,7 +378,7 @@ const EmployeesTable = () => {
                 allowedTypes={["xlsx"]}
             />}
 
-            {hasPermission("employees.preview") && modalType === 'preview' && <PreviewEmployeeModal
+            {hasPermission("employees.view") && modalType === 'preview' && <PreviewEmployeeModal
                 open={true}
                 selectedEmployee={selectedEmployee}
                 onClose={closeModal}
@@ -390,7 +390,7 @@ const EmployeesTable = () => {
                 onClose={closeModal}
                 onDeleteConfirm={handleDelete} />}
 
-            {/* {hasPermission("employees.edit") && modalType === 'edit' && <EditEmployeeModal
+            {/* {hasPermission("employees.update") && modalType === 'edit' && <EditEmployeeModal
                 open={true}
                 employee={selectedEmployee}
                 onClose={closeModal}

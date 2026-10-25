@@ -1,4 +1,7 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useState } from "react";
 import {
   Button,
@@ -9,8 +12,12 @@ import {
   Stack,
   TextField,
   Typography,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useUser } from "@/app/context/userContext";
+import { RowAction } from "../common/RowAction";
 import { useApi, useAction, useRemote } from "./api";
 import { Template, TemplateLine, Page } from "./types";
 import {
@@ -22,7 +29,8 @@ import {
   Permission,
   unitLabels,
 } from "./ui";
-import { Lookup, LookupItem } from "./Lookup";
+import { LookupItem } from "./Lookup";
+import { PreparationLookup } from "./PreparationLookup";
 export function TemplatesPage() {
   const api = useApi();
   const { hasPermission } = useUser();
@@ -36,7 +44,6 @@ export function TemplatesPage() {
       : null,
   );
   const [edit, setEdit] = useState<Partial<Template> | null>(null);
-  const [kind, setKind] = useState("equipment");
   const [item, setItem] = useState<LookupItem | null>(null);
   const [archive, setArchive] = useState<Template | null>(null);
   const update = (index: number, patch: Partial<TemplateLine>) =>
@@ -48,14 +55,20 @@ export function TemplatesPage() {
     });
   return (
     <Permission name="preparation_templates.list">
-      <Panel title="Szablony kompletacji">
-        <Typography color="text.secondary" mb={2}>
-          Gotowe listy sprzętu i materiałów do wielokrotnego użycia. Aby użyć szablonu, otwórz wydarzenie, przejdź do zakładki Kompletacja i wybierz „Zastosuj szablon do listy”.
-        </Typography>
-        <Typography mb={2}>
-          Stałe ilości albo przeliczenie na liczbę gości z zapasem. Przykład: 1
-          warnik na 50 gości, 1 zestaw kawowy na osobę + 10% zapasu.
-        </Typography>
+      <Panel title={
+        <>
+          Szablony kompletacji
+          <Tooltip
+            title="Gotowe listy sprzętu i materiałów do wielokrotnego użycia. Aby użyć szablonu, otwórz wydarzenie, przejdź do zakładki Kompletacja i wybierz „Zastosuj szablon do listy”. Szablon może zawierać stałe ilości albo przeliczać je na liczbę gości z zapasem, np. 1 warnik na 50 gości lub 1 zestaw kawowy na osobę + 10% zapasu."
+            describeChild
+            arrow
+          >
+            <IconButton size="small" aria-label="Informacje o szablonach kompletacji" sx={{ ml: 1 }}>
+              <InfoOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </>
+      }>
         <Stack direction="row" gap={2} flexWrap="wrap">
           <TextField
             size="small"
@@ -76,19 +89,16 @@ export function TemplatesPage() {
             }}
           />
           {hasPermission("preparation_templates.create") && (
-            <Button
+            <Button color="success" startIcon={<AddIcon fontSize="medium" />}
               variant="contained"
               onClick={() => setEdit({ name: "", description: "", lines: [] })}
             >
               Dodaj szablon
             </Button>
           )}
-          <Button onClick={remote.reload}>Odśwież</Button>
+          <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={remote.reload}>Odśwież</Button>
         </Stack>
-        <Feedback
-          error={remote.error || action.error}
-          success={action.success}
-        />
+        <Feedback error={remote.error} />
         {remote.loading && <Loading />}
         {remote.data?.items.map((t) => (
           <Panel key={t.uuid} title={t.name}>
@@ -96,7 +106,9 @@ export function TemplatesPage() {
               {t.description} · {t.active ? "Aktywny" : "Archiwalny"}
             </Typography>
             {hasPermission("preparation_templates.view") && (
-              <Button
+              <RowAction
+                action={hasPermission("preparation_templates.update") ? "edit" : "preview"}
+                label={hasPermission("preparation_templates.update") ? "Edytuj szablon" : "Podgląd szablonu"}
                 onClick={() =>
                   action.run(
                     async () =>
@@ -106,20 +118,18 @@ export function TemplatesPage() {
                     "Wczytano szablon.",
                   )
                 }
-              >
-                {hasPermission("preparation_templates.update")
-                  ? "Edytuj szablon"
-                  : "Podgląd szablonu"}
-              </Button>
+              />
             )}
             {hasPermission(
               t.active
                 ? "preparation_templates.delete"
                 : "preparation_templates.restore",
             ) && (
-              <Button onClick={() => setArchive(t)}>
-                {t.active ? "Archiwizuj" : "Przywróć"}
-              </Button>
+              <RowAction
+                action={t.active ? "archive" : "restore"}
+                label={t.active ? "Archiwizuj" : "Przywróć"}
+                onClick={() => setArchive(t)}
+              />
             )}
           </Panel>
         ))}
@@ -147,7 +157,7 @@ export function TemplatesPage() {
               });
             }}
           >
-            <DialogTitle>Szablon kompletacji</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Szablon kompletacji</DialogTitle>
             <DialogContent>
               <fieldset
                 disabled={
@@ -172,37 +182,36 @@ export function TemplatesPage() {
                       setEdit({ ...edit, description: e.target.value })
                     }
                   />
-                  <Stack direction="row" gap={2}>
-                    <FieldSelect
-                      label="Rodzaj pozycji"
-                      value={kind}
-                      onChange={(v) => {
-                        setKind(v);
-                        setItem(null);
-                      }}
-                      options={{ equipment: "Sprzęt", consumable: "Produkt" }}
-                    />
-                    <Lookup
-                      key={kind}
-                      label="Pozycja katalogowa"
-                      path={
-                        kind === "equipment"
-                          ? "/equipment/options"
-                          : "/consumables/options"
-                      }
-                      value={item}
-                      onChange={setItem}
-                    />
-                    <Button
+                  <Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
+                    <Stack direction="row" gap={0.5} alignItems="center" sx={{ flex: 1, minWidth: 260 }}>
+                      <PreparationLookup
+                        label="Pozycja katalogowa"
+                        value={item}
+                        onChange={setItem}
+                      />
+                      <Tooltip
+                        title="Wyszukaj rzecz po nazwie lub kodzie, np. stół cateringowy albo serwetki. Rodzaj — sprzęt lub produkt — zostanie pobrany automatycznie z katalogu. Jeśli rzeczy nie ma na liście, najpierw dodaj ją w sekcji Sprzęt albo Produkty i materiały. Następnie kliknij Dodaj do szablonu i podaj potrzebną ilość."
+                        describeChild
+                        arrow
+                      >
+                        <IconButton size="small" aria-label="Wyjaśnienie: Pozycja katalogowa">
+                          <HelpOutlineIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                    <Button color="success" variant="contained" startIcon={<AddIcon fontSize="medium" />}
                       disabled={!item}
                       onClick={() => {
-                        if (!item) return;
+                        if (
+                          !item ||
+                          (item.kind !== "equipment" && item.kind !== "consumable")
+                        ) return;
                         setEdit({
                           ...edit,
                           lines: [
                             ...(edit?.lines ?? []),
                             {
-                              kind,
+                              kind: item.kind,
                               itemUuid: item.uuid,
                               name: item.name,
                               unit: item.unit,
@@ -330,7 +339,7 @@ export function TemplatesPage() {
                           update(i, { instructions: e.target.value })
                         }
                       />
-                      <Button
+                      <RowAction action="delete" label="Usuń ze szablonu"
                         onClick={() =>
                           setEdit({
                             ...edit,
@@ -339,20 +348,17 @@ export function TemplatesPage() {
                             ),
                           })
                         }
-                      >
-                        Usuń ze szablonu
-                      </Button>
+                      />
                     </Stack>
                   ))}
                 </Stack>
               </fieldset>
-              <Feedback error={action.error} />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setEdit(null)}>Zamknij</Button>
+              <Button variant="contained" color="primary" onClick={() => setEdit(null)}>Zamknij</Button>
               {(!edit?.uuid ||
                 hasPermission("preparation_templates.update")) && (
-                <Button type="submit" disabled={action.busy}>
+                <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>
                   Zapisz szablon
                 </Button>
               )}
@@ -360,14 +366,14 @@ export function TemplatesPage() {
           </form>
         </Dialog>
         <Dialog open={archive !== null} onClose={() => setArchive(null)}>
-          <DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
             {archive?.active ? "Archiwizować szablon?" : "Przywrócić szablon?"}
           </DialogTitle>
           <DialogContent>
             Listy wcześniejszych wydarzeń pozostaną bez zmian.
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setArchive(null)}>Anuluj</Button>
+            <Button color="primary" variant="contained" onClick={() => setArchive(null)}>Anuluj</Button>
             <Button
               disabled={action.busy}
               onClick={() =>

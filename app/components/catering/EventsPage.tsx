@@ -1,6 +1,8 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useState } from "react";
-import Link from "next/link";
+import { RowAction } from "../common/RowAction";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -107,11 +109,11 @@ export function EventsPage() {
             }}
           />
           {hasPermission("events.create") && (
-            <Button variant="contained" onClick={() => setCreate(true)}>
+            <Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" onClick={() => setCreate(true)}>
               Dodaj wydarzenie
             </Button>
           )}
-          <Button onClick={remote.reload}>Odśwież</Button>
+          <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={remote.reload}>Odśwież</Button>
         </Stack>
         <Feedback error={remote.error} />
         {remote.loading && <Loading />}
@@ -140,12 +142,11 @@ export function EventsPage() {
                   </TableCell>
                   <TableCell>
                     {hasPermission("events.view") && (
-                      <Button
-                        component={Link}
+                      <RowAction
+                        action="preview"
+                        label="Otwórz wydarzenie"
                         href={"/catering/events/" + event.uuid}
-                      >
-                        Otwórz wydarzenie
-                      </Button>
+                      />
                     )}
                   </TableCell>
                 </TableRow>
@@ -167,12 +168,12 @@ export function EventsPage() {
           fullWidth
           maxWidth="lg"
         >
-          <DialogTitle>Planowanie wydarzenia</DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Planowanie wydarzenia</DialogTitle>
           <DialogContent>
             <EventForm
               onSaved={(event) => router.push("/catering/events/" + event.uuid)}
             />
-            <Button onClick={() => setCreate(false)}>Zamknij formularz</Button>
+            <Button variant="contained" color="primary" onClick={() => setCreate(false)}>Zamknij formularz</Button>
           </DialogContent>
         </Dialog>
       </Panel>

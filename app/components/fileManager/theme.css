@@ -1,0 +1,41 @@
+.eventcater-file-manager .wx-willow-theme {
+    --wx-color-primary: #34495e;
+    --wx-color-primary-selected: #e7edf2;
+    --wx-color-primary-font: #fff;
+    --wx-color-secondary-hover: rgba(52, 73, 94, 0.08);
+    --wx-color-secondary-font: #34495e;
+    --wx-color-secondary-font-hover: #263747;
+    --wx-color-secondary-border: #34495e;
+    --wx-color-success: #2e7d32;
+    --wx-color-danger: #d32f2f;
+    --wx-color-info: #1976d2;
+    --wx-color-warning: #ed6c02;
+    --wx-color-font: #34495e;
+    --wx-color-font-alt: #64748b;
+    --wx-icon-color: #64748b;
+    --wx-background: #fff;
+    --wx-background-alt: #f5f7f9;
+    --wx-background-hover: #edf1f5;
+    --wx-font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    --wx-button-primary-pressed: #263747;
+    --wx-button-danger-pressed: #b71c1c;
+    --wx-border: 1px solid #dce2e8;
+    --wx-table-select-background: #e7edf2;
+    --wx-table-header-background: #f5f7f9;
+    --wx-table-border: 1px solid #dce2e8;
+    --wx-fm-background: #f5f7f9;
+    --wx-fm-select-background: #e7edf2;
+    --wx-fm-grid-header-color: #f5f7f9;
+    --wx-fm-grid-border: 1px solid #dce2e8;
+    --wx-fm-button-font-color: #34495e;
+    --wx-fm-box-shadow: 0 1px 3px rgba(52, 73, 94, 0.1);
+}
+
+.eventcater-file-manager .wx-filemanager .wx-button.wx-primary.wx-block {
+    background-color: #2e7d32;
+    color: #fff;
+}
+
+.eventcater-file-manager .wx-filemanager .wx-button.wx-primary.wx-block:hover {
+    background-color: #1b5e20;
+}

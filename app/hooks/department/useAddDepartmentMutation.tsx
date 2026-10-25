@@ -14,8 +14,8 @@ const addDepartment = async (department: Department, token: string): Promise<str
             description: department.description,
             parentDepartmentUUID: department.parentDepartment?.uuid !== '' ? department.parentDepartment?.uuid : null,
             active: department.active,
-            phones: department.phones.filter(p => p.trim() !== ""),
-            emails: department.emails.filter(e => e.trim() !== ""),
+            phones: department.phones.map(phone => phone.trim()).filter(Boolean),
+            emails: department.emails.map(email => email.trim()).filter(Boolean),
             websites: department.webs.filter(w => w.trim() !== ""),
             address: department.address,
             createdAt: department.createdAt

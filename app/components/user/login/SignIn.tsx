@@ -7,7 +7,7 @@ import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
-import { CssBaseline, Divider, Card as MuiCard } from '@mui/material';
+import { Autocomplete, CssBaseline, Divider, Card as MuiCard } from '@mui/material';
 import ForgotPassword from './ForgotPassword';
 import getSignUpTheme from '../register/theme/getSignUpTheme';
 import {
@@ -71,6 +71,26 @@ export default function SignIn() {
     const [mode] = React.useState<PaletteMode>('light');
     const SignUpTheme = createTheme(getSignUpTheme(mode));
     const { login } = useUser();
+    const [tenantSlug, setTenantSlug] = React.useState('');
+    const [tenantOptions, setTenantOptions] = React.useState<{ slug: string; name: string }[]>([]);
+
+    React.useEffect(() => {
+        let current = true;
+        const preferred = new URLSearchParams(window.location.search).get('tenant') || localStorage.getItem('selected_tenant') || '';
+        setTenantSlug(preferred === 'default' ? '' : preferred);
+        fetch('/api/saas/tenant-options')
+            .then(response => {
+                if (!response.ok) throw new Error('Nie udało się wczytać listy firm. Wpisz kod firmy.');
+                return response.json();
+            })
+            .then(data => {
+                if (!current) return;
+                setTenantOptions(data.items);
+                if ((!preferred || preferred === 'default') && data.items.length === 1) setTenantSlug(data.items[0].slug);
+            })
+            .catch(error => { if (current) setBackendErrorMessage(error.message); });
+        return () => { current = false; };
+    }, []);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -82,8 +102,13 @@ export default function SignIn() {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (emailError || passwordError) {
+        setBackendErrorMessage('');
+        if (!validateInputs()) {
             return false;
+        }
+        if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(tenantSlug.trim())) {
+            setBackendErrorMessage('Wybierz firmę lub wpisz jej kod.');
+            return;
         }
 
         const data = new FormData(event.currentTarget);
@@ -91,7 +116,7 @@ export default function SignIn() {
         const passwordData = String(data.get('password') ?? '');
 
         try {
-            await login(emailData, passwordData, String(data.get('tenantSlug') || 'default'));
+            await login(emailData, passwordData, tenantSlug.trim());
         } catch (err: unknown) {
             if (
                 typeof err === 'object' &&
@@ -170,7 +195,19 @@ export default function SignIn() {
                         >
                             <FormControl>
                                 <FormLabel htmlFor="tenantSlug">Kod firmy</FormLabel>
-                                <TextField id="tenantSlug" name="tenantSlug" defaultValue="default" required helperText="Kod otrzymany od administratora systemu" inputProps={{pattern: '[a-z0-9][a-z0-9-]{1,62}', maxLength: 63}} />
+                                <Autocomplete
+                                    id="tenantSlug"
+                                    freeSolo
+                                    options={tenantOptions}
+                                    getOptionLabel={option => typeof option === 'string' ? option : option.slug}
+                                    inputValue={tenantSlug}
+                                    onInputChange={(_, value) => setTenantSlug(value)}
+                                    renderOption={(props, option) => {
+                                        const { key, ...attributes } = props;
+                                        return <li key={key} {...attributes}>{option.name} ({option.slug})</li>;
+                                    }}
+                                    renderInput={params => <TextField {...params} id="tenantSlug" name="tenantSlug" required helperText={tenantOptions.find(option => option.slug === tenantSlug)?.name || 'Wybierz firmę z listy lub wpisz jej kod'} inputProps={{ ...params.inputProps, maxLength: 63 }} />}
+                                />
                             </FormControl>
                             <FormControl>
                                 <FormLabel htmlFor="email">{t('loginForm.label.email')}</FormLabel>

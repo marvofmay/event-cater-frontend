@@ -25,7 +25,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
                 },
             }}
         >
-            <DialogTitle>Reset password</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Reset password</DialogTitle>
             <DialogContent
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
             >

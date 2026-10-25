@@ -38,10 +38,10 @@ const PositionsList: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-rows-[10px_1fr_10px] min-h-screen p-1 pb-1 sm:p-1 font-[family-name:var(--font-geist-sans)]">
+    <div className="p-1 font-[family-name:var(--font-geist-sans)]" style={{ width: '100%', minWidth: 0 }}>
       <main>
         <Box display="flex" justifyContent="center" alignItems="center">
-          <Box width="90%">
+          <Box width="100%" sx={{ minWidth: 0, px: { xs: 1, md: 2 }, py: 1 }}>
             <Typography variant="h6" gutterBottom>
               {t("position.list.title")}
             </Typography>

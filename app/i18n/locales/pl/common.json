@@ -44,6 +44,7 @@
     "events": "wydarzenia",
     "venues": "miejsca obsługi",
     "equipment": "sprzęt",
+    "locations": "miejsca sprzętu",
     "supplies": "produkty",
     "templates": "szablony",
     "kitchen": "kuchnia"
@@ -92,7 +93,7 @@
   "rowPerPage": "Ilość wierszy na stronę",
   "of": "z",
   "uploadFile": "Wgraj plik",
-  "view": "pdogląd",
+  "view": "podgląd",
   "edit": "edycja",
   "assignAccessesToRole": "przypisz dostępy i uprawnienia",
   "assignDepartmentsToPosition": "przypiywanie departamentów",

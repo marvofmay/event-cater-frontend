@@ -1,4 +1,6 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -16,6 +18,7 @@ import {
   Chip,
 } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
+import { RowAction } from "../common/RowAction";
 import {
   useApi,
   useAction,
@@ -88,7 +91,7 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
       <Button component={Link} href="/catering/events">
         ← Lista wydarzeń
       </Button>
-      <Feedback error={remote.error || action.error} success={action.success} />
+      <Feedback error={remote.error} />
       {remote.loading && <Loading />}
       {event && (
         <>
@@ -105,6 +108,10 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
               {event.date} · {event.guestCount ?? "Nie ustalono liczby"} gości
             </Typography>
             <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<RefreshIcon />}
+              disabled={remote.loading}
               onClick={() => {
                 if (
                   !dirty ||
@@ -241,7 +248,7 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
             <HistoryPanel path={"/events/" + uuid + "/history"} />
           )}
           <Dialog open={!!nextStatus} onClose={() => setNextStatus("")}>
-            <DialogTitle>Zmienić etap wydarzenia?</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Zmienić etap wydarzenia?</DialogTitle>
             <DialogContent>
               {stateLabels[nextStatus]}.{" "}
               {nextStatus === "cancelled"
@@ -371,7 +378,7 @@ function VenueSelection({
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <Button
+          <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained"
             disabled={
               action.busy ||
               !name.trim() ||
@@ -394,7 +401,6 @@ function VenueSelection({
           </Button>
         </Stack>
       )}
-      <Feedback error={action.error} success={action.success} />
     </Panel>
   );
 }
@@ -439,12 +445,11 @@ function ContactsSection({
           }}
         />
         {allowed && (
-          <Button type="submit" disabled={action.busy}>
+          <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>
             Zapisz kontakty
           </Button>
         )}
       </form>
-      <Feedback error={action.error} />
     </Panel>
   );
 }
@@ -498,17 +503,16 @@ function MenuSection({
           }}
         />
         {allowed && (
-          <Button
+          <Button color="primary"
             type="submit"
             variant="contained"
             disabled={action.busy}
-            sx={{ mt: 2 }}
+            sx={[{ mt: 2 }, { backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }]}
           >
             Zapisz menu wydarzenia
           </Button>
         )}
       </form>
-      <Feedback error={action.error} />
     </Panel>
   );
 }
@@ -552,7 +556,9 @@ function StaffSection({
           </Typography>
           {allowed && (
             <>
-              <Button
+              <RowAction
+                action="edit"
+                label="Zmień przydział"
                 onClick={() => {
                   setEmployee({
                     uuid: person.employeeUuid,
@@ -563,12 +569,8 @@ function StaffSection({
                   setEnd(localDateTime(person.endsAt, event.timezone));
                   setNotes(person.notes ?? "");
                 }}
-              >
-                Zmień przydział
-              </Button>
-              <Button onClick={() => setRemove(person.employeeUuid)}>
-                Usuń przydział
-              </Button>
+              />
+              <RowAction action="delete" label="Usuń przydział" onClick={() => setRemove(person.employeeUuid)} />
             </>
           )}
         </Stack>
@@ -645,7 +647,7 @@ function StaffSection({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
-            <Button
+            <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained"
               type="submit"
               disabled={action.busy || !employee || !functions.length}
             >
@@ -654,12 +656,11 @@ function StaffSection({
           </Stack>
         </form>
       )}
-      <Feedback error={action.error} />
       <Dialog open={!!remove} onClose={() => setRemove(null)}>
-        <DialogTitle>Usunąć przydział pracownika?</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć przydział pracownika?</DialogTitle>
         <DialogActions>
-          <Button onClick={() => setRemove(null)}>Anuluj</Button>
-          <Button
+          <Button color="primary" variant="contained" onClick={() => setRemove(null)}>Anuluj</Button>
+          <Button color="error" variant="contained"
             disabled={action.busy}
             onClick={() =>
               action.run(async () => {
@@ -702,7 +703,7 @@ function KitchenSection({
   return (
     <>
       <Feedback
-        error={remote.status === 404 ? "" : remote.error || action.error}
+        error={remote.status === 404 ? "" : remote.error}
       />
       {remote.data ? (
         <KitchenCard
@@ -778,7 +779,6 @@ function KitchenSection({
                   </Stack>
                 </form>
               )}
-            <Feedback error={action.error} />
           </Panel>
         )
       )}
@@ -814,7 +814,9 @@ function MediaSection({
             {attachment.name} · {(attachment.size / 1024 / 1024).toFixed(1)} MB
             · {attachment.description}
           </Typography>
-          <Button
+          <RowAction
+            action="download"
+            label="Pobierz"
             onClick={() =>
               action.run(
                 () =>
@@ -826,13 +828,9 @@ function MediaSection({
                 "Pobrano plik.",
               )
             }
-          >
-            Pobierz
-          </Button>
+          />
           {allowed && (
-            <Button onClick={() => setRemove(attachment.uuid)}>
-              Usuń załącznik
-            </Button>
+            <RowAction action="delete" label="Usuń załącznik" onClick={() => setRemove(attachment.uuid)} />
           )}
         </Stack>
       ))}
@@ -878,18 +876,17 @@ function MediaSection({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-            <Button type="submit" disabled={action.busy || !file}>
+            <Button color="success" variant="contained" startIcon={<AddIcon fontSize="medium" />} type="submit" disabled={action.busy || !file}>
               Dodaj materiał
             </Button>
           </Stack>
         </form>
       )}
-      <Feedback error={action.error} success={action.success} />
       <Dialog open={!!remove} onClose={() => setRemove(null)}>
-        <DialogTitle>Usunąć załącznik z wydarzenia?</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć załącznik z wydarzenia?</DialogTitle>
         <DialogActions>
-          <Button onClick={() => setRemove(null)}>Anuluj</Button>
-          <Button
+          <Button color="primary" variant="contained" onClick={() => setRemove(null)}>Anuluj</Button>
+          <Button color="error" variant="contained"
             disabled={action.busy}
             onClick={() =>
               action.run(async () => {

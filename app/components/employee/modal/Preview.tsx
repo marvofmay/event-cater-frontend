@@ -31,7 +31,7 @@ const PreviewEmployeeModal: React.FC<PreviewEmployeeModalProps> = ({ open, selec
                 UUID: selectedEmployee?.uuid || 'N/D',
                 [t('employee.form.field.firstName')]: selectedEmployee?.firstName || 'N/D',
                 [t('employee.form.field.lastName')]: selectedEmployee?.lastName || 'N/D',
-                [t('employee.form.field.pesel')]: selectedEmployee?.pesel || 'N/D',
+                [t('employee.form.field.pesel')]: selectedEmployee?.pesel ? `${selectedEmployee.pesel}${selectedEmployee.isPeselFake ? ' — Fikcyjny PESEL' : ''}` : 'N/D',
                 [t('employee.form.field.phone')]: phones.length > 0 ? phones.join(', ') : 'N/D',
                 [t('employee.form.field.email')]: emails.length > 0 ? emails.join(', ') : 'N/D',
                 [t('employee.form.field.company')]: selectedEmployee?.company?.fullName || 'N/D',

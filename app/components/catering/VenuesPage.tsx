@@ -1,4 +1,7 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useState } from "react";
 import {
   Button,
@@ -15,8 +18,11 @@ import {
   TableBody,
   TableContainer,
   Typography,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
+import { RowAction } from "../common/RowAction";
 import { useApi, useAction, useRemote } from "./api";
 import { Feedback, FieldSelect, Loading, Pager, Panel, Permission } from "./ui";
 import { Page, Venue } from "./types";
@@ -38,11 +44,20 @@ export function VenuesPage() {
   );
   return (
     <Permission name="venues.list">
-      <Panel title="Baza miejsc obsługi">
-        <Typography color="text.secondary" mb={2}>
-          Zapisz miejsce raz i wczytuj je przy kolejnych wyjazdach. Każde
-          wydarzenie zachowuje własny adres i kontakty.
-        </Typography>
+      <Panel title={
+        <>
+          Baza miejsc obsługi
+          <Tooltip
+            title="Zapisz miejsce raz i wczytuj je przy kolejnych wyjazdach. Każde wydarzenie zachowuje własny adres i kontakty."
+            describeChild
+            arrow
+          >
+            <IconButton size="small" aria-label="Informacje o bazie miejsc obsługi" sx={{ ml: 1 }}>
+              <InfoOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </>
+      }>
         <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
           <TextField
             size="small"
@@ -63,7 +78,7 @@ export function VenuesPage() {
             }}
           />
           {hasPermission("venues.create") && (
-            <Button
+            <Button color="success" startIcon={<AddIcon fontSize="medium" />}
               variant="contained"
               onClick={() =>
                 setEdit({
@@ -78,12 +93,17 @@ export function VenuesPage() {
               Dodaj miejsce
             </Button>
           )}
-          <Button onClick={remote.reload}>Odśwież</Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<RefreshIcon />}
+            disabled={remote.loading}
+            onClick={remote.reload}
+          >
+            Odśwież
+          </Button>
         </Stack>
-        <Feedback
-          error={remote.error || action.error}
-          success={action.success}
-        />
+        <Feedback error={remote.error} />
         {remote.loading && <Loading />}
         <TableContainer>
           <Table>
@@ -110,7 +130,9 @@ export function VenuesPage() {
                   <TableCell>{v.active ? "Aktywne" : "Archiwalne"}</TableCell>
                   <TableCell>
                     {hasPermission("venues.view") && (
-                      <Button
+                      <RowAction
+                        action={hasPermission("venues.update") ? "edit" : "preview"}
+                        label={hasPermission("venues.update") ? "Edytuj" : "Podgląd"}
                         onClick={() =>
                           action.run(
                             async () =>
@@ -120,16 +142,16 @@ export function VenuesPage() {
                             "Wczytano miejsce.",
                           )
                         }
-                      >
-                        {hasPermission("venues.update") ? "Edytuj" : "Podgląd"}
-                      </Button>
+                      />
                     )}
                     {hasPermission(
                       v.active ? "venues.delete" : "venues.restore",
                     ) && (
-                      <Button onClick={() => setArchive(v)}>
-                        {v.active ? "Archiwizuj" : "Przywróć"}
-                      </Button>
+                      <RowAction
+                        action={v.active ? "archive" : "restore"}
+                        label={v.active ? "Archiwizuj" : "Przywróć"}
+                        onClick={() => setArchive(v)}
+                      />
                     )}
                   </TableCell>
                 </TableRow>
@@ -160,7 +182,7 @@ export function VenuesPage() {
               });
             }}
           >
-            <DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
               {edit?.uuid ? "Miejsce obsługi" : "Nowe miejsce obsługi"}
             </DialogTitle>
             <DialogContent>
@@ -205,12 +227,11 @@ export function VenuesPage() {
                   />
                 </Stack>
               </fieldset>
-              <Feedback error={action.error} />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setEdit(null)}>Zamknij</Button>
+              <Button variant="contained" color="primary" onClick={() => setEdit(null)}>Zamknij</Button>
               {(!edit?.uuid || hasPermission("venues.update")) && (
-                <Button type="submit" disabled={action.busy}>
+                <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>
                   Zapisz miejsce
                 </Button>
               )}
@@ -218,14 +239,14 @@ export function VenuesPage() {
           </form>
         </Dialog>
         <Dialog open={archive !== null} onClose={() => setArchive(null)}>
-          <DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
             {archive?.active ? "Archiwizować miejsce?" : "Przywrócić miejsce?"}
           </DialogTitle>
           <DialogContent>
             {archive?.name}. Adresy wcześniejszych wydarzeń pozostaną bez zmian.
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setArchive(null)}>Anuluj</Button>
+            <Button color="primary" variant="contained" onClick={() => setArchive(null)}>Anuluj</Button>
             <Button
               disabled={action.busy}
               onClick={() =>

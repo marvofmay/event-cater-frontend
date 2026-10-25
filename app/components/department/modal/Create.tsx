@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Button,
     Dialog,
@@ -16,7 +16,7 @@ import {
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import { Formik, Form, Field, FormikHelpers } from 'formik';
+import { Formik, Form, Field, FormikHelpers, getIn } from 'formik';
 import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import Department from '@/app/types/Department';
@@ -105,6 +105,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
         emails: Yup.array()
             .of(
                 Yup.string()
+                    .trim()
                     .email(t('validation.invalidEmail'))
                     .nullable()
             )
@@ -113,10 +114,14 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
     const [errorAPI, setErrorAPI] = useState<string | null>(null);
     const [errorsAPI, setErrorsAPI] = useState<Record<string, string> | null>(null);
 
+    const submitting = useRef(false);
+
     const handleSubmit = async (
         values: Department,
         helpers: FormikHelpers<Department>
     ) => {
+        if (submitting.current) return;
+        submitting.current = true;
         setErrorAPI(null);
         setErrorsAPI(null);
 
@@ -132,6 +137,8 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
 
             setErrorAPI(message);
             setErrorsAPI(errors);
+        } finally {
+            submitting.current = false;
         }
     };
 
@@ -221,7 +228,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
             >
-                {({ values, errors, touched, setFieldValue }) => {
+                {({ values, errors, touched, setFieldValue, setFieldTouched, submitCount, isSubmitting }) => {
 
                     useEffect(() => {
                         setFieldValue('parentDepartment.uuid', '');
@@ -294,7 +301,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
                                                 companies.find(c => c.uuid === values.company?.uuid) ?? null
                                             }
                                             onChange={(_, value) => {
-                                                const uuid = value?.uuid ?? null;
+                                                const uuid = value?.uuid ?? '';
                                                 setFieldValue('company.uuid', uuid);
                                                 setSelectedCompanyUUID(uuid);
                                                 setFieldValue('parentDepartment.uuid', null);
@@ -312,11 +319,14 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
                                                     fullWidth
                                                     label={t('department.form.field.company')}
                                                     margin="dense"
-                                                    error={isErrorCompanies}
+                                                    name="company.uuid"
+                                                    required
+                                                    onBlur={() => setFieldTouched('company.uuid', true)}
+                                                    error={isErrorCompanies || Boolean((getIn(touched, 'company.uuid') || submitCount > 0) && getIn(errors, 'company.uuid'))}
                                                     helperText={
                                                         isErrorCompanies
                                                             ? t('company.list.loading.failed')
-                                                            : undefined
+                                                            : (getIn(touched, 'company.uuid') || submitCount > 0) ? getIn(errors, 'company.uuid') : undefined
                                                     }
                                                 />
                                             )}
@@ -467,19 +477,15 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
                             </DialogContent>
 
                             <DialogActions>
-                                <Button
+                                <Button color="primary"
                                     onClick={onClose}
                                     variant="contained"
-                                    sx={{
-                                        backgroundColor: '#999a99',
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                    }}
                                 >
                                     {t('common.button.cancel')}
                                 </Button>
-                                <Button
+                                <Button color="primary"
                                     type="submit"
+                                    disabled={isSubmitting}
                                     variant="contained"
                                     sx={{
                                         backgroundColor: '#34495e',

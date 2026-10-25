@@ -1,4 +1,6 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import { RowAction } from "../components/common/RowAction";
 import { FormEvent, useEffect, useState } from 'react';
 import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
 
@@ -50,27 +52,27 @@ export default function SaasPanel() {
             <Button type="submit" variant="contained" disabled={busy}>Zaloguj do SaaS</Button>
             <Button href="/login">Logowanie pracownika firmy</Button>
         </Stack></Box> : <>
-            <Stack direction="row" spacing={2} sx={{mb:2}}><Button variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button onClick={refresh}>Odśwież</Button><Button onClick={async()=>{try{await api('/logout','POST');}catch(e){setError((e as Error).message);}finally{sessionStorage.removeItem('saas_token');setToken(null);setItems([]);}}}>Wyloguj z SaaS</Button></Stack>
-            <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><Button onClick={()=>details(item)}>Zarządzaj</Button></TableCell></TableRow>)}</TableBody></Table></Box>
+            <Stack direction="row" spacing={2} sx={{mb:2}}><Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button onClick={refresh}>Odśwież</Button><Button onClick={async()=>{try{await api('/logout','POST');}catch(e){setError((e as Error).message);}finally{sessionStorage.removeItem('saas_token');setToken(null);setItems([]);}}}>Wyloguj z SaaS</Button></Stack>
+            <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><RowAction action="preview" label="Zarządzaj" onClick={()=>details(item)} /></TableCell></TableRow>)}</TableBody></Table></Box>
         </>}
-        <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth><Box component="form" onSubmit={create}><DialogTitle>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
+        <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth><Box component="form" onSubmit={create}><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
             <Alert severity="info">Klient powstanie jako nieaktywny. Otrzyma osobną bazę i własne konto administratora firmy.</Alert>
             <TextField name="name" label="Nazwa firmy" required inputProps={{maxLength:200}} />
             <TextField name="slug" label="Kod firmy" helperText="2–63 znaki: małe litery, cyfry, myślniki. Kod służy do logowania." required inputProps={{pattern:'[a-z0-9][a-z0-9-]{1,62}',maxLength:63}} />
             <TextField name="ownerEmail" label="E-mail administratora firmy" type="email" required inputProps={{maxLength:100}} />
             <TextField name="ownerPassword" label="Początkowe hasło administratora" type="password" autoComplete="new-password" required inputProps={{minLength:12,maxLength:72}} />
-        </Stack></DialogContent><DialogActions>{busy&&<CircularProgress size={22}/>}<Button disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
-        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle>{selected?.name} — zarządzanie</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
+        </Stack></DialogContent><DialogActions>{busy&&<CircularProgress size={22}/>}<Button color="primary" variant="contained" disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
+        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} — zarządzanie</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
             <Typography>{selected && provisioning[selected.provisioning]}</Typography>
             <Alert severity="info">Zawieszenie, dezaktywacja i usunięcie blokują dostęp do aplikacji. Usunięcie zachowuje dane; przywrócenie wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
             <TextField label="Status" select value={status} onChange={e=>setStatus(e.target.value)}>{Object.entries(statuses).map(([value,label])=><MenuItem key={value} value={value} disabled={value==='active'&&selected?.provisioning!=='ready' || selected?.status==='deleted'&&value!=='inactive'}>{label}</MenuItem>)}</TextField>
             <TextField label="Uzasadnienie zmiany" value={reason} multiline minRows={2} onChange={e=>setReason(e.target.value)} inputProps={{maxLength:1000}} />
-            <Button variant="contained" disabled={busy || !reason.trim() || status===selected?.status} onClick={changeStatus}>Zapisz status</Button>
+            <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" disabled={busy || !reason.trim() || status===selected?.status} onClick={changeStatus}>Zapisz status</Button>
             <Typography variant="h6">Historia</Typography>
             {selected?.history?.map((entry,index)=><Box key={index}><Typography>{entry.createdAt} · {entry.actor} · {entry.action}</Typography><Typography color="text.secondary">{entry.reason}</Typography></Box>)}
-        </Stack></DialogContent><DialogActions><Button disabled={busy} onClick={()=>setSelected(null)}>Zamknij</Button></DialogActions></Dialog>
+        </Stack></DialogContent><DialogActions><Button variant="contained" color="primary" disabled={busy} onClick={()=>setSelected(null)}>Zamknij</Button></DialogActions></Dialog>
     </Box>;
 }

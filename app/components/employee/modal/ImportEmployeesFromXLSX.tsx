@@ -48,6 +48,7 @@ const ImportEmployeesFromXLSXModal: React.FC<ImportEmployeesFromXLSXProps> = ({ 
             allowedTypes={allowedTypes}
             title={t('employee.modal.import.title')}
             errorsAPI={errorsAPI}
+            description={<p>Wymagane: imię, PESEL, telefon i e-mail oraz dane zatrudnienia. Nazwisko i adres są opcjonalne. Dla fikcyjnego PESEL-u wpisz 1 w dodatkowej kolumnie T (isPeselFake), a dla prawdziwego 0. PESEL musi mieć 11 cyfr i identyfikuje pracownika w kolejnych importach. Pusta kolumna T zachowuje dotychczasowe oznaczenie pracownika.</p>}
             sampleFileUrl="/samples/employees-import-example.xlsx"
         />
     );

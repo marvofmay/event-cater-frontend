@@ -359,7 +359,7 @@ const ContractTypesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("contract_types.edit") && (
+                                        {hasPermission("contract_types.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', contractType)}><Edit /></IconButton>
                                             </Tooltip>
@@ -392,7 +392,7 @@ const ContractTypesTable = () => {
                 />
             )}
 
-            {hasPermission("contract_types.preview") && modalType === 'preview' && <PreviewContractTypeModal
+            {hasPermission("contract_types.view") && modalType === 'preview' && <PreviewContractTypeModal
                 open={true}
                 selectedContractType={selectedContractType}
                 onClose={closeModal}
@@ -402,7 +402,7 @@ const ContractTypesTable = () => {
                 onClose={closeModal}
                 onAddContractType={handleAdd}
             />}
-            {hasPermission("contract_types.edit") && modalType === 'edit' && <EditContractTypeModal
+            {hasPermission("contract_types.update") && modalType === 'edit' && <EditContractTypeModal
                 open={true}
                 contractType={selectedContractType}
                 onClose={closeModal}

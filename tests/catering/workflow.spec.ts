@@ -103,7 +103,8 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
         await page.getByRole("option", { name: equipmentCategoryName, exact: true }).click();
         await dialog.getByLabel("Ilość posiadana").fill("200");
       } else {
-        await dialog.getByLabel("Kategoria").fill("Testy techniczne");
+        await dialog.getByRole("combobox", { name: "Kategoria produktu" }).click();
+        await page.getByRole("option", { name: "Napoje i dodatki", exact: true }).click();
       }
       const response = page.waitForResponse(
         (r) =>
@@ -131,8 +132,7 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
       .getByRole("option", { name: "Na liczbę gości", exact: true })
       .click();
     await dialog.getByLabel("Na ilu gości").fill("1");
-    await dialog.getByRole("combobox", { name: /Rodzaj pozycji/ }).click();
-    await page.getByRole("option", { name: "Produkt", exact: true }).click();
+    await expect(dialog.getByRole("combobox", { name: /Rodzaj pozycji/ })).toHaveCount(0);
     await lookup(page, "Pozycja katalogowa", productName);
     await dialog
       .getByRole("button", { name: "Dodaj do szablonu", exact: true })
@@ -149,6 +149,10 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
     const templateResult = await templateResponse;
     expect(templateResult.status()).toBe(201);
     const template = await templateResult.json();
+    expect(template.lines.map((line: { kind: string }) => line.kind)).toEqual([
+      "equipment",
+      "consumable",
+    ]);
     cleanup.push({ path: "/preparation-templates", uuid: template.uuid });
     await expect(dialog).toBeHidden();
     await page.goto("/catering/events");
@@ -160,9 +164,9 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
     await dialog.getByLabel("Tytuł wydarzenia").fill(eventName);
     await dialog.getByLabel("Data wydarzenia").fill("2026-12-31");
     await dialog.getByLabel("Liczba gości").fill("100");
-    await dialog.getByLabel("Gotowość cateringu").fill("2026-12-31T11:00");
-    await dialog.getByLabel("Początek wydawania").fill("2026-12-31T12:00");
-    await dialog.getByLabel("Koniec obsługi").fill("2026-12-31T16:00");
+    await dialog.getByLabel("Gotowość cateringu", { exact: true }).fill("11:00");
+    await dialog.getByLabel("Początek wydawania", { exact: true }).fill("12:00");
+    await dialog.getByLabel("Koniec obsługi", { exact: true }).fill("16:00");
     await dialog
       .getByRole("button", { name: "Utwórz wydarzenie", exact: true })
       .click();

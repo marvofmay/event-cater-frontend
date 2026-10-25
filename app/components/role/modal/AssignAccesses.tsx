@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 import {
   Box,
+  Alert,
   Button,
   Checkbox,
   CircularProgress,
@@ -19,8 +21,8 @@ import Role from "@/app/types/Role";
 import Access, { PermissionRef } from "@/app/types/Access";
 import useAccessesQuery from "@/app/hooks/access/useAccessesQuery";
 import useRoleQuery from "@/app/hooks/role/useRoleQuery";
-import useAssignAccessesMutation from "@/app/hooks/role/useAssignAccessesMutation";
-import useAssignPermissionsMutation from "@/app/hooks/role/useAssignPermissionsMutation";
+import useUpdateRoleAuthorizationMutation from "@/app/hooks/role/useUpdateRoleAuthorizationMutation";
+import { useUser } from "@/app/context/userContext";
 import { toast } from "react-toastify";
 
 interface AssignRoleAccessesModalProps {
@@ -41,11 +43,15 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
   const [selectedAccessUUIDs, setSelectedAccessUUIDs] = useState<string[]>([]);
   const [permissionsByAccess, setPermissionsByAccess] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const saving = useRef(false);
+  const { hasPermission } = useUser();
+  const canAssignAccesses = hasPermission("roles.assign_access_to_role");
+  const canAssignPermissions = hasPermission("roles.assign_permission_to_access_role");
 
-  const { data: accesses = [], isLoading: isLoadingAccesses } = useAccessesQuery();
-  const { data: role, isLoading: isLoadingRole } = useRoleQuery(selectedRole?.uuid ?? null);
-  const { mutateAsync: assignAccesses } = useAssignAccessesMutation();
-  const { mutateAsync: assignPermissions } = useAssignPermissionsMutation();
+  const { data: accesses = [], isFetching: isLoadingAccesses, error: accessError, refetch: refetchAccesses } = useAccessesQuery();
+  const { data: role, isFetching: isLoadingRole, error: roleError, refetch: refetchRole } = useRoleQuery(selectedRole?.uuid ?? null);
+  const { mutateAsync: updateAuthorization } = useUpdateRoleAuthorizationMutation();
 
   const accessesByUuid = useMemo(
     () => Object.fromEntries(accesses.map((access) => [access.uuid, access])),
@@ -53,9 +59,9 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
   );
 
   useEffect(() => {
-    if (!role) return;
+    if (!role || initialized || isLoadingAccesses || isLoadingRole || accessError || roleError) return;
 
-    const assignedAccesses = role.accesses ?? [];
+    const assignedAccesses = (role.accesses ?? []).filter(access => accessesByUuid[access.uuid]);
     setSelectedAccessUUIDs(assignedAccesses.map((access) => access.uuid));
     setPermissionsByAccess(
       Object.fromEntries(
@@ -72,7 +78,8 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
         }),
       ),
     );
-  }, [role, accessesByUuid]);
+    setInitialized(true);
+  }, [role, accessesByUuid, initialized, isLoadingAccesses, isLoadingRole, accessError, roleError]);
 
   const accessesByModule = useMemo(() => {
     return accesses.reduce<Record<string, Access[]>>((grouped, access) => {
@@ -110,22 +117,12 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!selectedRole) return;
+    if (!selectedRole || !initialized || saving.current || accessError || roleError) return;
 
+    saving.current = true;
     setIsSaving(true);
     try {
-      const accessMessage = await assignAccesses({
-        roleUUID: selectedRole.uuid,
-        accessesUUIDs: selectedAccessUUIDs,
-      });
-
-      if (selectedAccessUUIDs.length === 0) {
-        onSaved(accessMessage);
-        onClose();
-        return;
-      }
-
-      const permissionMessage = await assignPermissions({
+      const message = await updateAuthorization({
         roleUUID: selectedRole.uuid,
         accesses: selectedAccessUUIDs.map((accessUUID) => {
           const allowedUUIDs = new Set(
@@ -139,11 +136,12 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
         }),
       });
 
-      onSaved(permissionMessage);
+      onSaved(message);
       onClose();
-    } catch {
-      toast.error(t("role.assign.error"));
+    } catch (error) {
+      toast.error(axios.isAxiosError(error) ? error.response?.data?.message || t("role.assign.error") : t("role.assign.error"));
     } finally {
+      saving.current = false;
       setIsSaving(false);
     }
   };
@@ -156,12 +154,24 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
 
     return (
       <Box sx={{ pl: 1.5, pt: 0.5 }}>
+        <FormControlLabel
+          control={<Checkbox
+            size="small"
+            disabled={!canAssignPermissions || isSaving}
+            checked={availablePermissions.every(permission => (permissionsByAccess[access.uuid] ?? []).includes(permission.uuid))}
+            indeterminate={(permissionsByAccess[access.uuid]?.length ?? 0) > 0 && !availablePermissions.every(permission => (permissionsByAccess[access.uuid] ?? []).includes(permission.uuid))}
+            onChange={event => setPermissionsByAccess(current => ({ ...current, [access.uuid]: event.target.checked ? availablePermissions.map(permission => permission.uuid) : [] }))}
+          />}
+          label="Wszystkie czynności"
+        />
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 0.5 }}>
         {availablePermissions.map((permission: PermissionRef) => (
           <FormControlLabel
             key={`${access.uuid}-${permission.uuid}`}
             control={
               <Checkbox
                 size="small"
+                disabled={!canAssignPermissions || isSaving}
                 checked={(permissionsByAccess[access.uuid] ?? []).includes(permission.uuid)}
                 onChange={(event) =>
                   togglePermission(access.uuid, permission.uuid, event.target.checked)
@@ -173,6 +183,7 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
             sx={{ display: "block" }}
           />
         ))}
+        </Box>
       </Box>
     );
   };
@@ -189,6 +200,7 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
             control={
               <Checkbox
                 checked={accessChecked}
+                disabled={!canAssignAccesses || isSaving}
                 onChange={(event) => toggleAccess(access.uuid, event.target.checked)}
                 sx={{ color: "#34495e", "&.Mui-checked": { color: "#2ecc71" } }}
               />
@@ -207,6 +219,8 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
           />
           {accessChecked && (access.availablePermissions?.length ?? 0) > 0 && (
             <IconButton
+              aria-label={isOpen ? 'Zwiń uprawnienia' : 'Rozwiń uprawnienia'}
+              aria-expanded={isOpen}
               onClick={() => setOpenGroups((prev) => ({ ...prev, [groupKey]: !isOpen }))}
             >
               {isOpen ? <ExpandLess /> : <ExpandMore />}
@@ -223,7 +237,7 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+    <Dialog open={open} onClose={() => { if (!isSaving) onClose(); }} maxWidth="lg" fullWidth>
       <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
         {t("role.modal.assignAccesses.title")}
       </DialogTitle>
@@ -233,19 +247,26 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
             name: role?.name || selectedRole?.name || "",
           })}
         </Typography>
-        {isLoading ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Dostęp włącza sekcję modułu. Zaznacz osobno czynności, które rola może wykonywać.
+          Uprawnienia dotyczą pracowników tej firmy. Rola Superadministrator nie nadaje dostępu do panelu SaaS.
+        </Typography>
+        {(accessError || roleError) ? (
+          <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => { void refetchAccesses(); void refetchRole(); }}>Ponów</Button>}>
+            Nie udało się wczytać dostępów lub danych roli. Zapis jest zablokowany do czasu poprawnego wczytania.
+          </Alert>
+        ) : isLoading || !initialized ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
             <CircularProgress />
           </Box>
         ) : (
-          <Box display="flex" flexWrap="wrap" gap={2} mt={1}>
+          <Box display="grid" gap={2} mt={1} sx={{ gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, alignItems: 'start' }}>
             {Object.entries(accessesByModule).map(([moduleName, moduleAccesses]) => {
               const isSingleAccess = moduleAccesses.length === 1;
 
               return (
                 <Box
                   key={moduleName}
-                  flexBasis="32%"
                   sx={{
                     padding: "1rem",
                     backgroundColor: "#f5f5f5",
@@ -271,18 +292,17 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button
+        <Button color="primary"
           onClick={onClose}
           variant="contained"
           disabled={isSaving}
-          sx={{ backgroundColor: "#999a99", color: "white", fontWeight: "bold" }}
         >
           {t("common.button.cancel")}
         </Button>
-        <Button
+        <Button color="primary"
           onClick={handleSave}
           variant="contained"
-          disabled={isLoading || isSaving}
+          disabled={isLoading || isSaving || !initialized || !!accessError || !!roleError}
           sx={{ backgroundColor: "#34495e", color: "white", fontWeight: "bold" }}
         >
           {t("common.button.save")}

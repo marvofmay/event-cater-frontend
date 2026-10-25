@@ -23,6 +23,7 @@ interface UploadFileProps {
     title: string | undefined;
     errorsAPI?: Record<string, string[]>;
     sampleFileUrl?: string;
+    description?: React.ReactNode;
 }
 
 const defaultAllowedTypes = ["xlsx", "csv", "jpeg", "png", "jpg", "pdf", "doc", "docx"];
@@ -35,6 +36,7 @@ const UploadFileModal: React.FC<UploadFileProps> = ({
     title,
     errorsAPI = {},
     sampleFileUrl,
+    description,
 }) => {
     const { t } = useTranslation();
 
@@ -86,6 +88,7 @@ const UploadFileModal: React.FC<UploadFileProps> = ({
             </DialogTitle>
 
             <DialogContent>
+                {description}
                 {errorsAPI && (
                     <div style={{ color: 'red', marginBottom: '1rem' }}>
                         {Object.entries(errorsAPI).map(([key, value]) => (
@@ -154,10 +157,9 @@ const UploadFileModal: React.FC<UploadFileProps> = ({
             </DialogContent>
 
             <DialogActions>
-                <Button
+                <Button color="primary"
                     onClick={onClose}
                     variant="contained"
-                    sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}
                 >
                     {t('common.button.cancel')}
                 </Button>

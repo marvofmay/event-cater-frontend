@@ -1,4 +1,6 @@
 "use client";
+import AddIcon from "@mui/icons-material/Add";
+import { RowAction } from "../common/RowAction";
 import { Button, Stack, TextField } from "@mui/material";
 import { Contact } from "./types";
 export function ContactEditor({
@@ -40,16 +42,14 @@ export function ContactEditor({
             />
           ))}
           {!disabled && (
-            <Button
+            <RowAction action="delete" label="Usuń kontakt"
               onClick={() => onChange(value.filter((_, i) => i !== index))}
-            >
-              Usuń kontakt
-            </Button>
+            />
           )}
         </Stack>
       ))}
       {!disabled && (
-        <Button
+        <Button color="success" variant="contained" startIcon={<AddIcon fontSize="medium" />}
           sx={{ alignSelf: "start" }}
           onClick={() => onChange([...value, { name: "", phone: "" }])}
         >

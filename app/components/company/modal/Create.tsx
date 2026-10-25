@@ -142,7 +142,7 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onAddC
                 fullWidth
                 maxWidth="xl"
             >
-                <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.4rem', fontWeight: 'bold' }}>
+                <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                     {t('company.modal.add.title')}
                 </DialogTitle>
                 <Formik<Company>
@@ -565,10 +565,10 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ open, onClose, onAddC
                                     </Box>
                                 </DialogContent>
                                 <DialogActions>
-                                    <Button onClick={onClose} variant="contained" sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}>
+                                    <Button color="primary" onClick={onClose} variant="contained" >
                                         {t('common.button.cancel')}
                                     </Button>
-                                    <Button type="submit" variant="contained" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
+                                    <Button color="primary" type="submit" variant="contained" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
                                         {t('common.button.save')}
                                     </Button>
                                 </DialogActions>

@@ -75,6 +75,10 @@ const Navigation: React.FC = () => {
 
     const es = new EventSource(url.toString());
 
+    es.onopen = () => {
+      loadUnreadCount();
+    };
+
     es.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.payload?.subscriberType === "internal") {
@@ -82,9 +86,10 @@ const Navigation: React.FC = () => {
       }
     };
 
-    es.onerror = (event) => {
-      console.error("Mercure error:", event);
-      console.error("readyState:", es.readyState);
+    es.onerror = () => {
+      if (es.readyState === EventSource.CLOSED) {
+        console.warn("Połączenie z powiadomieniami Mercure zostało zamknięte.");
+      }
     };
 
     return () => es.close();

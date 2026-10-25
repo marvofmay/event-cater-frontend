@@ -115,15 +115,14 @@ const EditRoleModal: React.FC<EditRoleModalProps> = ({ open, role, onSave, onClo
                         </DialogContent>
 
                         <DialogActions>
-                            <Button
+                            <Button color="primary"
                                 onClick={onClose}
-                                sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}
                                 variant="contained"
                             >
                                 {t('common.button.cancel')}
                             </Button>
 
-                            <Button
+                            <Button color="primary"
                                 type="submit"
                                 sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}
                                 variant="contained"

@@ -1,13 +1,189 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="756574da-d715-43f9-b3b0-832e1e61d4a7" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
   <component name="ComposerSettings">
     <execution>
       <execution>
         <execution>
-          <execution />
+          <execution>
+            <execution />
+          </execution>
         </execution>
       </execution>
     </execution>
   </component>
-  <component name="PropertiesComponent">{}</component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="311" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="Git.Merge.Settings">
+    <option name="BRANCH" value="marvofmay/nextjs/feature/file-manager" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="feature/file-manager" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "marvofmay"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/marvofmay/nextjs.git",
+    "accountId": "7e4243fb-7458-41b9-a051-927a68d8eae3"
+  }
+}]]></component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.2017811511400356" />
+      <entry key="MS500" value="2.489321240275133" />
+      <entry key="S2" value="4.626505748626853" />
+      <entry key="S5" value="6.465228895049228" />
+      <entry key="S10" value="7.531878093649828" />
+      <entry key="S30" value="8.456228537387389" />
+      <entry key="S60" value="8.72058608447051" />
+      <entry key="M2" value="8.858351272726093" />
+      <entry key="M5" value="8.94286660960444" />
+      <entry key="M10" value="8.971353655479092" />
+      <entry key="M15" value="8.980884687442067" />
+      <entry key="M30" value="8.990433456491033" />
+      <entry key="H1" value="8.995214504098907" />
+      <entry key="H2" value="8.99760669572013" />
+      <entry key="H4" value="8.998803208741133" />
+      <entry key="D1" value="8.999800515465008" />
+      <entry key="W1" value="8.999971501735976" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.1770367774491488" />
+      <entry key="MS500" value="2.4780026685937804" />
+      <entry key="S2" value="4.618016364433456" />
+      <entry key="S5" value="6.459735824600253" />
+      <entry key="S10" value="7.528554358280342" />
+      <entry key="S30" value="8.454958785125159" />
+      <entry key="S60" value="8.719928420565283" />
+      <entry key="M2" value="8.858016531546445" />
+      <entry key="M5" value="8.942731266809634" />
+      <entry key="M10" value="8.971285740645317" />
+      <entry key="M15" value="8.980839356611305" />
+      <entry key="M30" value="8.990410763893571" />
+      <entry key="H1" value="8.995203150996275" />
+      <entry key="H2" value="8.99760101746679" />
+      <entry key="H4" value="8.998800369188825" />
+      <entry key="D1" value="8.999800042147161" />
+      <entry key="W1" value="8.999971434117693" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 4,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3L6jC14uH7u4l6Xvifhy2EUyVhR" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "js.debugger.nextJs.config.created.client": "true",
+    "js.debugger.nextJs.config.created.server": "true",
+    "last_opened_file_path": "/home/marcin/www-applications/event-cater-frontend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
+  <component name="RunManager" selected="npm.Next.js: server-side">
+    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <configuration name="Next.js: server-side" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-PS-262.10968.76" />
+        <option value="bundled-php-predefined-a98d8de5180a-9522f28f0b20-com.jetbrains.php.sharedIndexes-PS-262.10968.76" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="756574da-d715-43f9-b3b0-832e1e61d4a7" name="Changes" comment="" />
+      <created>1792781280979</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1792781280979</updated>
+      <workItem from="1792781284992" duration="869000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/app/components/user/register/theme/customizations/surfaces.js" />
+        <option value="$PROJECT_DIR$/app/components/user/register/theme/customizations/index.js" />
+        <option value="$PROJECT_DIR$/app/components/user/register/theme/customizations/feedback.js" />
+        <option value="$PROJECT_DIR$/app/components/user/register/theme/customizations/inputs.js" />
+        <option value="$PROJECT_DIR$/app/components/user/register/theme/customizations/dataDisplay.js" />
+        <option value="$PROJECT_DIR$/app/components/user/register/theme/customizations/navigation.js" />
+      </list>
+    </option>
+  </component>
 </project>

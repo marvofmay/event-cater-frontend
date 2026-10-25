@@ -4,6 +4,7 @@ import { Autocomplete, TextField } from "@mui/material";
 import { useRemote } from "./api";
 export interface LookupItem {
   uuid: string;
+  itemUuid?: string;
   name: string;
   slangName?: string | null;
   code?: string;
@@ -48,12 +49,17 @@ export function Lookup({
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       value={value}
-      options={remote.data?.items ?? []}
+      options={(remote.data?.items ?? []).map((item) => ({
+        ...item,
+        uuid: item.itemUuid ?? item.uuid,
+      }))}
       filterOptions={(items) => items}
       getOptionLabel={(item) =>
         item.name +
         (item.slangName ? " (" + item.slangName + ")" : "") +
         (item.code ? " · " + item.code : "") +
+        (item.kind === "equipment" ? " · Sprzęt" : "") +
+        (item.kind === "consumable" ? " · Produkt / materiał" : "") +
         (item.location?.city ? " · " + item.location.city : "")
       }
       isOptionEqualToValue={(a, b) => a.uuid === b.uuid && a.kind === b.kind}

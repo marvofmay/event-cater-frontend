@@ -35,16 +35,27 @@ export interface CatalogItem {
   categoryUuid?: string;
   slangName?: string | null;
   stockQuantity?: number;
+  storageLocationUuid?: string | null;
+  storageLocation?: string | null;
   unit: string;
   description?: string | null;
   active: boolean;
   version: number;
+  photos?: EquipmentPhoto[];
+}
+export interface EquipmentPhoto {
+  uuid: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
 }
 export interface EquipmentCategory {
   uuid: string;
   name: string;
   version: number;
 }
+export type EquipmentLocation = EquipmentCategory;
 export interface EmployeeOption {
   uuid: string;
   name: string;

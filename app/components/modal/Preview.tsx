@@ -33,7 +33,7 @@ const Preview: React.FC<PreviewProps> = ({ open, title, details, onClose }) => {
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={onClose} sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
+                <Button onClick={onClose} variant="contained" color="primary">
                     {t('common.button.close')}
                 </Button>
             </DialogActions>

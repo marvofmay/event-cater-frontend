@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import CompactDialogs from './components/common/CompactDialogs';
+import PendingOperations from './components/common/PendingOperations';
 import Navigation from './components/layout/Navigation';
 import Content from "./components/layout/Content";
 import Footer from "./components/layout/Footer";
@@ -30,6 +32,8 @@ const RootLayout = ({ children, }: Readonly<{ children: React.ReactNode; }>) => 
         <html lang="pl">
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <UserProvider>
+                    <CompactDialogs />
+                    <PendingOperations />
                     <ToastContainer />
                     <Navigation />
                     <Content>{children}</Content>

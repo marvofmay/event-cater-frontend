@@ -1,4 +1,7 @@
 {
+    "validation": {
+        "atLeastOnePhoneIsRequired": "Enter at least one phone number"
+    },
     "industry": {
         "modal": {
             "title": "Add New Industry"

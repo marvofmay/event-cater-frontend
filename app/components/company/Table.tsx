@@ -366,7 +366,7 @@ const CompaniesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("companies.edit") && (
+                                        {hasPermission("companies.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', company)}><Edit /></IconButton>
                                             </Tooltip>
@@ -404,12 +404,12 @@ const CompaniesTable = () => {
                 onClose={closeModal}
                 onAddCompany={handleAdd}
             />}
-            {hasPermission("companies.preview") && modalType === 'preview' && <PreviewCompanyModal
+            {hasPermission("companies.view") && modalType === 'preview' && <PreviewCompanyModal
                 open={true}
                 selectedCompany={selectedCompany}
                 onClose={closeModal}
             />}
-            {hasPermission("companies.edit") && modalType === 'edit' && <EditCompanyModal
+            {hasPermission("companies.update") && modalType === 'edit' && <EditCompanyModal
                 open={true}
                 company={selectedCompany}
                 onClose={closeModal}

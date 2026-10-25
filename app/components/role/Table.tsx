@@ -338,7 +338,7 @@ const RolesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("roles.edit") && (
+                                        {hasPermission("roles.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', role)}><Edit /></IconButton>
                                             </Tooltip>
@@ -376,7 +376,7 @@ const RolesTable = () => {
                 />
             )}
 
-            {hasPermission("roles.preview") && modalType === 'preview' && <PreviewRoleModal
+            {hasPermission("roles.view") && modalType === 'preview' && <PreviewRoleModal
                 open={true}
                 selectedRole={selectedRole}
                 onClose={closeModal}
@@ -386,7 +386,7 @@ const RolesTable = () => {
                 onClose={closeModal}
                 onAddRole={handleAdd}
             />}
-            {hasPermission("roles.edit") && modalType === 'edit' && <EditRoleModal
+            {hasPermission("roles.update") && modalType === 'edit' && <EditRoleModal
                 open={true}
                 role={selectedRole}
                 onClose={closeModal}

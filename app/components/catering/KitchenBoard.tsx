@@ -1,6 +1,7 @@
 "use client";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useState } from "react";
-import Link from "next/link";
+import { RowAction } from "../common/RowAction";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
 import { useRemote, today } from "./api";
@@ -61,7 +62,7 @@ export function KitchenBoard() {
                 ),
               }}
             />
-            <Button onClick={remote.reload}>Odśwież plan</Button>
+            <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={remote.reload}>Odśwież plan</Button>
           </Stack>
           <Typography color="text.secondary" mt={2}>
             Osobne karty dla każdego wydarzenia. Dzień produkcji może poprzedzać
@@ -82,12 +83,11 @@ export function KitchenBoard() {
               {order.source.title} · wydarzenie {order.source.date}
             </Typography>
             {hasPermission("events.view") && (
-              <Button
-                component={Link}
+              <RowAction
+                action="preview"
+                label="Otwórz wydarzenie"
                 href={"/catering/events/" + order.eventUuid}
-              >
-                Otwórz wydarzenie
-              </Button>
+              />
             )}
             <KitchenCard
               key={order.uuid + "-" + order.version}

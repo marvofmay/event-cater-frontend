@@ -6,10 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/context/userContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 const RolesList: React.FC = () => {
-  const queryClient = new QueryClient();
+  const queryClient = useMemo(() => new QueryClient(), []);
   const { hasAccess, hasPermission, isAuthenticated, loading } = useUser();
   const router = useRouter();
   const { t } = useTranslation();

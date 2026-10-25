@@ -144,15 +144,14 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({ open, onClose, onAddNote })
                         </DialogContent>
 
                         <DialogActions>
-                            <Button
+                            <Button color="primary"
                                 onClick={onClose}
                                 variant="contained"
-                                sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}
                             >
                                 {t('common.button.cancel')}
                             </Button>
 
-                            <Button
+                            <Button color="primary"
                                 type="submit"
                                 variant="contained"
                                 sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}

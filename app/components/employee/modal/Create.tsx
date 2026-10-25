@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import axios from 'axios';
+import { SERVICE_COMPANY_URL } from '@/app/utils/constans';
+import React, { useState, useRef } from 'react';
 import {
     Button,
     Dialog,
@@ -40,11 +42,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
     const { t } = useTranslation();
 
     const MAX_PHONE_FIELDS = 3;
+    const [generatingPesel, setGeneratingPesel] = useState(false);
 
     const initialValues: EmployeePayload = {
         firstName: '',
         lastName: '',
         pesel: '',
+        isPeselFake: false,
         internalCode: '',
         externalCode: '',
         companyUUID: '',
@@ -73,50 +77,45 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
 
     const validationSchema = Yup.object({
         firstName: Yup.string().required(t('validation.fieldIsRequired')),
-        lastName: Yup.string().required(t('validation.fieldIsRequired')),
+        lastName: Yup.string().trim().test('length', 'Nazwisko musi mieć od 3 do 50 znaków.', value => !value || (value.length >= 3 && value.length <= 50)),
         pesel: Yup.string()
             .required(t('validation.fieldIsRequired'))
             .matches(/^\d{11}$/, t('validation.peselMustHave11Digits')),
         email: Yup
             .string()
+            .trim()
             .email(t('validation.invalidEmail'))
             .required(t('validation.fieldIsRequired')),
         employmentFrom: Yup.string().required(t('validation.fieldIsRequired')),
-        company: Yup.object().shape({
-            uuid: Yup.string().required(t('validation.fieldIsRequired')),
-        }),
-        department: Yup.object().shape({
-            uuid: Yup.string().required(t('validation.fieldIsRequired')),
-        }),
-        contractType: Yup.object().shape({
-            uuid: Yup.string().required(t('validation.fieldIsRequired')),
-        }),
-        position: Yup.object().shape({
-            uuid: Yup.string().required(t('validation.fieldIsRequired')),
-        }),
-        role: Yup.object().shape({
-            uuid: Yup.string().required(t('validation.fieldIsRequired')),
-        }),
+        companyUUID: Yup.string().required(t('validation.fieldIsRequired')),
+        departmentUUID: Yup.string().required(t('validation.fieldIsRequired')),
+        contractTypeUUID: Yup.string().required(t('validation.fieldIsRequired')),
+        positionUUID: Yup.string().required(t('validation.fieldIsRequired')),
+        roleUUID: Yup.string().required(t('validation.fieldIsRequired')),
         address: Yup.object().shape({
-            country: Yup.string().required(t('validation.fieldIsRequired')),
-            city: Yup.string().required(t('validation.fieldIsRequired')),
-            postcode: Yup.string().required(t('validation.fieldIsRequired')),
-            street: Yup.string().required(t('validation.fieldIsRequired')),
+            country: Yup.string(),
+            city: Yup.string(),
+            postcode: Yup.string(),
+            street: Yup.string(),
         }),
         phones: Yup.array()
             .of(Yup.string().trim())
-            .compact(v => !v)
+            .compact(value => !value || !value.trim())
             .min(1, t('validation.atLeastOnePhoneIsRequired')),
     });
 
     const [errorAPI, setErrorAPI] = useState<string | null>(null);
     const [errorsAPI, setErrorsAPI] = useState<Record<string, string> | null>(null);
 
+    const submitting = useRef(false);
+
     const handleSubmit = async (values: EmployeePayload, formikHelpers: FormikHelpers<EmployeePayload>) => {
         const employeeData = {
             ...values,
         };
 
+        if (submitting.current) return;
+        submitting.current = true;
         setErrorAPI(null);
         setErrorsAPI(null);
 
@@ -132,6 +131,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
 
             setErrorAPI(message);
             setErrorsAPI(errors);
+        } finally {
+            submitting.current = false;
         }
     };
 
@@ -269,7 +270,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
             >
-                {({ values, errors, touched, setFieldValue }) => (
+                {({ values, errors, touched, setFieldValue, setFieldTouched, submitCount, isSubmitting }) => (
                     <Form noValidate>
                         <DialogContent>
                             {errorAPI && (
@@ -322,7 +323,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         margin="normal"
                                         error={touched.lastName && Boolean(errors.lastName)}
                                         helperText={touched.lastName && errors.lastName}
-                                        required
                                     />
                                     <Field
                                         as={TextField}
@@ -335,6 +335,44 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         helperText={touched.pesel && errors.pesel}
                                         required
                                     />
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                name="isPeselFake"
+                                                checked={values.isPeselFake ?? false}
+                                                disabled={generatingPesel}
+                                                onChange={async event => {
+                                                    if (!event.target.checked) {
+                                                        setFieldValue('isPeselFake', false);
+                                                        setFieldValue('pesel', '');
+                                                        return;
+                                                    }
+                                                    setFieldValue('isPeselFake', true);
+                                                    setGeneratingPesel(true);
+                                                    setErrorAPI(null);
+                                                    try {
+                                                        const token = localStorage.getItem('auth_token');
+                                                        const response = await axios.post(
+                                                            `${SERVICE_COMPANY_URL}/api/employees/generate-fake-pesel`,
+                                                            {},
+                                                            { headers: { Authorization: `Bearer ${token}` } }
+                                                        );
+                                                        setFieldValue('pesel', response.data.pesel);
+                                                        setFieldValue('isPeselFake', true);
+                                                    } catch {
+                                                        setFieldValue('isPeselFake', false);
+                                                        setErrorAPI('Nie udało się wygenerować fikcyjnego PESEL-u. Spróbuj ponownie.');
+                                                    } finally {
+                                                        setGeneratingPesel(false);
+                                                    }
+                                                }}
+                                            />
+                                        }
+                                        label="Fikcyjny PESEL"
+                                    />
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Po zaznaczeniu wygenerujemy numer zgodny z formatem i sumą kontrolną PESEL. Pozostanie oznaczony jako fikcyjny. Używaj go w kolejnych importach XLSX.
+                                    </Typography>
                                     <Field
                                         as={TextField}
                                         name="internalCode"
@@ -390,10 +428,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                             companies.find(c => c.uuid === values.companyUUID) ?? null
                                         }
                                         onChange={(_, value) => {
-                                            const uuid = value?.uuid ?? null;
+                                            const uuid = value?.uuid ?? '';
                                             setFieldValue('companyUUID', uuid);
                                             setSelectedCompanyUUID(uuid);
-                                            setFieldValue('departmentUUID', null);
+                                            setFieldValue('departmentUUID', '');
                                         }}
                                         noOptionsText={
                                             isErrorCompanies
@@ -408,11 +446,14 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                                 fullWidth
                                                 label={t('employee.form.field.company')}
                                                 margin="dense"
-                                                error={isErrorCompanies}
+                                                required
+                                                name="companyUUID"
+                                                onBlur={() => setFieldTouched('companyUUID', true)}
+                                                error={isErrorCompanies || Boolean((touched.companyUUID || submitCount > 0) && errors.companyUUID)}
                                                 helperText={
                                                     isErrorCompanies
                                                         ? t('company.list.loading.failed')
-                                                        : undefined
+                                                        : (touched.companyUUID || submitCount > 0) ? errors.companyUUID : undefined
                                                 }
                                             />
                                         )}
@@ -428,7 +469,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         onChange={(_, value) => {
                                             setFieldValue(
                                                 'departmentUUID',
-                                                value?.uuid ?? null
+                                                value?.uuid ?? ''
                                             );
                                         }}
                                         disabled={!values.companyUUID}
@@ -445,13 +486,16 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                                 fullWidth
                                                 label={t('employee.form.field.department')}
                                                 margin="dense"
-                                                error={isErrorDepartments}
+                                                required
+                                                name="departmentUUID"
+                                                onBlur={() => setFieldTouched('departmentUUID', true)}
+                                                error={isErrorDepartments || Boolean((touched.departmentUUID || submitCount > 0) && errors.departmentUUID)}
                                                 helperText={
                                                     !values.companyUUID
                                                         ? t('department.form.selectCompanyFirst')
                                                         : isErrorDepartments
                                                             ? t('department.list.loading.failed')
-                                                            : undefined
+                                                            : (touched.departmentUUID || submitCount > 0) ? errors.departmentUUID : undefined
                                                 }
                                             />
                                         )}
@@ -460,7 +504,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         as={TextField}
                                         select
                                         fullWidth
-                                        name="position.uuid"
+                                        name="positionUUID"
                                         label={t('employee.form.field.position')}
                                         margin="normal"
                                         disabled={!values.departmentUUID}
@@ -485,16 +529,15 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                                     </MenuItem>
                                                 ))}
                                     </Field>
-                                    {/* 
                                     <Field
                                         as={TextField}
                                         select
                                         fullWidth
-                                        name="contractType.uuid"
+                                        name="contractTypeUUID"
                                         label={t('employee.form.field.contractType')}
                                         margin="normal"
-                                        error={touched?.contractType?.uuid && Boolean(errors?.contractType?.uuid)}
-                                        helperText={touched?.contractType?.uuid && errors?.contractType?.uuid}
+                                        error={touched?.contractTypeUUID && Boolean(errors?.contractTypeUUID)}
+                                        helperText={touched?.contractTypeUUID && errors?.contractTypeUUID}
                                         required
                                     >
                                         {loadingContractTypes && <MenuItem disabled>{t('common.loading')}</MenuItem>}
@@ -505,6 +548,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                             </MenuItem>
                                         ))}
                                     </Field>
+                                    {/*
                                     <Field
                                         as={TextField}
                                         select
@@ -561,7 +605,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         margin="normal"
                                         error={touched?.address?.country && Boolean(errors?.address?.country)}
                                         helperText={touched?.address?.country && errors?.address?.country}
-                                        required
                                     >
                                         <MenuItem value="Polska">Polska</MenuItem>
                                         <MenuItem value="Anglia">Anglia</MenuItem>
@@ -577,7 +620,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         margin="normal"
                                         error={touched?.address?.city && Boolean(errors?.address?.city)}
                                         helperText={touched?.address?.city && errors?.address?.city}
-                                        required
                                     >
                                         <MenuItem value="Gdańsk">Gdańsk</MenuItem>
                                         <MenuItem value="Sopot">Sopot</MenuItem>
@@ -591,7 +633,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         margin="normal"
                                         error={touched?.address?.postcode && Boolean(errors?.address?.postcode)}
                                         helperText={touched?.address?.postcode && errors?.address?.postcode}
-                                        required
                                     />
                                     <Field
                                         as={TextField}
@@ -601,7 +642,6 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         margin="normal"
                                         error={touched?.address?.street && Boolean(errors?.address?.street)}
                                         helperText={touched?.address?.street && errors?.address?.street}
-                                        required
                                     />
                                 </Box>
 
@@ -734,10 +774,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                             </Box>
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={onClose} variant="contained" sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}>
+                            <Button color="primary" onClick={onClose} variant="contained" >
                                 {t('common.button.cancel')}
                             </Button>
-                            <Button type="submit" variant="contained" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
+                            <Button color="primary" disabled={isSubmitting || generatingPesel} type="submit" variant="contained" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }}>
                                 {t('common.button.save')}
                             </Button>
                         </DialogActions>

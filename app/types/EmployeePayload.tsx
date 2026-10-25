@@ -10,6 +10,7 @@ export default interface EmployeePayload {
     firstName: string;
     lastName: string;
     pesel: string;
+    isPeselFake?: boolean;
     email: string;
     employmentFrom: string;
     employmentTo?: string | null;

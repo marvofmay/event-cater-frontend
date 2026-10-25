@@ -10,7 +10,7 @@ import { useUser } from "./context/userContext";
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
-  const { isAuthenticated, loading, employee } = useUser();
+  const { isAuthenticated, loading, employee, tenant } = useUser();
 
   const queryClient = useMemo(() => new QueryClient(), []);
 
@@ -48,6 +48,11 @@ const Home: React.FC = () => {
             <Typography variant="h6" mb={3}>
               {t("common.welcome")}, {fullName}.
             </Typography>
+            {!employee?.uuid && tenant && (
+              <Typography variant="body1" mb={3}>
+                Zalogowano do firmy: <strong>{tenant.name}</strong> ({tenant.slug}).
+              </Typography>
+            )}
 
             <Items />
           </Box>

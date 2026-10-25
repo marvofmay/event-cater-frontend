@@ -71,7 +71,8 @@ const PositionsTable = () => {
         createdAt: api.createdAt,
         updatedAt: api.updatedAt || '',
         deletedAt: api.deletedAt || '',
-        departmentsUUIDs: api.positionDepartments?.map(d => d.uuid),
+        departmentsUUIDs: api.positionDepartments?.map(d => d.uuid) ?? [],
+        departments: api.positionDepartments?.map(department => ({ uuid: department.uuid, name: department.name ?? '' })) ?? [],
     });
 
     const { data: departments } = useDepartmentsQuery(1000, 1, 'name', 'desc');
@@ -230,13 +231,13 @@ const PositionsTable = () => {
 
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} marginBottom={2}>
+                <Box display="flex" alignItems="center" gap={1} sx={{ flex: '1 1 320px', maxWidth: 560, minWidth: 0 }}>
                     <TextField
                         variant="outlined"
                         placeholder={t('common.enterPhraseToSearch')}
                         size="small"
-                        sx={{ width: '500px' }}
+                        sx={{ flex: 1, minWidth: 0 }}
                         onChange={(e) => setSearchPhrase(e.target.value)}
                     />
                     <Button
@@ -249,7 +250,7 @@ const PositionsTable = () => {
                     </Button>
                 </Box>
 
-                <Box display="flex" alignItems="center" gap={1} ml="auto">
+                <Box display="flex" alignItems="center" flexWrap="wrap" gap={1} ml="auto" sx={{ width: { xs: '100%', sm: 'auto' }, '& .MuiButton-root': { whiteSpace: { xs: 'normal', sm: 'nowrap' }, maxWidth: '100%' } }}>
                     {hasPermission("positions.create") && (
                         <>
                             <Button
@@ -299,15 +300,37 @@ const PositionsTable = () => {
                 <TableContainer
                     sx={{
                         maxHeight: '65vh',
-                        overflowY: 'auto',
+                        overflow: 'auto',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
                     }}
                 >
-                    <Table>
+                    <Table size="small" stickyHeader sx={{
+                        tableLayout: 'fixed',
+                        minWidth: 1040,
+                        '& .MuiTableCell-root': { px: 1.5, py: 1, verticalAlign: 'middle', fontSize: '0.8125rem', lineHeight: 1.4, borderColor: 'divider' },
+                        '& .MuiTableCell-head': { height: 44, fontWeight: 600, backgroundColor: 'grey.50', whiteSpace: 'nowrap' },
+                        '& .MuiTableRow-root:last-child .MuiTableCell-body': { borderBottom: 0 },
+                        '& .MuiTableSortLabel-root': { maxWidth: '100%' },
+                    }}>
+                        <colgroup>
+                            {hasPermission("positions.delete") && <col style={{ width: 44 }} />}
+                            <col style={{ width: 44 }} />
+                            <col />
+                            <col style={{ width: 220 }} />
+                            <col style={{ width: 96 }} />
+                            <col style={{ width: 130 }} />
+                            <col style={{ width: 150 }} />
+                            <col style={{ width: 128 }} />
+                        </colgroup>
                         <TableHead>
                             <TableRow>
                                 {hasPermission("positions.delete") && (
                                     <TableCell sx={{ width: 50, padding: "4px 8px" }}>
                                         <Checkbox
+                                            size="small"
+                                            sx={{ p: 0.5 }}
                                             checked={allSelected}
                                             onChange={toggleSelectAll}
                                         />
@@ -332,17 +355,18 @@ const PositionsTable = () => {
                                     </TableSortLabel>
                                 </TableCell>
                                 <TableCell
-                                    sortDirection={sortBy === 'description' ? sortDirection : false}
-                                    onClick={() => handleSort('description')}
-                                    sx={{ width: 750, padding: "4px 8px" }}
+                                    sortDirection={sortBy === 'departments' ? sortDirection : false}
+                                    onClick={() => handleSort('departments')}
+                                    sx={{ padding: '4px 8px' }}
                                 >
-                                    <TableSortLabel active={sortBy === 'description'} direction={sortBy === 'description' ? sortDirection : 'asc'}>
-                                        {t('position.table.column.description')}
+                                    <TableSortLabel active={sortBy === 'departments'} direction={sortBy === 'departments' ? sortDirection : 'asc'}>
+                                        {t('position.table.column.departments')}
                                     </TableSortLabel>
                                 </TableCell>
                                 <TableCell
                                     sortDirection={sortBy === 'active' ? sortDirection : false}
                                     onClick={() => handleSort('active')}
+                                    align="center"
                                     sx={{ padding: '4px 8px' }}
                                 >
                                     <TableSortLabel active={sortBy === 'active'} direction={sortBy === 'active' ? sortDirection : 'asc'}>
@@ -367,34 +391,55 @@ const PositionsTable = () => {
                                         {t('position.table.column.updatedAt')}
                                     </TableSortLabel>
                                 </TableCell>
-                                <TableCell sx={{ padding: '4px 8px' }}>{t('position.table.column.actions')}</TableCell>
+                                <TableCell align="right" sx={{ padding: '4px 8px' }}>{t('position.table.column.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {positions.map((position, index) => (
-                                <TableRow key={position.uuid}>
+                                <TableRow key={position.uuid} hover selected={selected.includes(position.uuid)} sx={{ height: 60 }}>
                                     {hasPermission("positions.delete") && (
                                         <TableCell sx={{ width: 50, padding: "4px 8px" }}>
                                             <Checkbox
+                                                size="small"
+                                                sx={{ p: 0.5 }}
                                                 checked={selected.includes(position.uuid)}
                                                 onChange={() => toggleSelectRow(position.uuid)}
                                             />
                                         </TableCell>
                                     )}
                                     <TableCell sx={{ padding: '4px 8px' }}>{(page - 1) * pageSize + index + 1}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>{position.name}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>{position.description || '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}> {position.active ? (<CheckCircleIcon color="success" fontSize="small" />) : (<CancelIcon color="error" fontSize="small" />)}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>{moment(position.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>{position.updatedAt ? moment(position.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>
+                                        <Tooltip title={position.name}>
+                                            <Box sx={{ fontWeight: 500, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere' }}>{position.name}</Box>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                        <Tooltip title={position.departments?.map(department => department.name).sort((first, second) => first.localeCompare(second, 'pl')).join(', ') || ''}>
+                                            <Box sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere' }}>
+                                                {position.departments?.map(department => department.name).sort((first, second) => first.localeCompare(second, 'pl')).join(', ') || '-'}
+                                            </Box>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell align="center" sx={{ padding: '4px 8px' }}> {position.active ? (<CheckCircleIcon color="success" fontSize="small" />) : (<CancelIcon color="error" fontSize="small" />)}</TableCell>
+                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                                        <Box>{moment(position.createdAt).format('YYYY-MM-DD')}</Box>
+                                        <Box sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>{moment(position.createdAt).format('HH:mm:ss')}</Box>
+                                    </TableCell>
+                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                                        {position.updatedAt ? <>
+                                            <Box>{moment(position.updatedAt).format('YYYY-MM-DD')}</Box>
+                                            <Box sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>{moment(position.updatedAt).format('HH:mm:ss')}</Box>
+                                        </> : '-'}
+                                    </TableCell>
+                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, '& .MuiIconButton-root': { p: 0.75 }, '& .MuiSvgIcon-root': { fontSize: 20 } }}>
                                         {hasPermission("positions.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', position)}><Preview /></IconButton>
                                             </Tooltip>
                                         )}
 
-                                        {hasPermission("positions.edit") && (
+                                        {hasPermission("positions.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
                                                 <IconButton onClick={() => openModal('edit', position)}><Edit /></IconButton>
                                             </Tooltip>
@@ -405,6 +450,7 @@ const PositionsTable = () => {
                                                 <IconButton onClick={() => openModal('delete', position)}><Delete /></IconButton>
                                             </Tooltip>
                                         )}
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -415,6 +461,11 @@ const PositionsTable = () => {
 
             {totalCount > 0 && (
                 <TablePagination
+                    sx={{
+                        '& .MuiTablePagination-toolbar': { flexWrap: 'wrap', justifyContent: 'flex-end', px: { xs: 0, sm: 2 }, rowGap: 1 },
+                        '& .MuiTablePagination-spacer': { display: { xs: 'none', sm: 'block' } },
+                        '& .MuiTablePagination-actions': { ml: { xs: 0, sm: 2 } },
+                    }}
                     rowsPerPageOptions={[5, 10, 25, 50, 100]}
                     component="div"
                     count={totalCount}
@@ -427,7 +478,7 @@ const PositionsTable = () => {
                 />
             )}
 
-            {hasPermission("positions.preview") && modalType === 'preview' && <PreviewPositionModal
+            {hasPermission("positions.view") && modalType === 'preview' && <PreviewPositionModal
                 open={true}
                 selectedPosition={previewPosition}
                 onClose={closeModal}
@@ -439,7 +490,7 @@ const PositionsTable = () => {
                 onAddPosition={handleAdd}
             />}
 
-            {hasPermission("positions.edit") && modalType === 'edit' && <EditPositionModal
+            {hasPermission("positions.update") && modalType === 'edit' && <EditPositionModal
                 open={true}
                 position={selectedPosition}
                 onClose={closeModal}

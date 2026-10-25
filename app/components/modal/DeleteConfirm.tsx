@@ -52,10 +52,9 @@ const DeleteConfirmModal = <T,>({
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button
+                <Button color="primary"
                     onClick={onClose}
                     variant="contained"
-                    sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }}
                 >
                     {t('common.button.cancel')}
                 </Button>
@@ -68,4 +67,3 @@ const DeleteConfirmModal = <T,>({
 };
 
 export default DeleteConfirmModal;
-

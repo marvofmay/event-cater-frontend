@@ -177,10 +177,10 @@ const EditPositionModal: React.FC<EditPositionModalProps> = ({ open, onClose, po
                         </DialogContent>
 
                         <DialogActions>
-                            <Button onClick={onClose} sx={{ backgroundColor: '#999a99', color: 'white', fontWeight: 'bold' }} variant="contained">
+                            <Button color="primary" onClick={onClose}  variant="contained">
                                 {t('common.button.cancel')}
                             </Button>
-                            <Button type="submit" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} variant="contained">
+                            <Button color="primary" type="submit" sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} variant="contained">
                                 {t('common.button.save')}
                             </Button>
                         </DialogActions>

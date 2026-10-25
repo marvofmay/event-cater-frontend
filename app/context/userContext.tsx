@@ -14,7 +14,8 @@ interface UserContextType {
   isAuthenticated: boolean;
   loading: boolean;
   token: string | null;
-  login: (email: string, password: string, tenantSlug?: string) => Promise<void>;
+  tenant: { slug: string; name: string } | null;
+  login: (email: string, password: string, tenantSlug: string) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (permissionName: string) => boolean;
   hasAccess: (accessName: string) => boolean;
@@ -43,8 +44,53 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [tenant, setTenant] = useState<{ slug: string; name: string } | null>(null);
 
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!token) return;
+    let current = true;
+    const refreshAuthorization = () => {
+      if (document.visibilityState === 'hidden') return;
+      fetch('/api/auth/authorization', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+        .then(response => response.ok ? response.json() : null)
+        .then(data => {
+          if (!current || !Array.isArray(data?.modules) || !Array.isArray(data?.accesses) || !Array.isArray(data?.permissions)) return;
+          setModules(data.modules);
+          setAccesses(data.accesses);
+          setPermissions(data.permissions);
+        })
+        .catch(() => {});
+    };
+    refreshAuthorization();
+    window.addEventListener('focus', refreshAuthorization);
+    window.addEventListener('authorization-changed', refreshAuthorization);
+    document.addEventListener('visibilitychange', refreshAuthorization);
+    return () => {
+      current = false;
+      window.removeEventListener('focus', refreshAuthorization);
+      window.removeEventListener('authorization-changed', refreshAuthorization);
+      document.removeEventListener('visibilitychange', refreshAuthorization);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    let current = true;
+    const payload = token ? decodeJwt(token) : null;
+    const slug = payload?.tenantSlug;
+    setTenant(slug ? { slug, name: payload.tenantName || slug } : null);
+    if (slug && !payload.tenantName) {
+      fetch('/api/saas/tenant-options')
+        .then(response => response.ok ? response.json() : null)
+        .then(data => {
+          const selected = data?.items?.find((item: { slug: string; name: string }) => item.slug === slug);
+          if (current && selected) setTenant({ slug: selected.slug, name: selected.name });
+        })
+        .catch(() => {});
+    }
+    return () => { current = false; };
+  }, [token]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("auth_token");
@@ -65,7 +111,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, tenantSlug = "default") => {
+  const login = async (email: string, password: string, tenantSlug: string) => {
+    if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(tenantSlug)) {
+      throw new Error("Wybierz firmę, do której chcesz się zalogować.");
+    }
     setLoading(true);
 
     const res = await fetch(`${SERVICE_COMPANY_URL}/api/login`, {
@@ -88,6 +137,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     localStorage.setItem("auth_token", data.token);
+    localStorage.setItem("selected_tenant", tenantSlug);
     document.cookie = `tenant_slug=${encodeURIComponent(tenantSlug)}; Path=/; SameSite=Lax`;
 
     setToken(data.token);
@@ -155,6 +205,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated,
         loading,
         token,
+        tenant,
         login,
         logout,
         hasPermission,
