@@ -4,7 +4,7 @@ import type { NotePriority } from '@/app/types/NotePriority';
 import React from 'react';
 import { TFunction } from 'i18next';
 
-const priorityColorMap: Record<NotePriority, string> = {
+export const priorityColorMap: Record<NotePriority, string> = {
     high: '#e53935',
     medium: '#fb8c00',
     low: '#fdd835',

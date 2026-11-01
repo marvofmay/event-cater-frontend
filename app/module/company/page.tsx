@@ -1,58 +1,29 @@
 "use client";
 
-import CompaniesTable from "@/app/components/company/Table";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, CircularProgress } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { useUser } from "@/app/context/userContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useUser } from "@/app/context/userContext";
+import CompanyStructure from "@/app/components/company/CompanyStructure";
 
-const CompaniesList: React.FC = () => {
-  const queryClient = new QueryClient();
-  const { hasAccess, hasPermission, isAuthenticated, loading } = useUser();
-  const router = useRouter();
-  const { t } = useTranslation();
+export default function CompanyPage() {
+    const [queryClient] = useState(() => new QueryClient());
+    const { hasAccess, hasPermission, isAuthenticated, loading, token } = useUser();
+    const router = useRouter();
+    const allowed = hasAccess("company_structure") && hasPermission("company_structure.view");
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push("/me/logout");
-    }
+    useEffect(() => {
+        if (!loading && !isAuthenticated) router.replace("/me/logout");
+        else if (!loading && !allowed) router.replace("/forbidden");
+    }, [loading, isAuthenticated, allowed, router]);
 
-    if (!loading && !hasAccess("companies")) {
-      router.push("/forbidden");
-    }
-  }, [hasAccess, hasPermission, isAuthenticated, loading, router]);
+    if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress aria-label="Ładowanie" /></Box>;
+    if (!isAuthenticated || !allowed) return null;
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="300px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
-    <div className="grid grid-rows-[10px_1fr_10px] min-h-screen p-1 pb-1 sm:p-1 font-[family-name:var(--font-geist-sans)]">
-      <main>
-        <Box display="flex" justifyContent="center" alignItems="center">
-          <Box width="90%">
-            <Typography variant="h6" gutterBottom>
-              {t("company.list.title")}
-            </Typography>
-            <QueryClientProvider client={queryClient}>
-              {hasPermission("companies.list") && <CompaniesTable />}
-            </QueryClientProvider>
-          </Box>
-        </Box>
-      </main>
-    </div>
-  );
-};
-
-export default CompaniesList;
+    return <Box component="main" sx={{ maxWidth: 1200, mx: "auto", p: { xs: 1.5, sm: 3 }, width: "100%" }}>
+        <QueryClientProvider client={queryClient}>
+            <CompanyStructure key={token} />
+        </QueryClientProvider>
+    </Box>;
+}

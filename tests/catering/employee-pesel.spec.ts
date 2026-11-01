@@ -15,14 +15,21 @@ test("checking fictitious PESEL generates it, unchecking clears it and optional 
             return route.fulfill({ json: { pesel: "44051401458", isPeselFake: true } });
         }
         const path = new URL(route.request().url()).pathname;
+        if (path === '/api/employees/parent-options') {
+            expect(new URL(route.request().url()).searchParams.has('departmentUUID')).toBe(false);
+            return route.fulfill({ json: { data: [{ uuid: '00000000-0000-4000-8000-000000000009', fullName: 'Kierownik Logistyki', departmentName: 'Logistyka' }] } });
+        }
         if (path === "/api/employees" && route.request().method() === "POST") {
             const body = route.request().postDataJSON();
             expect(body.isPeselFake).toBe(true);
             expect(body.pesel).toBe("44051401458");
             expect(body.lastName).toBe("");
+            expect(body.employmentFrom).toBeNull();
             expect(body.phones).toEqual(["123456789"]);
-            expect(body.email).toBe("anna@example.test");
-            for (const field of ["companyUUID", "departmentUUID", "positionUUID", "contractTypeUUID", "roleUUID"]) expect(body[field]).toBe("00000000-0000-4000-8000-000000000001");
+            expect(body.email).toBe('anna@example.test');
+            expect(body.contractTypeUUID).toBeNull();
+            expect(body.parentEmployeeUUID).toBe('00000000-0000-4000-8000-000000000009');
+            for (const field of ["companyUUID", "departmentUUID", "positionUUID", "roleUUID"]) expect(body[field]).toBe("00000000-0000-4000-8000-000000000001");
             created++;
             return route.fulfill({ status: 201, json: { message: "Dodano pracownika" } });
         }
@@ -32,7 +39,13 @@ test("checking fictitious PESEL generates it, unchecking clears it and optional 
     await page.goto("/manage/employees/list");
     await page.getByRole("button", { name: /dodaj pracownika/i }).click();
     const dialog = page.getByRole("dialog");
+    const employmentFrom = dialog.locator('input[name="employmentFrom"]');
+    await expect(employmentFrom).not.toHaveAttribute("required");
+    await expect(employmentFrom).toHaveValue("");
+    await expect(dialog.getByRole("textbox", { name: /adres email/i })).toHaveAttribute("required", "");
+    await expect(dialog.locator('input[name="contractTypeUUID"]')).not.toHaveAttribute("required");
     const pesel = dialog.getByRole("textbox", { name: /^pesel/i });
+    await expect(dialog.getByRole("textbox", { name: /telefon 1/i })).toHaveAttribute("required", "");
     await expect(pesel).toHaveAttribute("required", "");
     await expect(dialog.getByRole("textbox", { name: /nazwisko/i })).not.toHaveAttribute("required");
     await expect(dialog.getByRole("combobox", { name: /miasto/i })).not.toHaveAttribute("required");
@@ -48,15 +61,19 @@ test("checking fictitious PESEL generates it, unchecking clears it and optional 
     await dialog.getByRole("button", { name: /zapisz/i }).click();
     await expect(dialog.getByText("Podaj co najmniej jeden numer telefonu")).toBeVisible();
     await dialog.getByRole("textbox", { name: /^imię/i }).fill("Anna");
-    await dialog.getByRole("textbox", { name: /telefon 1/i }).fill("123456789");
     await dialog.getByRole("textbox", { name: /adres email/i }).fill("anna@example.test");
+    await dialog.getByRole("textbox", { name: /telefon 1/i }).fill("123456789");
     const company = dialog.getByRole("combobox", { name: /^firma/i });
     await company.fill("Firma");
     await page.getByRole("option", { name: "Firma testowa" }).click();
     const department = dialog.getByRole("combobox", { name: /^oddział/i });
     await department.fill("Opcja");
     await page.getByRole("option", { name: "Opcja testowa" }).click();
-    for (const name of [/stanowisko/i, /forma zatrud/i, /rola w serwisie/i]) {
+    const supervisor = dialog.getByRole('combobox', { name: 'Bezpośredni przełożony' });
+    await expect(supervisor).not.toHaveAttribute('required');
+    await supervisor.fill('Kierownik');
+    await page.getByRole('option', { name: 'Kierownik Logistyki — Logistyka' }).click();
+    for (const name of [/stanowisko/i, /rola w serwisie/i]) {
         await dialog.getByRole("combobox", { name }).click();
         await page.getByRole("option", { name: "Opcja testowa" }).click();
     }

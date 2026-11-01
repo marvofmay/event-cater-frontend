@@ -12,6 +12,7 @@ export interface LookupItem {
   kind?: string;
   version?: number;
   location?: { city: string | null; street: string | null };
+  storageLocation?: string | null;
 }
 export function Lookup({
   label,

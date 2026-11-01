@@ -1,3 +1,4 @@
+import { useTablePageSize } from '@/app/context/preferencesContext';
 import React, { useState } from 'react';
 import {
     Table,
@@ -45,7 +46,7 @@ import mapPositionToPreview from '@/app/mappers/mapPositionToPreview';
 import { PositionPreview } from '@/app/types/PositionPreview';
 
 const PositionsTable = () => {
-    const [pageSize, setPageSize] = useState(5);
+    const [pageSize, setPageSize] = useTablePageSize('positions');
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState('createdAt');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');

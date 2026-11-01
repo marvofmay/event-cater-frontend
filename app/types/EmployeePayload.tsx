@@ -11,11 +11,11 @@ export default interface EmployeePayload {
     lastName: string;
     pesel: string;
     isPeselFake?: boolean;
-    email: string;
-    employmentFrom: string;
+    email: string | null;
+    employmentFrom: string | null;
     employmentTo?: string | null;
     positionUUID: string;
-    contractTypeUUID: string;
+    contractTypeUUID: string | null;
     roleUUID: string;
     active: boolean;
     address: Address;

@@ -5,6 +5,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useState } from "react";
 import {
   Button,
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -31,6 +32,8 @@ import {
 } from "./ui";
 import { LookupItem } from "./Lookup";
 import { PreparationLookup } from "./PreparationLookup";
+import { TemplateQuantityRule } from './TemplateQuantityRule';
+import { SourceLocationAutocomplete } from './SourceLocationAutocomplete';
 export function TemplatesPage() {
   const api = useApi();
   const { hasPermission } = useUser();
@@ -46,6 +49,8 @@ export function TemplatesPage() {
   const [edit, setEdit] = useState<Partial<Template> | null>(null);
   const [item, setItem] = useState<LookupItem | null>(null);
   const [archive, setArchive] = useState<Template | null>(null);
+  const [deleting, setDeleting] = useState<Template | null>(null);
+  const [exampleGuests, setExampleGuests] = useState(50);
   const update = (index: number, patch: Partial<TemplateLine>) =>
     setEdit({
       ...edit,
@@ -59,7 +64,7 @@ export function TemplatesPage() {
         <>
           Szablony kompletacji
           <Tooltip
-            title="Gotowe listy sprzętu i materiałów do wielokrotnego użycia. Aby użyć szablonu, otwórz wydarzenie, przejdź do zakładki Kompletacja i wybierz „Zastosuj szablon do listy”. Szablon może zawierać stałe ilości albo przeliczać je na liczbę gości z zapasem, np. 1 warnik na 50 gości lub 1 zestaw kawowy na osobę + 10% zapasu."
+            title="Gotowe listy sprzętu i materiałów do wielokrotnego użycia. Aby użyć szablonu, otwórz wydarzenie, przejdź do zakładki Kompletacja i wybierz „Zastosuj szablon do listy”. Możesz wpisać stałą ilość albo ilość na osobę lub grupę, np. 1 filiżanka na osobę i 5 dodatkowych sztuk zapasu."
             describeChild
             arrow
           >
@@ -111,10 +116,10 @@ export function TemplatesPage() {
                 label={hasPermission("preparation_templates.update") ? "Edytuj szablon" : "Podgląd szablonu"}
                 onClick={() =>
                   action.run(
-                    async () =>
-                      setEdit(
-                        await api<Template>("/preparation-templates/" + t.uuid),
-                      ),
+                    async () => {
+                      const template = await api<Template>("/preparation-templates/" + t.uuid);
+                      setEdit({ ...template, lines: template.lines.map(line => ({ ...line, rule: { ...line.rule, quantity: String(Number(line.rule.quantity)), reserveQuantity: String(Number(line.rule.reserveQuantity ?? 0)) } })) });
+                    },
                     "Wczytano szablon.",
                   )
                 }
@@ -131,6 +136,7 @@ export function TemplatesPage() {
                 onClick={() => setArchive(t)}
               />
             )}
+            {hasPermission('preparation_templates.delete') && <RowAction action="delete" label={`Usuń trwale szablon: ${t.name}`} disabled={action.busy} onClick={() => setDeleting(t)} />}
           </Panel>
         ))}
         {remote.data && (
@@ -215,11 +221,13 @@ export function TemplatesPage() {
                               itemUuid: item.uuid,
                               name: item.name,
                               unit: item.unit,
+                              sourceLocation: item.storageLocation ?? null,
                               rule: {
                                 mode: "fixed",
                                 quantity: "1",
                                 perGuests: null,
                                 reservePercent: 0,
+                                reserveQuantity: '0',
                               },
                             },
                           ],
@@ -230,106 +238,22 @@ export function TemplatesPage() {
                       Dodaj do szablonu
                     </Button>
                   </Stack>
+                  {!!edit?.lines?.length && <TextField size="small" type="number" label="Przykładowa liczba gości" value={exampleGuests || ''} onChange={event => setExampleGuests(Number(event.target.value))} helperText="To tylko podgląd wyliczenia. W wydarzeniu użyjemy jego rzeczywistej liczby gości." slotProps={{ htmlInput: { min: 1, max: 1000000, step: 1 } }} />}
                   {edit?.lines?.map((line, i) => (
                     <Stack
                       key={line.kind + line.itemUuid + "-" + i}
                       gap={1}
-                      sx={{ p: 2, border: "1px solid #ddd" }}
+                      sx={{ p: 2, border: "1px solid #ddd", borderRadius: 2, gap: 2 }}
                     >
                       <Typography>
                         {line.name} · {line.unit ? unitLabels[line.unit] : ""}
                       </Typography>
-                      <Stack direction="row" gap={2} flexWrap="wrap">
-                        <FieldSelect
-                          label="Sposób wyliczenia"
-                          value={line.rule.mode}
-                          options={{
-                            fixed: "Stała ilość",
-                            per_guest: "Na liczbę gości",
-                          }}
-                          onChange={(mode) =>
-                            update(i, {
-                              rule: {
-                                ...line.rule,
-                                mode,
-                                perGuests:
-                                  mode === "per_guest"
-                                    ? (line.rule.perGuests ?? 1)
-                                    : null,
-                                reservePercent:
-                                  mode === "fixed"
-                                    ? 0
-                                    : line.rule.reservePercent,
-                              },
-                            })
-                          }
-                        />
-                        <TextField
-                          required
-                          type="number"
-                          label="Ilość"
-                          value={line.rule.quantity}
-                          onChange={(e) =>
-                            update(i, {
-                              rule: { ...line.rule, quantity: e.target.value },
-                            })
-                          }
-                          slotProps={{
-                            htmlInput: {
-                              min:
-                                line.unit === "kg" || line.unit === "l"
-                                  ? 0.001
-                                  : 1,
-                              max: 1000000,
-                              step:
-                                line.unit === "kg" || line.unit === "l"
-                                  ? 0.001
-                                  : 1,
-                            },
-                          }}
-                        />
-                        {line.rule.mode === "per_guest" && (
-                          <TextField
-                            required
-                            type="number"
-                            label="Na ilu gości"
-                            value={line.rule.perGuests ?? 1}
-                            onChange={(e) =>
-                              update(i, {
-                                rule: {
-                                  ...line.rule,
-                                  perGuests: Number(e.target.value),
-                                },
-                              })
-                            }
-                            slotProps={{
-                              htmlInput: { min: 1, max: 1000000, step: 1 },
-                            }}
-                          />
-                        )}
-                        <TextField
-                          type="number"
-                          label="Zapas (%)"
-                          disabled={line.rule.mode === "fixed"}
-                          value={line.rule.reservePercent}
-                          onChange={(e) =>
-                            update(i, {
-                              rule: {
-                                ...line.rule,
-                                reservePercent: Number(e.target.value),
-                              },
-                            })
-                          }
-                          slotProps={{
-                            htmlInput: { min: 0, max: 100, step: 1 },
-                          }}
-                        />
-                      </Stack>
-                      <TextField
-                        label="Miejsce pobrania"
+                      <TemplateQuantityRule line={line} guests={exampleGuests} onChange={rule => update(i, { rule })} />
+                      <SourceLocationAutocomplete
                         value={line.sourceLocation ?? ""}
-                        onChange={(e) =>
-                          update(i, { sourceLocation: e.target.value })
+                        disabled={action.busy || (!!edit?.uuid && !hasPermission('preparation_templates.update'))}
+                        onChange={value =>
+                          update(i, { sourceLocation: value })
                         }
                       />
                       <TextField
@@ -364,6 +288,22 @@ export function TemplatesPage() {
               )}
             </DialogActions>
           </form>
+        </Dialog>
+        <Dialog open={deleting !== null} onClose={() => !action.busy && setDeleting(null)} fullWidth maxWidth="xs" aria-labelledby="delete-template-title">
+          <DialogTitle id="delete-template-title" sx={{ bgcolor: '#34495e', color: 'white' }}>Usunąć trwale szablon?</DialogTitle>
+          <DialogContent>
+            <Typography fontWeight={600} sx={{ mt: 2, mb: 2 }}>{deleting?.name}</Typography>
+            <Alert severity="warning">Tej operacji nie można cofnąć. Listy rzeczy w istniejących wydarzeniach pozostaną bez zmian.</Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button disabled={action.busy} onClick={() => setDeleting(null)}>Anuluj</Button>
+            <Button color="error" variant="contained" disabled={action.busy} onClick={() => action.run(async () => {
+              if (!deleting) return;
+              await api(`/preparation-templates/${deleting.uuid}`, 'DELETE', { version: deleting.version });
+              setDeleting(null);
+              remote.reload();
+            }, 'Trwale usunięto szablon.')}>Usuń trwale</Button>
+          </DialogActions>
         </Dialog>
         <Dialog open={archive !== null} onClose={() => setArchive(null)}>
           <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>

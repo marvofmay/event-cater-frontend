@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import SettingsIcon from "@mui/icons-material/Settings"
 import '../../../i18n/i18n';
 import { useTranslation } from 'react-i18next';
+import { useUser } from '@/app/context/userContext';
 
 const menuItems = [
     { label: "companies", href: "/settings/companies", key: "companies" },
@@ -11,12 +12,14 @@ const menuItems = [
     { label: "employees", href: "/settings/employees", key: "employees" },
     { label: "positions", href: "/settings/positions", key: "positions" },
     { label: "roles", href: "/settings/roles", key: "roles" },
-    { label: "contractTypes", href: "/settings/contractTypes", key: "contract-types" },
-    { label: "industries", href: "/settings/industries", key: "industiries" },
+    { label: "contractTypes", href: "/settings/contractTypes", key: "contract_types" },
+    { label: "industries", href: "/settings/industries", key: "industries" },
     { label: "notifications", href: "/settings/notifications", key: "notifications" },
 ];
 
 const SettingsListNavigation: React.FC = () => {
+    const { hasAccess, hasPermission, user, roles } = useUser();
+    const visibleItems = menuItems.filter(item => hasAccess(item.key) && hasPermission(`${item.key}.list`));
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const pathname = usePathname();
@@ -45,11 +48,13 @@ const SettingsListNavigation: React.FC = () => {
         }
     }, [pathname]);
 
+    if (!(user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS')) || visibleItems.length === 0) return null;
     return (
         <>
             <Button
                 color="inherit"
-                aria-controls="manage-menu"
+                id="settings-button"
+                aria-controls="settings-menu"
                 aria-haspopup="true"
                 onClick={handleMenuOpen}
                 sx={{
@@ -59,15 +64,15 @@ const SettingsListNavigation: React.FC = () => {
                 <SettingsIcon /> {t('navigation.settings')}
             </Button>
             <Menu
-                id="manage-menu"
+                id="settings-menu"
                 anchorEl={anchorEl}
                 open={open}
                 onClose={handleMenuClose}
                 MenuListProps={{
-                    "aria-labelledby": "manage-button",
+                    "aria-labelledby": "settings-button",
                 }}
             >
-                {menuItems.map((item) => (
+                {visibleItems.map((item) => (
                     <MenuItem
                         key={item.key}
                         onClick={() => handleMenuItemClick(item.key)}

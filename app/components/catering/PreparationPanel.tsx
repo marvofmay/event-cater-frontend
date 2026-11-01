@@ -4,7 +4,12 @@ import { RowAction } from "../common/RowAction";
 import { useState } from "react";
 import {
   Alert,
+  Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
   TextField,
   Typography,
@@ -14,6 +19,8 @@ import {
   TableCell,
   TableBody,
   TableContainer,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
 import {
@@ -33,6 +40,9 @@ import {
 } from "./ui";
 import { Lookup, LookupItem } from "./Lookup";
 import { PreparationLookup } from "./PreparationLookup";
+import { SourceLocationAutocomplete } from './SourceLocationAutocomplete';
+
+const quantityText = (value: string) => Number(value).toLocaleString('pl-PL', { maximumFractionDigits: 3 });
 export function PreparationPanel({
   event,
   onChanged,
@@ -41,16 +51,15 @@ export function PreparationPanel({
   onChanged: (version: number) => void;
 }) {
   const { hasPermission } = useUser();
-  const api = useApi();
   const path = "/events/" + event.uuid + "/preparation";
   const remote = useRemote<Preparation>(path);
-  const action = useAction();
+  const [mode, setMode] = useState<'plan' | 'execution'>(hasPermission('events.plan_event_preparation') || hasPermission('events.plan_event_equipment') ? 'plan' : hasPermission('events.prepare_event_catering') || hasPermission('events.load_event_catering') || hasPermission('events.dispatch_event_catering') ? 'execution' : 'plan');
   const changed = (data: Preparation) => {
     remote.setData(data);
     onChanged(data.version);
   };
   return (
-    <Panel title="Kompletacja i załadunek cateringu">
+    <Panel title="Lista rzeczy do zabrania">
       <Feedback error={remote.error} />
       {remote.loading && <Loading />}
       {remote.data && (
@@ -59,6 +68,8 @@ export function PreparationPanel({
           data={remote.data}
           event={event}
           onChange={changed}
+          mode={mode}
+          setMode={setMode}
         />
       )}
     </Panel>
@@ -68,10 +79,14 @@ function PreparationContent({
   data,
   event,
   onChange,
+  mode,
+  setMode,
 }: {
   data: Preparation;
   event: EventDetails;
   onChange: (d: Preparation) => void;
+  mode: 'plan' | 'execution';
+  setMode: (mode: 'plan' | 'execution') => void;
 }) {
   const { hasPermission } = useUser();
   const can = (p: string) => hasPermission("events." + p);
@@ -80,6 +95,8 @@ function PreparationContent({
   const path = "/events/" + event.uuid + "/preparation";
   const closed = ["cancelled", "completed"].includes(event.status);
   const plan = can("plan_event_preparation") && !closed;
+  const canExecute = can('prepare_event_catering') || can('load_event_catering') || can('dispatch_event_catering');
+  const planning = mode === 'plan' || !canExecute;
   const [owner, setOwner] = useState<LookupItem | null>(
     data.responsibleUuid
       ? {
@@ -107,28 +124,35 @@ function PreparationContent({
     );
   return (
     <>
+      {canExecute && <Tabs value={planning ? 'plan' : 'execution'} onChange={(_, selected) => setMode(selected)} aria-label="Tryb listy rzeczy" sx={{ mb: 2 }}>
+        <Tab value="plan" label="Planowanie" />
+        <Tab value="execution" label="Kompletowanie" />
+      </Tabs>}
+      <Typography color="text.secondary" sx={{ mb: 2 }}>{planning ? 'Ustal, co i ile zabrać, skąd to pobrać oraz wyznacz jedną osobę do skompletowania całej listy.' : 'To widok osoby fizycznie kompletującej rzeczy. Tutaj zapisujesz rzeczywiście przygotowane ilości.'}</Typography>
+      {!planning && data.status === 'draft' && <Alert severity="info" sx={{ mb: 2 }}>Lista jest jeszcze planowana. Organizator musi ją zatwierdzić przed rozpoczęciem kompletowania.</Alert>}
       <Stack direction="row" gap={2} alignItems="center">
         <Status value={data.status} />
-        <Typography>{data.lines.length} pozycji do zabrania</Typography>
+        <Typography>Pozycji do zabrania: {data.lines.length}</Typography>
       </Stack>
-      {data.summary.hasShortages && (
+      {!planning && data.status !== 'draft' && data.summary.hasShortages && (
         <Alert severity="warning" sx={{ my: 2 }}>
           Lista ma braki w załadunku. Ich ewentualna akceptacja nie usuwa braków
           z ewidencji.
         </Alert>
       )}
-      {data.summary.hasSurplus && (
+      {!planning && data.summary.hasSurplus && (
         <Alert severity="info">
           Przygotowano lub załadowano nadwyżkę względem planu.
         </Alert>
       )}
-      {data.acceptedShortagesReason && (
+      {!planning && data.acceptedShortagesReason && (
         <Alert severity="warning">
           Wyjazd z zaakceptowanymi brakami: {data.acceptedShortagesReason}
         </Alert>
       )}
-      {plan && (
-        <Panel title="Odpowiedzialność i termin">
+      {(!planning || !plan) && <Typography sx={{ my: 2 }}>Całą listę kompletuje: <strong>{data.responsibleName || 'Nie wyznaczono jeszcze osoby'}</strong>{data.notes ? ` · ${data.notes}` : ''}</Typography>}
+      {planning && plan && (
+        <Panel title="Kto kompletuje całą listę i na kiedy">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -144,15 +168,16 @@ function PreparationContent({
               );
             }}
           >
-            <Stack gap={2}>
+            <Stack gap={2} sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1.3fr) minmax(240px, 1fr) auto' }, alignItems: 'start' }}>
               <Lookup
-                label="Odpowiedzialny za kompletację"
+                label="Osoba kompletująca całą listę"
                 path={path + "/staff-options"}
                 value={owner}
                 onChange={setOwner}
               />
               <TextField
                 label={"Termin kompletacji (" + event.timezone + ")"}
+                size="small"
                 type="datetime-local"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
@@ -160,18 +185,20 @@ function PreparationContent({
               />
               <TextField
                 label="Uwagi do kompletacji"
+                size="small"
+                sx={{ gridColumn: { md: '1 / -1' }, gridRow: { md: 2 } }}
                 multiline
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
-              <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" disabled={action.busy} type="submit">
-                Zapisz odpowiedzialność i termin
+              <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold', gridColumn: { md: 3 }, gridRow: { md: 1 }, alignSelf: 'center' }} color="primary" variant="contained" disabled={action.busy} type="submit">
+                Zapisz osobę i termin
               </Button>
             </Stack>
           </form>
         </Panel>
       )}
-      {(plan || can("plan_event_equipment")) && !closed && (
+      {planning && (plan || can("plan_event_equipment")) && !closed && (
         <Panel title="Dodaj rzecz do listy">
           <form
             onSubmit={(e) => {
@@ -240,7 +267,7 @@ function PreparationContent({
           </form>
         </Panel>
       )}
-      {plan &&
+      {planning && plan &&
         hasPermission("preparation_templates.view") &&
         hasPermission("preparation_templates.list") && (
           <Stack gap={1} my={2}>
@@ -278,18 +305,24 @@ function PreparationContent({
           </Stack>
         )}
       <TableContainer>
-        <Table>
+        <Table size="small" sx={{ minWidth: 650, '& th': { bgcolor: 'grey.50', whiteSpace: 'nowrap' }, '& td': { py: 1.5, verticalAlign: 'middle' } }}>
           <TableHead>
             <TableRow>
               <TableCell>Rzecz / instrukcje</TableCell>
-              <TableCell>Plan</TableCell>
-              <TableCell>Przygotowanie i załadunek</TableCell>
-              <TableCell />
+              <TableCell>Do zabrania</TableCell>
+              <TableCell>{planning ? 'Skąd pobrać' : 'Przygotowanie i załadunek'}</TableCell>
+              {planning && <TableCell align="right">Akcje</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {data.lines.map((line) => (
-              <PreparationRow
+              planning ? <PreparationPlanRow
+                key={line.uuid}
+                line={line}
+                list={data}
+                closed={closed}
+                onChange={onChange}
+              /> : <PreparationRow
                 key={line.uuid}
                 line={line}
                 list={data}
@@ -301,26 +334,26 @@ function PreparationContent({
         </Table>
       </TableContainer>
       <Stack direction="row" gap={1} flexWrap="wrap" my={2}>
-        {plan && data.status === "draft" && (
+        {planning && plan && data.status === "draft" && (
           <Button disabled={action.busy} onClick={() => command("approve")}>
             Zatwierdź listę
           </Button>
         )}
-        {can("prepare_event_catering") &&
+        {!planning && can("prepare_event_catering") &&
           !closed &&
           data.status === "approved" && (
             <Button disabled={action.busy} onClick={() => command("start")}>
               Rozpocznij kompletowanie
             </Button>
           )}
-        {can("prepare_event_catering") &&
+        {!planning && can("prepare_event_catering") &&
           !closed &&
           ["approved", "in_preparation"].includes(data.status) && (
             <Button disabled={action.busy} onClick={() => command("ready")}>
               Potwierdź gotowość do załadunku
             </Button>
           )}
-        {can("dispatch_event_catering") &&
+        {!planning && can("dispatch_event_catering") &&
           !closed &&
           ["ready_for_loading", "in_preparation", "approved"].includes(
             data.status,
@@ -334,7 +367,7 @@ function PreparationContent({
             </Button>
           )}
       </Stack>
-      {can("accept_preparation_shortages") &&
+      {!planning && can("accept_preparation_shortages") &&
         can("dispatch_event_catering") &&
         !closed &&
         data.status !== "draft" &&
@@ -359,6 +392,81 @@ function PreparationContent({
     </>
   );
 }
+function PreparationPlanRow({ line, list, closed, onChange }: { line: PreparationLine; list: Preparation; closed: boolean; onChange: (list: Preparation) => void }) {
+  const { hasPermission } = useUser();
+  const api = useApi();
+  const action = useAction();
+  const canConfigure = hasPermission('events.plan_event_preparation') && !closed;
+  const canQuantity = hasPermission(line.kind === 'equipment' ? 'events.plan_event_equipment' : 'events.plan_event_preparation') && !closed;
+  const [editing, setEditing] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [quantity, setQuantity] = useState(String(Number(line.requiredQuantity)));
+  const [source, setSource] = useState(line.sourceLocation ?? '');
+  const [instructions, setInstructions] = useState(line.instructions ?? '');
+  const path = `/events/${list.eventUuid}/preparation`;
+  return <>
+    <TableRow>
+      <TableCell>
+        <Typography fontWeight={600}>{line.name}</Typography>
+        <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'} · {line.code}</Typography>
+        {line.instructions && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{line.instructions}</Typography>}
+      </TableCell>
+      <TableCell sx={{ whiteSpace: 'nowrap' }}>{quantityText(line.requiredQuantity)} {unitLabels[line.unit]}</TableCell>
+      <TableCell>{line.sourceLocation || 'Nie wskazano miejsca'}</TableCell>
+      <TableCell align="right">
+        {(canConfigure || canQuantity) && <RowAction action="edit" label={`Edytuj pozycję: ${line.name}`} onClick={() => {
+          setQuantity(String(Number(line.requiredQuantity)));
+          setSource(line.sourceLocation ?? '');
+          setInstructions(line.instructions ?? '');
+          setEditing(true);
+        }} />}
+      </TableCell>
+    </TableRow>
+    <Dialog open={editing && !removing} onClose={() => !action.busy && setEditing(false)} fullWidth maxWidth="sm" aria-labelledby={`preparation-line-${line.uuid}`}>
+      <Box component="form" onSubmit={event => {
+        event.preventDefault();
+        action.run(async () => {
+          if (canConfigure) {
+            onChange(await api<Preparation>(`${path}/lines/${line.uuid}`, 'PUT', {
+              version: list.version, sourceLocation: source, instructions,
+              ...(canQuantity && Number(quantity) !== Number(line.requiredQuantity) ? { requiredQuantity: quantity } : {}),
+            }));
+          } else if (canQuantity) {
+            await api(`/events/${list.eventUuid}/equipment/${line.itemUuid}`, 'PUT', { version: list.version, quantity: Number(quantity) });
+            onChange(await api<Preparation>(path));
+          }
+          setEditing(false);
+        }, 'Zapisano pozycję w planie.');
+      }}>
+        <DialogTitle id={`preparation-line-${line.uuid}`} sx={{ bgcolor: '#34495e', color: 'white' }}>Edycja planu — {line.name}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            <TextField required type="number" label={`Ilość do zabrania (${unitLabels[line.unit]})`} value={quantity} onChange={event => setQuantity(event.target.value)} disabled={action.busy || !canQuantity} slotProps={{ htmlInput: { min: ['kg', 'l'].includes(line.unit) ? 0.001 : 1, max: 1000000, step: ['kg', 'l'].includes(line.unit) ? 0.001 : 1 } }} />
+            <SourceLocationAutocomplete label="Skąd pobrać" value={source} onChange={setSource} disabled={action.busy || !canConfigure} />
+            <TextField label="Instrukcje" multiline minRows={2} value={instructions} onChange={event => setInstructions(event.target.value)} disabled={action.busy || !canConfigure} />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
+          {canQuantity && <Button color="error" disabled={action.busy} onClick={() => setRemoving(true)} sx={{ mr: 'auto' }}>Usuń z planu</Button>}
+          <Button disabled={action.busy} onClick={() => setEditing(false)}>Anuluj</Button>
+          <Button type="submit" variant="contained" disabled={action.busy} sx={{ bgcolor: '#34495e' }}>Zapisz pozycję w planie</Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
+    <Dialog open={removing} onClose={() => !action.busy && setRemoving(false)} fullWidth maxWidth="xs" aria-labelledby={`remove-preparation-${line.uuid}`}>
+      <DialogTitle id={`remove-preparation-${line.uuid}`}>Usunąć pozycję z planu?</DialogTitle>
+      <DialogContent>{line.name}</DialogContent>
+      <DialogActions>
+        <Button disabled={action.busy} onClick={() => setRemoving(false)}>Anuluj</Button>
+        <Button color="error" variant="contained" disabled={action.busy} onClick={() => action.run(async () => {
+          await api(line.kind === 'equipment' ? `/events/${list.eventUuid}/equipment/${line.itemUuid}` : `${path}/consumables/${line.itemUuid}`, 'DELETE', { version: list.version });
+          onChange(await api<Preparation>(path));
+        }, 'Usunięto pozycję z planu.')}>Usuń z planu</Button>
+      </DialogActions>
+    </Dialog>
+  </>;
+}
+
 function PreparationRow({
   line,
   list,
@@ -375,26 +483,10 @@ function PreparationRow({
   const action = useAction();
   const prepare = hasPermission("events.prepare_event_catering");
   const load = hasPermission("events.load_event_catering");
-  const canPlan = hasPermission("events.plan_event_preparation");
-  const [prepared, setPrepared] = useState(line.preparedQuantity);
-  const [loaded, setLoaded] = useState(line.loadedQuantity);
+  const [prepared, setPrepared] = useState(String(Number(line.preparedQuantity)));
+  const [loaded, setLoaded] = useState(String(Number(line.loadedQuantity)));
   const [reason, setReason] = useState("");
-  const [source, setSource] = useState(line.sourceLocation ?? "");
-  const [instructions, setInstructions] = useState(line.instructions ?? "");
-  const [owner, setOwner] = useState<LookupItem | null>(
-    line.responsibleUuid
-      ? {
-          uuid: line.responsibleUuid,
-          name: line.responsibleName ?? "Zapisana osoba",
-        }
-      : null,
-  );
-  const [remove, setRemove] = useState(false);
   const path = "/events/" + list.eventUuid + "/preparation";
-  const canRemove =
-    line.kind === "equipment"
-      ? hasPermission("events.plan_event_equipment")
-      : canPlan;
   return (
     <TableRow>
       <TableCell>
@@ -403,71 +495,24 @@ function PreparationRow({
           {line.kind === "equipment" ? "Sprzęt" : "Produkt / materiał"} ·{" "}
           {line.code}
         </Typography>
-        <Typography variant="body2">
-          {line.sourceLocation} · {line.instructions}
-        </Typography>
-        {canPlan && !closed && (
-          <details>
-            <summary>Instrukcje i odpowiedzialność</summary>
-            <Stack gap={1} mt={1}>
-              <Lookup
-                label="Odpowiedzialny za pozycję"
-                path={path + "/staff-options"}
-                value={owner}
-                onChange={setOwner}
-              />
-              <TextField
-                size="small"
-                label="Skąd pobrać"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-              />
-              <TextField
-                size="small"
-                label="Instrukcje"
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-              />
-              <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained"
-                disabled={action.busy}
-                onClick={() =>
-                  action.run(async () =>
-                    onChange(
-                      await api<Preparation>(
-                        path + "/lines/" + line.uuid,
-                        "PUT",
-                        {
-                          version: list.version,
-                          responsibleUuid: owner?.uuid ?? null,
-                          sourceLocation: source,
-                          instructions,
-                        },
-                      ),
-                    ),
-                  )
-                }
-              >
-                Zapisz instrukcje
-              </Button>
-            </Stack>
-          </details>
-        )}
+        {line.sourceLocation && <Typography variant="body2">Skąd pobrać: {line.sourceLocation}</Typography>}
+        {line.instructions && <Typography variant="body2">{line.instructions}</Typography>}
       </TableCell>
       <TableCell>
-        {line.requiredQuantity} {unitLabels[line.unit]}
+        {quantityText(line.requiredQuantity)} {unitLabels[line.unit]}
         <Typography variant="body2">
-          Brak do przygotowania: {line.missingToPrepare}
+          Do przygotowania pozostało: {quantityText(line.missingToPrepare)}
         </Typography>
         <Typography variant="body2">
-          Brak w załadunku: {line.missingToLoad}
+          Brak w załadunku: {quantityText(line.missingToLoad)}
         </Typography>
       </TableCell>
       <TableCell>
         <Typography variant="body2">
-          Przygotowano: {line.preparedQuantity} · załadowano:{" "}
-          {line.loadedQuantity}
+          Przygotowano: {quantityText(line.preparedQuantity)} · załadowano:{" "}
+          {quantityText(line.loadedQuantity)}
         </Typography>
-        {!closed && (prepare || load) && (
+        {!closed && list.status !== 'draft' && (prepare || load) && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -534,40 +579,6 @@ function PreparationRow({
             </Stack>
           </form>
         )}
-      </TableCell>
-      <TableCell>
-        {canRemove &&
-          !closed &&
-          (remove ? (
-            <Stack>
-              <Typography>Usunąć pozycję z planu?</Typography>
-              <Button
-                color="error"
-                variant="contained"
-                disabled={action.busy}
-                onClick={() =>
-                  action.run(async () => {
-                    await api(
-                      line.kind === "equipment"
-                        ? "/events/" +
-                            list.eventUuid +
-                            "/equipment/" +
-                            line.itemUuid
-                        : path + "/consumables/" + line.itemUuid,
-                      "DELETE",
-                      { version: list.version },
-                    );
-                    onChange(await api<Preparation>(path));
-                  })
-                }
-              >
-                Potwierdź usunięcie
-              </Button>
-              <Button onClick={() => setRemove(false)}>Zostaw</Button>
-            </Stack>
-          ) : (
-            <RowAction action="delete" label="Usuń z planu" onClick={() => setRemove(true)} />
-          ))}
       </TableCell>
     </TableRow>
   );

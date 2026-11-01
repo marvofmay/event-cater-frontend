@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Stack, TextField, Alert, Typography } from "@mui/material";
+import { Box, Button, Stack, TextField, Alert, Typography } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
 import { useApi, useAction, eventDateTime, localDateTime } from "./api";
 import { EventDetails, Venue } from "./types";
 import { LocationEditor, emptyLocation } from "./LocationEditor";
 import { Lookup, LookupItem } from "./Lookup";
 import { Panel } from "./ui";
+import { CustomerPicker, CustomerOption } from "./CustomerPicker";
 export function EventForm({
   initial,
   onSaved,
@@ -29,13 +30,13 @@ export function EventForm({
     initial?.guestCount?.toString() ?? "",
   );
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [customerName, setCustomer] = useState(initial?.customerName ?? "");
+  const [customer, setCustomer] = useState<CustomerOption | null>(initial?.customerName ? { uuid: initial.customerUuid ?? null, name: initial.customerName } : null);
   const [location, setLocation] = useState(
     initial?.location ?? { ...emptyLocation },
   );
   const [coordinator, setCoordinator] = useState<LookupItem | null>(
     initial?.coordinatorUuid
-      ? { uuid: initial.coordinatorUuid, name: "Zapisany koordynator" }
+      ? { uuid: initial.coordinatorUuid, name: initial.coordinatorName || 'Pracownik niedostępny' }
       : null,
   );
   const [readyDate, setReadyDate] = useState(
@@ -106,7 +107,8 @@ export function EventForm({
               timezone,
               guestCount: guestCount === "" ? null : Number(guestCount),
               description,
-              customerName,
+              customerName: customer?.name ?? null,
+              customerUuid: customer?.uuid ?? null,
               location,
               coordinatorUuid: coordinator?.uuid ?? null,
               readyAt: eventDateTime(ready && readyDate ? readyDate + "T" + ready : "", timezone),
@@ -174,13 +176,9 @@ export function EventForm({
               />
             </Stack>
             <Stack direction={{ xs: "column", md: "row" }} gap={2}>
-              <TextField
-                label="Klient / organizator"
-                value={customerName}
-                onChange={(e) => setCustomer(e.target.value)}
-                fullWidth
-              />
+              <CustomerPicker value={customer} disabled={!canSave || action.busy || !!created} onChange={value => { setCustomer(value); onDirty?.(true); }} />
               {hasPermission("events.assign_event_staff") && (
+                <Box sx={{ flex: { md: '1 1 320px' }, minWidth: 0, width: { xs: '100%', md: 320 }, '& .MuiAutocomplete-root': { minWidth: 0, width: '100%' } }}>
                 <Lookup
                   label="Koordynator"
                   path="/events/staff-options"
@@ -190,6 +188,7 @@ export function EventForm({
                     onDirty?.(true);
                   }}
                 />
+                </Box>
               )}
               <TextField
                 label="Strefa czasowa"

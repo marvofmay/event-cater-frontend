@@ -27,7 +27,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import usePositionsQuery from '@/app/hooks/position/usePositionsQuery';
 import useContractTypesQuery from '@/app/hooks/contractType/useContractTypesQuery';
 import useRolesQuery from '@/app/hooks/role/useRolesQuery';
-import useEmployeesQuery from '@/app/hooks/employee/useEmployeesQuery';
+import useParentEmployeeOptions from '@/app/hooks/employee/useParentEmployeeOptions';
 import useCompaniesQuery from '@/app/hooks/company/useCompaniesQuery';
 import useDepartmentsQuery from '@/app/hooks/department/useDepartmentsQuery';
 import EmployeePayload from '@/app/types/EmployeePayload';
@@ -36,40 +36,42 @@ interface AddEmployeeModalProps {
     open: boolean;
     onClose: () => void;
     onAddEmployee: (newEmployee: EmployeePayload) => Promise<void>;
+    employee?: Employee | null;
 }
 
-const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAddEmployee }) => {
+const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAddEmployee, employee }) => {
     const { t } = useTranslation();
 
     const MAX_PHONE_FIELDS = 3;
     const [generatingPesel, setGeneratingPesel] = useState(false);
 
     const initialValues: EmployeePayload = {
-        firstName: '',
-        lastName: '',
-        pesel: '',
-        isPeselFake: false,
-        internalCode: '',
-        externalCode: '',
-        companyUUID: '',
-        departmentUUID: '',
-        parentEmployeeUUID: '',
-        positionUUID: '',
-        contractTypeUUID: '',
-        roleUUID: '',
-        contacts: [],
-        email: '',
-        phones: [""],
-        webs: [""],
-        employmentFrom: new Date().toISOString().slice(0, 10),
-        active: true,
+        uuid: employee?.uuid,
+        firstName: employee?.firstName ?? '',
+        lastName: employee?.lastName ?? '',
+        pesel: employee?.pesel ?? '',
+        isPeselFake: employee?.isPeselFake ?? false,
+        internalCode: employee?.internalCode ?? '',
+        externalCode: employee?.externalCode ?? '',
+        companyUUID: employee?.company?.uuid ?? '',
+        departmentUUID: employee?.department?.uuid ?? '',
+        parentEmployeeUUID: employee?.parentEmployee?.uuid ?? '',
+        positionUUID: employee?.position?.uuid ?? '',
+        contractTypeUUID: employee?.contractType?.uuid ?? '',
+        roleUUID: employee?.role?.uuid ?? '',
+        contacts: employee?.contacts ?? [],
+        email: employee?.contacts?.find(contact => contact.type === 'email')?.data ?? employee?.email ?? '',
+        phones: employee?.contacts?.some(contact => contact.type === 'phone') ? employee.contacts.filter(contact => contact.type === 'phone').map(contact => contact.data) : employee?.phones?.length ? employee.phones : [''],
+        webs: employee?.contacts?.filter(contact => contact.type === 'website').map(contact => contact.data) ?? [''],
+        employmentFrom: employee?.employmentFrom ?? '',
+        active: employee?.active ?? true,
         address: {
-            country: '',
-            city: '',
-            postcode: '',
-            street: '',
+            country: employee?.address?.country ?? '',
+            city: employee?.address?.city ?? '',
+            postcode: employee?.address?.postcode ?? '',
+            street: employee?.address?.street ?? '',
         },
-        employmentTo: '',
+        employmentTo: employee?.employmentTo ?? '',
         createdAt: '',
         updatedAt: '',
         deletedAt: ''
@@ -84,12 +86,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
         email: Yup
             .string()
             .trim()
-            .email(t('validation.invalidEmail'))
-            .required(t('validation.fieldIsRequired')),
-        employmentFrom: Yup.string().required(t('validation.fieldIsRequired')),
+            .required(t('validation.fieldIsRequired'))
+            .max(100, 'Adres e-mail może mieć maksymalnie 100 znaków.')
+            .email(t('validation.invalidEmail')),
+        employmentFrom: Yup.string().nullable(),
         companyUUID: Yup.string().required(t('validation.fieldIsRequired')),
         departmentUUID: Yup.string().required(t('validation.fieldIsRequired')),
-        contractTypeUUID: Yup.string().required(t('validation.fieldIsRequired')),
+        contractTypeUUID: Yup.string().nullable(),
         positionUUID: Yup.string().required(t('validation.fieldIsRequired')),
         roleUUID: Yup.string().required(t('validation.fieldIsRequired')),
         address: Yup.object().shape({
@@ -101,7 +104,14 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
         phones: Yup.array()
             .of(Yup.string().trim())
             .compact(value => !value || !value.trim())
-            .min(1, t('validation.atLeastOnePhoneIsRequired')),
+            .min(1, t('validation.atLeastOnePhoneIsRequired'))
+            .test('login-phone', 'Podaj prawidłowy telefon logowania: 9 cyfr lub numer z kodem kraju.', values => {
+                const phone = values?.[0]?.trim() ?? '';
+                if (!phone) return true;
+                if (!/^\+?[0-9 ().-]+$/.test(phone)) return false;
+                const digits = phone.replace(/[^0-9]/g, '').replace(/^00/, '');
+                return /^[1-9][0-9]{8,14}$/.test(digits);
+            }),
     });
 
     const [errorAPI, setErrorAPI] = useState<string | null>(null);
@@ -112,6 +122,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
     const handleSubmit = async (values: EmployeePayload, formikHelpers: FormikHelpers<EmployeePayload>) => {
         const employeeData = {
             ...values,
+            employmentFrom: values.employmentFrom || null,
+            contractTypeUUID: values.contractTypeUUID || null,
+            email: values.email?.trim() || null,
         };
 
         if (submitting.current) return;
@@ -164,7 +177,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
         'asc'
     );
 
-    const [selectedCompanyUUID, setSelectedCompanyUUID] = useState<string | null>(null);
+    const [selectedCompanyUUID, setSelectedCompanyUUID] = useState<string | null>(employee?.company?.uuid ?? null);
 
     const departments = dataDepartments?.items.map(({ uuid, name }) => ({
         uuid,
@@ -220,27 +233,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
         name,
     })) ?? [];
 
-    const {
-        data: dataEmployees,
-        isLoading: loadingEmployees,
-        isError: isErrorEmployees
-    } = useEmployeesQuery(
-        1000,
-        1,
-        'lastName',
-        'asc',
-        null,
-        'department'
-    );
-
-    const employees = dataEmployees?.items.map(({ uuid, lastName, firstName, department }) => ({
-        uuid,
-        lastName,
-        firstName,
-        department: {
-            uuid: department.uuid,
-        }
-    })) ?? [];
+    const { data: supervisors = [], isLoading: loadingSupervisors, isError: supervisorError } = useParentEmployeeOptions(selectedCompanyUUID, employee?.uuid);
 
 
     return (
@@ -263,7 +256,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                     fontWeight: 'bold',
                 }}
             >
-                {t('employee.modal.add.title')}
+                {t(employee ? 'employee.modal.edit.title' : 'employee.modal.add.title')}
             </DialogTitle>
             <Formik<EmployeePayload>
                 initialValues={initialValues}
@@ -410,14 +403,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         as={TextField}
                                         type="date"
                                         name="employmentFrom"
-                                        value={values.employmentFrom}
+                                        value={values.employmentFrom ?? ''}
                                         label={t('employee.form.field.employmentFrom')}
                                         fullWidth
                                         margin="normal"
                                         InputLabelProps={{ shrink: true }}
                                         error={touched.employmentFrom && Boolean(errors.employmentFrom)}
                                         helperText={touched.employmentFrom && errors.employmentFrom}
-                                        required
                                     />
                                     <Autocomplete
                                         options={companies}
@@ -432,6 +424,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                             setFieldValue('companyUUID', uuid);
                                             setSelectedCompanyUUID(uuid);
                                             setFieldValue('departmentUUID', '');
+                                            setFieldValue('parentEmployeeUUID', '');
                                         }}
                                         noOptionsText={
                                             isErrorCompanies
@@ -534,12 +527,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         select
                                         fullWidth
                                         name="contractTypeUUID"
+                                        value={values.contractTypeUUID ?? ''}
                                         label={t('employee.form.field.contractType')}
                                         margin="normal"
                                         error={touched?.contractTypeUUID && Boolean(errors?.contractTypeUUID)}
                                         helperText={touched?.contractTypeUUID && errors?.contractTypeUUID}
-                                        required
                                     >
+                                        <MenuItem value="">Brak</MenuItem>
                                         {loadingContractTypes && <MenuItem disabled>{t('common.loading')}</MenuItem>}
                                         {isErrorContractTypes && <MenuItem disabled>{t('contractType.list.loading.failed')}</MenuItem>}
                                         {!loadingContractTypes && contractTypes.map(contractType => (
@@ -548,29 +542,17 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                             </MenuItem>
                                         ))}
                                     </Field>
-                                    {/*
-                                    <Field
-                                        as={TextField}
-                                        select
-                                        fullWidth
-                                        name="parentEmployee.uuid"
-                                        label={t('employee.form.field.parentEmployee')}
-                                        margin="normal"
-                                        disabled={!values.department.uuid}
-                                    >
-                                        <MenuItem value="">
-                                            — {t('common.lack')} —
-                                        </MenuItem>
-                                        {loadingEmployees && <MenuItem disabled>{t('common.loading')}</MenuItem>}
-                                        {isErrorEmployees && <MenuItem disabled>{t('employee.list.loading.failed')}</MenuItem>}
-                                        {!loadingEmployees && employees
-                                            .filter(ppe => ppe.department.uuid === values.department.uuid)
-                                            .map(ppe => (
-                                                <MenuItem key={ppe.uuid} value={ppe.uuid}>
-                                                    {ppe.lastName} {ppe.firstName}
-                                                </MenuItem>
-                                            ))}
-                                    </Field> */}
+                                    <Autocomplete
+                                        options={Array.isArray(supervisors) ? supervisors : []}
+                                        loading={loadingSupervisors}
+                                        disabled={!values.companyUUID}
+                                        getOptionLabel={option => option.fullName}
+                                        isOptionEqualToValue={(option, value) => option.uuid === value.uuid}
+                                        value={(Array.isArray(supervisors) ? supervisors : []).find(option => option.uuid === values.parentEmployeeUUID) ?? (employee?.parentEmployee?.uuid && employee.parentEmployee.uuid === values.parentEmployeeUUID ? { uuid: employee.parentEmployee.uuid, fullName: `${employee.parentEmployee.firstName} ${employee.parentEmployee.lastName}`.trim() } : null)}
+                                        onChange={(_, option) => setFieldValue('parentEmployeeUUID', option?.uuid ?? '')}
+                                        renderOption={(props, option) => <li {...props} key={option.uuid}>{option.fullName}{option.departmentName ? ` — ${option.departmentName}` : ''}</li>}
+                                        renderInput={parameters => <TextField {...parameters} label="Bezpośredni przełożony" margin="normal" error={supervisorError} helperText={supervisorError ? 'Nie udało się pobrać przełożonych.' : 'Opcjonalnie. Możesz wybrać osobę z dowolnego działu tej firmy.'} />}
+                                    />
                                     <Field
                                         as={TextField}
                                         type="date"
@@ -670,12 +652,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                                                 name={`phones[${index}]`}
                                                                 type="tel"
                                                                 label={`${t('company.form.field.phone')} ${index + 1}`}
+                                                                required={index === 0}
                                                                 fullWidth
                                                                 error={index === 0 && phonesSectionError}
                                                                 helperText={
                                                                     index === 0 && phonesSectionError
                                                                         ? errors.phones
-                                                                        : undefined
+                                                                        : index === 0 ? 'Telefon logowania pracownika. Polski numer: 9 cyfr; zagraniczny: z kodem kraju.' : undefined
                                                                 }
                                                             />
 
@@ -704,12 +687,12 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         as={TextField}
                                         type="email"
                                         name="email"
+                                        required
                                         label={t('employee.form.field.email')}
                                         fullWidth
                                         margin="normal"
                                         error={touched?.email && Boolean(errors?.email)}
                                         helperText={touched?.email && errors?.email}
-                                        required
                                     />
                                 </Box>
                             </Box>

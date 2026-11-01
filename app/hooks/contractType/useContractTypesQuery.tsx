@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import ContractType from "../../types/ContractType";
 import axios from "axios";
@@ -49,7 +50,9 @@ const useContractTypesQuery = (
 ) => {
   const { t } = useTranslation();
 
+  const { ready } = usePreferences();
   return useQuery<ContractTypesResponse>({
+    enabled: ready,
     queryKey: ["contractTypes", pageSize, page, sortBy, sortDirection, phrase],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");

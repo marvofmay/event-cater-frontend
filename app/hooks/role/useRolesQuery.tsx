@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import Role from "../../types/Role";
 import axios from "axios";
@@ -46,7 +47,9 @@ const useRolesQuery = (
 ) => {
   const { t } = useTranslation();
 
+  const { ready } = usePreferences();
   return useQuery<RolesResponse>({
+    enabled: ready,
     queryKey: ["roles", pageSize, page, sortBy, sortDirection, phrase],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");

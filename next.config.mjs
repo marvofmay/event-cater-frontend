@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: { proxyClientMaxBodySize: "110mb" },
+  async headers() {
+    return [{ source: '/reset-password', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'Cache-Control', value: 'no-store' }] }];
+  },
   async rewrites() {
     const api = (
       process.env.API_INTERNAL_URL ||

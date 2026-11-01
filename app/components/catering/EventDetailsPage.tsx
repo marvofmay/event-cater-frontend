@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Alert,
+  Box,
   Button,
   Checkbox,
   Dialog,
@@ -371,15 +372,24 @@ function VenueSelection({
           </Stack>
         )}
       {hasPermission("venues.create") && (
-        <Stack direction="row" gap={1} mt={2} flexWrap="wrap">
+        <Box component="details" sx={{ mt: 2, border: 1, borderColor: "divider", borderRadius: 2, p: 2, "& summary": { cursor: "pointer", color: "primary.main", fontWeight: 600 } }}>
+          <summary>Dodaj aktualne miejsce jako nowe w bazie</summary>
+          <Typography variant="body2" color="text.secondary" mt={1} mb={2}>
+            Tworzy nowy wpis na podstawie zapisanego adresu i kontaktów tego wydarzenia. Nie nadpisuje wcześniej wczytanego miejsca ani innych wpisów w bazie.
+          </Typography>
+          <Stack direction={{ xs: "column", sm: "row" }} gap={2} alignItems={{ sm: "flex-start" }}>
           <TextField
             size="small"
-            label="Nazwa miejsca do zapisania"
+            label="Nazwa nowego miejsca"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            disabled={disabled || action.busy}
+            sx={{ flex: 1, minWidth: 0 }}
+            slotProps={{ htmlInput: { maxLength: 200 } }}
           />
-          <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained"
+          <Button color="primary" variant="contained"
             disabled={
+              disabled ||
               action.busy ||
               !name.trim() ||
               !event.location.street ||
@@ -394,12 +404,16 @@ function VenueSelection({
                   notes: event.location.instructions,
                   serviceMode: "off_site",
                 });
-              }, "Zapisano miejsce i aktualne kontakty w bazie.")
+                setName("");
+              }, "Dodano nowe miejsce do bazy. Dotychczasowe wpisy pozostały bez zmian.")
             }
           >
-            Zapisz aktualne miejsce w bazie
+            Dodaj nowe miejsce do bazy
           </Button>
-        </Stack>
+          </Stack>
+          {disabled && <Typography variant="caption" color="text.secondary">Przed dodaniem miejsca zapisz zmiany formularza. Dla zamkniętego wydarzenia ta opcja jest niedostępna.</Typography>}
+          {(!event.location.street || !event.location.city || !event.location.postalCode) && <Typography variant="caption" color="text.secondary">Uzupełnij i zapisz ulicę, miasto oraz kod pocztowy w danych wydarzenia.</Typography>}
+        </Box>
       )}
     </Panel>
   );
@@ -439,16 +453,12 @@ function ContactsSection({
         <ContactEditor
           value={contacts}
           disabled={!allowed || action.busy}
+          actions={allowed && <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>Zapisz kontakty</Button>}
           onChange={(v) => {
             setContacts(v);
             onDirty(true);
           }}
         />
-        {allowed && (
-          <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>
-            Zapisz kontakty
-          </Button>
-        )}
       </form>
     </Panel>
   );
@@ -546,35 +556,43 @@ function StaffSection({
   };
   return (
     <Panel title="Zespół wydarzenia">
-      {event.staff.map((person) => (
-        <Stack key={person.uuid} direction="row" gap={2} my={1} flexWrap="wrap">
-          <Typography>
-            {person.employeeName} ·{" "}
-            {person.functions.map((f) => labels[f] ?? f).join(", ")} ·{" "}
-            {localDateTime(person.startsAt, event.timezone).replace("T", " ")} –{" "}
-            {localDateTime(person.endsAt, event.timezone).replace("T", " ")}
-          </Typography>
-          {allowed && (
-            <>
-              <RowAction
-                action="edit"
-                label="Zmień przydział"
-                onClick={() => {
-                  setEmployee({
-                    uuid: person.employeeUuid,
-                    name: person.employeeName,
-                  });
-                  setFunctions(person.functions);
-                  setStart(localDateTime(person.startsAt, event.timezone));
-                  setEnd(localDateTime(person.endsAt, event.timezone));
-                  setNotes(person.notes ?? "");
-                }}
-              />
-              <RowAction action="delete" label="Usuń przydział" onClick={() => setRemove(person.employeeUuid)} />
-            </>
-          )}
-        </Stack>
-      ))}
+      {event.staff.length === 0 ? <Typography color="text.secondary">Nie przypisano jeszcze pracowników.</Typography> : <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ display: { xs: 'none', md: 'grid' }, gridTemplateColumns: allowed ? 'minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1fr) 88px' : 'minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1fr)', gap: 2, px: 2, py: 1, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="body2" color="text.secondary">Pracownik</Typography>
+          <Typography variant="body2" color="text.secondary">Funkcje</Typography>
+          <Typography variant="body2" color="text.secondary">Czas pracy</Typography>
+          {allowed && <Typography variant="body2" color="text.secondary" textAlign="right">Akcje</Typography>}
+        </Box>
+        <Box component="ul" aria-label="Zespół wydarzenia" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+          {event.staff.map((person) => (
+            <Box component="li" key={person.uuid} aria-label={person.employeeName} sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr) auto', md: allowed ? 'minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1fr) 88px' : 'minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1fr)' }, alignItems: 'center', columnGap: 2, rowGap: 1, px: 2, py: 1.5, '& + li': { borderTop: 1, borderColor: 'divider' }, '&:hover': { bgcolor: 'grey.50' } }}>
+              <Typography fontWeight={600} sx={{ minWidth: 0, overflowWrap: 'anywhere', gridColumn: 1, gridRow: 1 }}>{person.employeeName}</Typography>
+              <Stack direction="row" gap={0.75} flexWrap="wrap" sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', md: 2 }, gridRow: { xs: 2, md: 1 } }}>
+                {person.functions.map(functionCode => <Chip key={functionCode} size="small" variant="outlined" label={labels[functionCode] ?? functionCode} />)}
+              </Stack>
+              <Box sx={{ gridColumn: { xs: '1 / -1', md: 3 }, gridRow: { xs: 3, md: 1 } }}>
+                <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}><Box component="span" sx={{ color: 'text.secondary', mr: 1 }}>Od</Box>{localDateTime(person.startsAt, event.timezone).replace('T', ' ')}</Typography>
+                <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums' }}><Box component="span" sx={{ color: 'text.secondary', mr: 1 }}>Do</Box>{localDateTime(person.endsAt, event.timezone).replace('T', ' ')}</Typography>
+              </Box>
+              {allowed && <Stack direction="row" justifyContent="flex-end" sx={{ gridColumn: { xs: 2, md: 4 }, gridRow: 1 }}>
+                <RowAction
+                  action="edit"
+                  label="Zmień przydział"
+                  disabled={action.busy}
+                  onClick={() => {
+                    setEmployee({ uuid: person.employeeUuid, name: person.employeeName });
+                    setFunctions(person.functions);
+                    setStart(localDateTime(person.startsAt, event.timezone));
+                    setEnd(localDateTime(person.endsAt, event.timezone));
+                    setNotes(person.notes ?? '');
+                  }}
+                />
+                <RowAction action="delete" label="Usuń przydział" disabled={action.busy} onClick={() => setRemove(person.employeeUuid)} />
+              </Stack>}
+            </Box>
+          ))}
+        </Box>
+      </Box>}
       {allowed && (
         <form
           onSubmit={(e) => {

@@ -18,7 +18,8 @@ const menuItems = [
 ];
 
 const ManageListNavigation: React.FC = () => {
-    const { hasAccess } = useUser();
+    const { hasAccess, hasPermission } = useUser();
+    const visibleItems = menuItems.filter(item => hasAccess(item.key) && hasPermission(`${item.key}.list`));
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const pathname = usePathname();
@@ -47,6 +48,7 @@ const ManageListNavigation: React.FC = () => {
         }
     }, [pathname]);
 
+    if (!hasAccess('manage') || visibleItems.length === 0) return null;
     return (
         <>
             <Button
@@ -70,7 +72,7 @@ const ManageListNavigation: React.FC = () => {
                     "aria-labelledby": "manage-button",
                 }}
             >
-                {menuItems.map((item) => hasAccess(item.key) && (
+                {visibleItems.map((item) => (
                     <MenuItem
                         key={item.key}
                         onClick={() => handleMenuItemClick(item.key)}

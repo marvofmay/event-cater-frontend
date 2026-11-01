@@ -89,7 +89,9 @@ export interface EventDetails extends EventItem {
   readyAt: string | null;
   location: Location;
   coordinatorUuid: string | null;
+  coordinatorName?: string | null;
   customerName: string | null;
+  customerUuid?: string | null;
   contacts: Contact[];
   menu: MenuItem[];
   staff: {
@@ -219,6 +221,7 @@ export interface TemplateLine {
     quantity: string | number;
     perGuests: number | null;
     reservePercent: number;
+    reserveQuantity?: string | number;
   };
   sourceLocation?: string | null;
   instructions?: string | null;
@@ -232,6 +235,7 @@ export interface Template {
   lines: TemplateLine[];
 }
 export interface AuditEntry {
+  actorName?: string;
   uuid: string;
   action: string;
   actorUuid: string;

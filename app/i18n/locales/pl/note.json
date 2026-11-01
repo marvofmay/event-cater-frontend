@@ -1,4 +1,19 @@
 {
+    "view": {
+        "mode": "Widok notatek",
+        "table": "Tabela",
+        "board": "Karteczki",
+        "sortBy": "Sortuj według",
+        "ascending": "Rosnąco",
+        "descending": "Malejąco",
+        "changeDirection": "Zmień kierunek sortowania",
+        "selectPage": "Zaznacz całą stronę",
+        "selectNote": "Zaznacz notatkę: {{title}}",
+        "content": "Treść notatki: {{title}}",
+        "untitled": "Bez tytułu",
+        "emptyContent": "Brak treści",
+        "search": "Szukaj notatek"
+    },
     "list": {
         "title": "Lista notatek",
         "loading": {

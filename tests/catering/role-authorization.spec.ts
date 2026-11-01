@@ -6,7 +6,7 @@ const listUuid = "00000000-0000-4000-8000-000000000003";
 const menuUuid = "00000000-0000-4000-8000-000000000004";
 const availablePermissions = [{ uuid: listUuid, name: "list" }, { uuid: menuUuid, name: "plan_event_menu" }];
 
-async function setup(page: Page, permissions = ["roles.*"], initiallyAssigned = false, failCatalog = false) {
+async function setup(page: Page, permissions = ["roles.*"], initiallyAssigned = false, failCatalog = false, catalog?: { uuid: string; name: string; module: { uuid: string; name: string }; availablePermissions: { uuid: string; name: string }[] }[]) {
   const token = [
     Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url"),
     Buffer.from(JSON.stringify({
@@ -25,7 +25,7 @@ async function setup(page: Page, permissions = ["roles.*"], initiallyAssigned = 
     const path = new URL(request.url()).pathname;
     if (path === "/api/auth/authorization") return route.fulfill({ json: { modules: ["company"], accesses: ["roles"], permissions } });
     if (path === "/api/roles") return route.fulfill({ json: { data: { items: [{ uuid: roleUuid, name: "Pracownik", createdAt: "2026-10-25 12:00:00" }], total: 1 } } });
-    if (path === "/api/accesses") return route.fulfill({ status: failCatalog ? 500 : 200, json: { data: [access], message: "Błąd katalogu" } });
+    if (path === "/api/accesses") return route.fulfill({ status: failCatalog ? 500 : 200, json: { data: catalog ?? [access], message: "Błąd katalogu" } });
     if (path === "/api/roles/" + roleUuid) return route.fulfill({ json: { data: { uuid: roleUuid, name: "Pracownik", accesses: assigned } } });
     if (path === `/api/roles/${roleUuid}/accesses` && request.method() !== "GET") {
       const body = request.postDataJSON();
@@ -43,6 +43,32 @@ async function setup(page: Page, permissions = ["roles.*"], initiallyAssigned = 
   await page.getByRole("cell", { name: "Pracownik", exact: true }).waitFor();
   return { writes, failNextSave: () => { rejectNextSave = true; } };
 }
+
+test("management gates catalogs but leaves company structure independent", async ({ page }) => {
+  const companyModule = { uuid: "company-module", name: "company" };
+  const structureUuid = "structure-access";
+  const viewUuid = "structure-view";
+  const catalog = [
+    { uuid: "manage-access", name: "manage", module: companyModule, availablePermissions: [] },
+    { uuid: structureUuid, name: "company_structure", module: companyModule, availablePermissions: [{ uuid: viewUuid, name: "view" }] },
+    { uuid: "employees-access", name: "employees", module: companyModule, availablePermissions: [{ uuid: listUuid, name: "list" }] },
+  ];
+  const { writes } = await setup(page, ["roles.*"], false, false, catalog);
+  await page.getByRole("button", { name: "przypisz dostępy i uprawnienia" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("pracownicy", { exact: true })).toHaveCount(0);
+  await dialog.getByLabel("struktura firmy", { exact: true }).check();
+  await dialog.getByLabel("podgląd", { exact: true }).check();
+  await dialog.getByLabel("zarządzanie", { exact: true }).check();
+  await dialog.getByLabel("pracownicy", { exact: true }).check();
+  await dialog.getByLabel("lista", { exact: true }).check();
+  await dialog.getByLabel("zarządzanie", { exact: true }).uncheck();
+  await expect(dialog.getByLabel("pracownicy", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByLabel("struktura firmy", { exact: true })).toBeChecked();
+  await dialog.getByRole("button", { name: /^zapisz$/i, exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(writes[0].body.accesses).toEqual([{ accessUUID: structureUuid, permissionsUUIDs: [viewUuid] }]);
+});
 
 test("role editor uses one atomic save, preserves edits on error and reloads saved permissions", async ({ page }) => {
   const { writes, failNextSave } = await setup(page);

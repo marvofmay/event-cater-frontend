@@ -1,17 +1,20 @@
-import { Button, Menu, MenuItem, Link } from "@mui/material";
+import { Avatar, Button, Menu, MenuItem, Link } from "@mui/material";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Person2Icon from '@mui/icons-material/Person2';
 import '../../i18n/i18n';
 import { useTranslation } from 'react-i18next';
+import { useNavigationAvatar } from '@/app/hooks/userProfile/useNavigationAvatar';
 
 const menuItems = [
     { label: "Settings", href: "/me/settings", key: "companies" },
     { label: "UserData", href: "/me/data", key: "employees" },
+    { label: "ChangePassword", href: "/me/password", key: "password" },
     { label: "Logout", href: "/me/logout", key: "roles" },
 ];
 
 const UserProfileNavigation: React.FC = () => {
+    const avatarUrl = useNavigationAvatar();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const pathname = usePathname();
@@ -44,6 +47,7 @@ const UserProfileNavigation: React.FC = () => {
         <>
             <Button
                 color="inherit"
+                aria-label="Menu użytkownika"
                 aria-controls="manage-menu"
                 aria-haspopup="true"
                 onClick={handleMenuOpen}
@@ -51,7 +55,7 @@ const UserProfileNavigation: React.FC = () => {
                     backgroundColor: open || selectedMenuItem ? "rgba(255, 255, 255, 0.3)" : "transparent",
                 }}
             >
-                <Person2Icon />
+                {avatarUrl ? <Avatar src={avatarUrl} alt="Avatar użytkownika" sx={{ width: 32, height: 32, bgcolor: 'transparent', color: 'inherit' }}><Person2Icon /></Avatar> : <Person2Icon />}
             </Button>
 
             <Menu
@@ -73,7 +77,7 @@ const UserProfileNavigation: React.FC = () => {
                             backgroundColor: selectedMenuItem === item.key ? "rgba(0, 0, 0, 0.1)" : "transparent",
                         }}
                     >
-                        {t(`navigation.${item.label.charAt(0).toLowerCase()}${item.label.slice(1)}`)}
+                        {item.key === 'password' ? 'zmień hasło' : t(`navigation.${item.label.charAt(0).toLowerCase()}${item.label.slice(1)}`)}
                     </MenuItem>
                 ))}
             </Menu>

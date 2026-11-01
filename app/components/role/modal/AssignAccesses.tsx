@@ -92,8 +92,17 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
   const isLoading = isLoadingAccesses || isLoadingRole;
 
   const toggleAccess = (accessUUID: string, checked: boolean) => {
+    const access = accessesByUuid[accessUUID];
+    const manage = accesses.find(candidate => candidate.name === 'manage');
+    const isManaged = access?.module?.name === 'company' && !['manage', 'company_structure'].includes(access.name);
+    if (access?.name === 'manage' && !checked) {
+      const children = accesses.filter(candidate => candidate.module?.name === 'company' && candidate.name !== 'company_structure').map(candidate => candidate.uuid);
+      setSelectedAccessUUIDs(current => current.filter(uuid => !children.includes(uuid)));
+      setPermissionsByAccess(current => Object.fromEntries(Object.entries(current).filter(([uuid]) => !children.includes(uuid))));
+      return;
+    }
     setSelectedAccessUUIDs((current) =>
-      checked ? [...current, accessUUID] : current.filter((uuid) => uuid !== accessUUID),
+      checked ? Array.from(new Set([...current, accessUUID, ...(isManaged && manage ? [manage.uuid] : [])])) : current.filter((uuid) => uuid !== accessUUID),
     );
 
     if (!checked) {
@@ -262,6 +271,16 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
         ) : (
           <Box display="grid" gap={2} mt={1} sx={{ gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, alignItems: 'start' }}>
             {Object.entries(accessesByModule).map(([moduleName, moduleAccesses]) => {
+              if (moduleName === 'company') {
+                const manage = moduleAccesses.find(access => access.name === 'manage');
+                const structure = moduleAccesses.find(access => access.name === 'company_structure');
+                const catalogs = moduleAccesses.filter(access => !['manage', 'company_structure'].includes(access.name)).sort((first, second) => t(`access.${first.name}`).localeCompare(t(`access.${second.name}`), 'pl'));
+                return <Box key={moduleName} sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                  {structure && renderAccessRow(structure, { asHeader: true })}
+                  {manage && renderAccessRow(manage, { asHeader: true })}
+                  {manage && selectedAccessUUIDs.includes(manage.uuid) && <Box sx={{ pl: 2, borderLeft: '2px solid', borderColor: 'divider' }}>{catalogs.map(access => renderAccessRow(access))}</Box>}
+                </Box>;
+              }
               const isSingleAccess = moduleAccesses.length === 1;
 
               return (

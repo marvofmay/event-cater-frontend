@@ -9,8 +9,8 @@ export interface UserProfileDataResponse {
             employment: {
                 position: string;
                 role: string;
-                contractType: string;
-                employmentFrom: string;
+                contractType: string | null;
+                employmentFrom: string | null;
                 employmentTo: string | null;
                 parentEmployee: string | null;
             }

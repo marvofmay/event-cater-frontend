@@ -1,4 +1,6 @@
 export default interface Employee {
     uuid: string;
-    email: string;
+    email: string | null;
+    loginPhone?: string | null;
+    technicalAdministrator?: boolean;
 }

@@ -68,6 +68,7 @@ export default function SignIn() {
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [backendErrorMessage, setBackendErrorMessage] = React.useState('');
     const [open, setOpen] = React.useState(false);
+    const [resetLogin, setResetLogin] = React.useState('');
     const [mode] = React.useState<PaletteMode>('light');
     const SignUpTheme = createTheme(getSignUpTheme(mode));
     const { login } = useUser();
@@ -93,6 +94,7 @@ export default function SignIn() {
     }, []);
 
     const handleClickOpen = () => {
+        setResetLogin((document.getElementById('email') as HTMLInputElement)?.value ?? '');
         setOpen(true);
     };
 
@@ -137,9 +139,9 @@ export default function SignIn() {
 
         let isValid = true;
 
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+        if (!email.value.trim()) {
             setEmailError(true);
-            setEmailErrorMessage(t('validation.pleaseEnterValidEmailAddress'));
+            setEmailErrorMessage('Podaj numer telefonu lub e-mail konta technicznego.');
             isValid = false;
         } else {
             setEmailError(false);
@@ -210,15 +212,15 @@ export default function SignIn() {
                                 />
                             </FormControl>
                             <FormControl>
-                                <FormLabel htmlFor="email">{t('loginForm.label.email')}</FormLabel>
+                                <FormLabel htmlFor="email">Login</FormLabel>
                                 <TextField
                                     error={emailError}
                                     helperText={emailErrorMessage}
                                     id="email"
-                                    type="email"
+                                    type="text"
                                     name="email"
-                                    placeholder="your@email.com"
-                                    autoComplete="email"
+                                    placeholder="Numer telefonu"
+                                    autoComplete="username"
                                     autoFocus
                                     required
                                     fullWidth
@@ -259,7 +261,7 @@ export default function SignIn() {
                                 control={<Checkbox value="remember" color="primary" />}
                                 label={t('loginForm.button.rememberMe')}
                             /> */}
-                            <ForgotPassword open={open} handleClose={handleClose} />
+                            <ForgotPassword open={open} handleClose={handleClose} tenantSlug={tenantSlug.trim()} initialLogin={resetLogin} />
                             <Button
                                 type="submit"
                                 fullWidth

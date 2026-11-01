@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import Industry from "../../types/Industry";
 import axios from "axios";
@@ -46,7 +47,9 @@ const useIndustriesQuery = (
 ) => {
   const { t } = useTranslation();
 
+  const { ready } = usePreferences();
   return useQuery<IndustriesResponse>({
+    enabled: ready,
     queryKey: ["industries", pageSize, page, sortBy, sortDirection, phrase],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");

@@ -1,3 +1,4 @@
+import { useTablePageSize } from '@/app/context/preferencesContext';
 import React, { useState } from "react";
 import {
   Table,
@@ -37,7 +38,7 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MarkAsReadNotificationsModal from "./modal/MarkAsRead";
 
 const NotificationsTable = () => {
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useTablePageSize('notifications');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");

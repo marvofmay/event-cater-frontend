@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import localFont from "next/font/local";
 import CompactDialogs from './components/common/CompactDialogs';
 import PendingOperations from './components/common/PendingOperations';
+import SessionInactivity from './components/common/SessionInactivity';
+import PasswordChangeGate from './components/user/PasswordChangeGate';
 import Navigation from './components/layout/Navigation';
 import Content from "./components/layout/Content";
 import Footer from "./components/layout/Footer";
 import { UserProvider } from './context/userContext';
+import { PreferencesProvider } from './context/preferencesContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import "../public/globals.css";
@@ -31,14 +35,21 @@ const RootLayout = ({ children, }: Readonly<{ children: React.ReactNode; }>) => 
     return (
         <html lang="pl">
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <UserProvider>
-                    <CompactDialogs />
-                    <PendingOperations />
-                    <ToastContainer />
-                    <Navigation />
-                    <Content>{children}</Content>
-                    <Footer />
-                </UserProvider>
+                <AppRouterCacheProvider>
+                    <UserProvider>
+                        <PreferencesProvider>
+                        <CompactDialogs />
+                        <PendingOperations />
+                        <SessionInactivity />
+                        <ToastContainer />
+                        <PasswordChangeGate>
+                        <Navigation />
+                        <Content>{children}</Content>
+                        <Footer />
+                        </PasswordChangeGate>
+                        </PreferencesProvider>
+                    </UserProvider>
+                </AppRouterCacheProvider>
             </body>
         </html>
     );

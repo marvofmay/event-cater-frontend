@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import Company from "../../types/Company";
 import axios from "axios";
@@ -75,7 +76,9 @@ const useCompaniesQuery = (
   const normalizedPhrase = phrase ?? undefined;
   const normalizedIncludes = includes ?? undefined;
 
+  const { ready } = usePreferences();
   return useQuery<CompaniesResponse>({
+    enabled: ready,
     queryKey: [
       "companies",
       pageSize,

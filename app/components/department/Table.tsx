@@ -1,3 +1,4 @@
+import { useTablePageSize } from '@/app/context/preferencesContext';
 import React, { useState } from 'react';
 import {
     Table,
@@ -40,7 +41,7 @@ import { useUser } from "@/app/context/userContext";
 import { SortDirection } from '@/app/types/SortDirection';
 
 const DepartmentsTable = () => {
-    const [pageSize, setPageSize] = useState(5);
+    const [pageSize, setPageSize] = useTablePageSize('departments');
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState('createdAt');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');

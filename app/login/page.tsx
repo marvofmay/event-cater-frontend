@@ -1,9 +1,14 @@
 "use client";
 
-import { Box, Paper } from "@mui/material";
+import { Alert, Box, Paper } from "@mui/material";
+import { useEffect, useState } from "react";
 import SignIn from "../components/user/login/SignIn";
 
 const Login: React.FC = () => {
+  const [inactiveLogout, setInactiveLogout] = useState(false);
+  useEffect(() => {
+    setInactiveLogout(new URLSearchParams(window.location.search).get('reason') === 'inactivity');
+  }, []);
   return (
     <Box
       minHeight="80vh"
@@ -21,6 +26,7 @@ const Login: React.FC = () => {
           borderRadius: 3,
         }}
       >
+        {inactiveLogout && <Alert severity="info" sx={{ mb: 2 }}>Sesja została zakończona z powodu bezczynności. Zaloguj się ponownie, aby kontynuować.</Alert>}
         <SignIn />
       </Paper>
     </Box>

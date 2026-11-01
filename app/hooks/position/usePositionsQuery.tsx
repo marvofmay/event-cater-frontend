@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { SERVICE_COMPANY_URL } from "@/app/utils/constans";
@@ -51,7 +52,9 @@ const usePositionsQuery = (
   const normalizedPhrase = phrase ?? undefined;
   const normalizedIncludes = includes ?? undefined;
 
+  const { ready } = usePreferences();
   return useQuery<PositionsResponse>({
+    enabled: ready,
     queryKey: [
       "positions",
       pageSize,

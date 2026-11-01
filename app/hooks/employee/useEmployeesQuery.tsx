@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import Employee from "../../types/Employee";
 import axios from "axios";
@@ -61,7 +62,9 @@ const useEmployeesQuery = (
   const normalizedPhrase = phrase ?? undefined;
   const normalizedIncludes = includes ?? undefined;
 
+  const { ready } = usePreferences();
   return useQuery<EmployeesResponse>({
+    enabled: ready,
     queryKey: [
       "companies",
       pageSize,

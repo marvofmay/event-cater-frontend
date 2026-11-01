@@ -127,11 +127,11 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
     await dialog
       .getByRole("button", { name: "Dodaj do szablonu", exact: true })
       .click();
-    await dialog.getByRole("combobox", { name: /Sposób wyliczenia/ }).click();
+    await dialog.getByRole("combobox", { name: 'Ile zabrać?' }).click();
     await page
-      .getByRole("option", { name: "Na liczbę gości", exact: true })
+      .getByRole("option", { name: "Według liczby gości", exact: true })
       .click();
-    await dialog.getByLabel("Na ilu gości").fill("1");
+    await dialog.getByLabel("Liczba osób").fill("1");
     await expect(dialog.getByRole("combobox", { name: /Rodzaj pozycji/ })).toHaveCount(0);
     await lookup(page, "Pozycja katalogowa", productName);
     await dialog
@@ -194,6 +194,7 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
     await page.getByLabel("Wielkość porcji").fill("250 ml");
     await page.getByLabel("Sposób podania").fill("Bufet — bemar");
     await page.getByLabel("Diety, oddziel przecinkami").fill("wegetariańska");
+    await page.getByRole('dialog').getByRole('button', { name: 'Dodaj do menu', exact: true }).click();
     const menuSaved = page.waitForResponse(
       (r) => r.url().endsWith("/menu") && r.request().method() === "PUT",
     );
@@ -214,10 +215,10 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
       .getByRole("button", { name: "Zastosuj szablon do listy", exact: true })
       .click();
     await expect(page.getByText(gearName)).toBeVisible();
-    await lookup(page, "Odpowiedzialny za kompletację", owner!);
+    await lookup(page, "Osoba kompletująca całą listę", owner!);
     await page
       .getByRole("button", {
-        name: "Zapisz odpowiedzialność i termin",
+        name: "Zapisz osobę i termin",
         exact: true,
       })
       .click();
@@ -228,13 +229,14 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
       .getByRole("button", { name: "Zatwierdź listę", exact: true })
       .click();
     await expect(page.getByText("Zatwierdzona")).toBeVisible();
+    await page.getByRole('tab', { name: 'Kompletowanie', exact: true }).click();
     await page.getByLabel("Przygotowano").first().fill("100");
     await page.getByLabel("Załadowano").first().fill("100");
     await page
       .getByRole("button", { name: "Zapisz ilości", exact: true })
       .first()
       .click();
-    await expect(page.getByText(/Przygotowano: 100.000/)).toBeVisible();
+    await expect(page.getByText(/Przygotowano: 100 ·/)).toBeVisible();
 
     await page
       .getByRole("navigation", { name: "Zakładki wydarzenia" })
@@ -284,7 +286,9 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
       .getByRole("navigation", { name: "Zakładki wydarzenia" })
       .getByRole("button", { name: "Menu", exact: true })
       .click();
+    await page.getByRole('button', { name: 'Edytuj potrawę: Krem pomidorowy', exact: true }).click();
     await page.getByLabel("Liczba porcji").fill("120");
+    await page.getByRole('dialog').getByRole('button', { name: 'Zapisz pozycję', exact: true }).click();
     const changedMenuResponse = page.waitForResponse(
       (r) => r.url().endsWith("/menu") && r.request().method() === "PUT",
     );
@@ -295,7 +299,7 @@ test("saved venue → event menu → preparation → kitchen card, PDF and accep
     await expect(
       page.getByRole("button", { name: "Zapisz menu wydarzenia", exact: true }),
     ).toBeEnabled();
-    await expect(page.getByLabel("Liczba porcji")).toHaveValue("120");
+    await expect(page.getByText('Porcje: 120', { exact: true })).toBeVisible();
     await page
       .getByRole("navigation", { name: "Zakładki wydarzenia" })
       .getByRole("button", { name: "Kuchnia", exact: true })
@@ -417,17 +421,19 @@ test("removing one dish keeps the other dietary variant and its client form stat
       .getByRole("navigation", { name: "Zakładki wydarzenia" })
       .getByRole("button", { name: "Menu", exact: true })
       .click();
-    await expect(
-      page.getByLabel("Diety, oddziel przecinkami").nth(1),
-    ).toHaveValue("wegańska");
+    await page.getByRole('button', { name: 'Edytuj potrawę: Zupa', exact: true }).nth(1).click();
+    await expect(page.getByLabel("Diety, oddziel przecinkami")).toHaveValue("wegańska");
+    await page.getByRole('dialog').getByRole('button', { name: 'Anuluj', exact: true }).click();
     await page
       .getByRole("button", { name: "Usuń potrawę", exact: true })
       .first()
       .click();
+    await page.getByRole('button', { name: 'Edytuj potrawę: Zupa', exact: true }).click();
     await expect(page.getByLabel("Diety, oddziel przecinkami")).toHaveValue(
       "wegańska",
     );
     await expect(page.getByLabel("Liczba porcji")).toHaveValue("1");
+    await page.getByRole('dialog').getByRole('button', { name: 'Zapisz pozycję', exact: true }).click();
     const saved = page.waitForResponse(
       (r) => r.url().endsWith("/menu") && r.request().method() === "PUT",
     );

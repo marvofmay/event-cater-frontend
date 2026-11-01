@@ -1,3 +1,4 @@
+import { useTablePageSize } from '@/app/context/preferencesContext';
 import React, { useState } from 'react';
 import {
     Table,
@@ -15,6 +16,8 @@ import {
     TextField,
     Checkbox
 } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Person2Icon from '@mui/icons-material/Person2';
 import Tooltip from "@mui/material/Tooltip";
 import { Preview, Edit, Delete, Add, Key, Search } from '@mui/icons-material';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
@@ -22,14 +25,14 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import CancelIcon from '@mui/icons-material/CancelOutlined';
 import Employee from '@/app/types/Employee';
 import CreateEmployeeModal from '@/app/components/employee/modal/Create';
-//import EditEmployeeModal from '@/app/components/employee/modal/Edit';
+import EditEmployeeModal from '@/app/components/employee/modal/Edit';
 import PreviewEmployeeModal from '@/app/components/employee/modal/Preview';
 import ImportEmployeesFromXLSXModal from '@/app/components/employee/modal/ImportEmployeesFromXLSX';
 import DeleteEmployeeModal from '@/app/components/employee/modal/Delete';
 import DeleteMultipleEmployeesModal from '@/app/components/employee/modal/DeleteMultiple';
 import useEmployeesQuery from '@/app/hooks/employee/useEmployeesQuery';
 import useAddEmployeeMutation from '@/app/hooks/employee/useAddEmployeeMutation';
-//import useUpdateEmployeeMutation from '@/app/hooks/employee/useUpdateEmployeeMutation';
+import useUpdateEmployeeMutation from '@/app/hooks/employee/useUpdateEmployeeMutation';
 import useDeleteEmployeeMutation from '@/app/hooks/employee/useDeleteEmployeeMutation';
 import useDeleteMultipleEmployeeMutation from '@/app/hooks/employee/useDeleteMultipleEmployeeMutation';
 import useImportEmployeesFromXLSXMutation from '@/app/hooks/employee/importEmployeesFromXLSXMutation';
@@ -39,9 +42,10 @@ import moment from 'moment';
 import { useUser } from "@/app/context/userContext";
 import { SortDirection } from '@/app/types/SortDirection';
 import EmployeePayload from '@/app/types/EmployeePayload';
+import { userAvatarUrl } from '@/app/utils/userAvatar';
 
 const EmployeesTable = () => {
-    const [pageSize, setPageSize] = useState(5);
+    const [pageSize, setPageSize] = useTablePageSize('employees');
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState('createdAt');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -52,7 +56,7 @@ const EmployeesTable = () => {
     const [selected, setSelected] = useState<string[]>([]);
 
     const { mutate: addEmployeeMutate } = useAddEmployeeMutation();
-    // const { mutate: updateEmployeeMutate } = useUpdateEmployeeMutation();
+    const { mutate: updateEmployeeMutate } = useUpdateEmployeeMutation();
     const { mutate: deleteEmployeeMutate } = useDeleteEmployeeMutation();
     const { mutate: deleteMultipleEmployeeMutate } = useDeleteMultipleEmployeeMutation();
     const { mutate: importEmployeesFromXLSXMutate } = useImportEmployeesFromXLSXMutation();
@@ -126,18 +130,18 @@ const EmployeesTable = () => {
         });
     };
 
-    // const handleUpdate = async (updatedEmployee: Employee): Promise<void> => {
-    //     return new Promise((resolve, reject) => {
-    //         updateEmployeeMutate(updatedEmployee, {
-    //             onSuccess: (message: string) => {
-    //                 toast.success(message);
-    //                 refetch();
-    //                 resolve();
-    //             },
-    //             onError: (error: object) => { toast.error(t('employee.update.error')); reject(error); },
-    //         });
-    //     });
-    // };
+    const handleUpdate = async (updatedEmployee: EmployeePayload): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            updateEmployeeMutate(updatedEmployee, {
+                onSuccess: (message: string) => {
+                    toast.success(message);
+                    refetch();
+                    resolve();
+                },
+                onError: (error: object) => { toast.error(t('employee.update.error')); reject(error); },
+            });
+        });
+    };
 
     const handleImportEmployeesFromXLSX = async (file: File): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -257,7 +261,7 @@ const EmployeesTable = () => {
                     }}
                 >
                     <Table>
-                        <TableHead>
+                        <TableHead sx={{ '& .MuiTableCell-head': { verticalAlign: 'middle', lineHeight: '24px', whiteSpace: 'nowrap', py: 1, px: 1 }, '& .MuiTableSortLabel-root, & .employee-column-heading': { display: 'flex', alignItems: 'center', minHeight: 24, lineHeight: '24px' } }}>
                             <TableRow>
                                 {hasPermission("employees.delete") && (
                                     <TableCell sx={{ width: 50, padding: "4px 8px" }}>
@@ -276,17 +280,20 @@ const EmployeesTable = () => {
                                         #
                                     </TableSortLabel>
                                 </TableCell>
+                                <TableCell align="center" sx={{ width: 64, padding: '4px 8px' }}>
+                                    <Box component="span" className="employee-column-heading" sx={{ justifyContent: 'center' }}>avatar</Box>
+                                </TableCell>
                                 <TableCell
                                     sortDirection={sortBy === 'lastName' ? sortDirection : false}
                                     onClick={() => handleSort('lastName')}
                                     sx={{ padding: '4px 8px' }}
                                 >
                                     <TableSortLabel active={sortBy === 'lastName'} direction={sortBy === 'lastName' ? sortDirection : 'asc'}>
-                                        {t('employee.table.column.lastName')}{t('employee.table.column.firstName')}
+                                        {t('employee.table.column.lastName')}{' '}{t('employee.table.column.firstName')}
                                     </TableSortLabel>
                                 </TableCell>
                                 <TableCell>
-                                    {t('employee.table.column.active')}
+                                    <Box component="span" className="employee-column-heading">{t('employee.table.column.active')}</Box>
                                 </TableCell>
                                 <TableCell
                                     sortDirection={sortBy === 'createdAt' ? sortDirection : false}
@@ -306,7 +313,9 @@ const EmployeesTable = () => {
                                         {t('employee.table.column.updatedAt')}
                                     </TableSortLabel>
                                 </TableCell>
-                                <TableCell sx={{ padding: '4px 8px' }}>{t('employee.table.column.actions')}</TableCell>
+                                <TableCell sx={{ padding: '4px 8px' }}>
+                                    <Box component="span" className="employee-column-heading">{t('employee.table.column.actions')}</Box>
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -321,6 +330,11 @@ const EmployeesTable = () => {
                                         </TableCell>
                                     )}
                                     <TableCell sx={{ padding: '4px 8px' }}>{(page - 1) * pageSize + index + 1}</TableCell>
+                                    <TableCell align="center" sx={{ width: 64, padding: '4px 8px' }}>
+                                        <Avatar src={userAvatarUrl(employee.avatar)} alt={`Avatar: ${employee.firstName} ${employee.lastName || ''}`.trim()} slotProps={{ img: { loading: 'lazy' } }} sx={{ width: 32, height: 32, mx: 'auto' }}>
+                                            <Person2Icon fontSize="small" />
+                                        </Avatar>
+                                    </TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{employee.lastName} {employee.firstName}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}> {employee.active ? (<CheckCircleIcon color="success" fontSize="small" />) : (<CancelIcon color="error" fontSize="small" />)}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(employee.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
@@ -332,11 +346,11 @@ const EmployeesTable = () => {
                                             </Tooltip>
                                         )}
 
-                                        {/* {hasPermission("employees.update") && (
+                                        {hasPermission("employees.update") && (
                                             <Tooltip title={t('common.edit')} placement="top">
-                                                <IconButton onClick={() => openModal('edit', employee)}><Edit /></IconButton>
+                                                <IconButton aria-label={`${t('common.edit')}: ${employee.firstName} ${employee.lastName}`} onClick={() => openModal('edit', employee)}><Edit /></IconButton>
                                             </Tooltip>
-                                        )} */}
+                                        )}
 
                                         {hasPermission("employees.delete") && (
                                             <Tooltip title={t('common.delete')} placement="top">
@@ -390,11 +404,11 @@ const EmployeesTable = () => {
                 onClose={closeModal}
                 onDeleteConfirm={handleDelete} />}
 
-            {/* {hasPermission("employees.update") && modalType === 'edit' && <EditEmployeeModal
+            {hasPermission("employees.update") && modalType === 'edit' && <EditEmployeeModal
                 open={true}
                 employee={selectedEmployee}
                 onClose={closeModal}
-                onSave={handleUpdate} />} */}
+                onSave={handleUpdate} />}
 
             {hasPermission("employees.delete") && modalType === 'multipleDelete' && <DeleteMultipleEmployeesModal
                 open={true}

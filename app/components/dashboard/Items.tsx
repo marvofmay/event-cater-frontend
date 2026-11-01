@@ -2,37 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
-import { useTranslation } from "react-i18next";
-import { useUser } from "@/app/context/userContext";
-
-import TaskIcon from "@mui/icons-material/Task";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import StickyNote2Icon from "@mui/icons-material/StickyNote2";
-import DescriptionIcon from "@mui/icons-material/Description";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import SettingsIcon from "@mui/icons-material/Settings";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-
-const moduleIcons: Record<string, React.ReactNode> = {
-  events: <CalendarTodayIcon fontSize="inherit" />,
-  equipment: <DescriptionIcon fontSize="inherit" />,
-  supplies: <TaskIcon fontSize="inherit" />,
-  kitchen: <TaskIcon fontSize="inherit" />,
-  company: <DashboardIcon fontSize="inherit" />,
-  system: <SettingsIcon fontSize="inherit" />,
-  tasks: <TaskIcon fontSize="inherit" />,
-  calendar: <CalendarTodayIcon fontSize="inherit" />,
-  notes: <StickyNote2Icon fontSize="inherit" />,
-  documents: <DescriptionIcon fontSize="inherit" />,
-  file_manager: <FolderOpenIcon fontSize="inherit" />,
-};
+import { Alert, Stack } from '@mui/material';
+import { useDashboardTiles } from './useDashboardTiles';
 
 const Items: React.FC = () => {
-  const { t } = useTranslation();
-  const { modules } = useUser();
+  const { tiles } = useDashboardTiles();
 
   return (
-    <div className="w-full min-h-[60vh] flex justify-center items-center px-4">
+    <Stack spacing={3}>
+    {tiles.length === 0 && <Alert severity="info">Nie masz jeszcze przydzielonych dostępów do modułów. Skontaktuj się z administratorem firmy.</Alert>}
+    <div className="w-full flex justify-center items-center px-4">
       <div
         className="grid
         grid-cols-2
@@ -42,10 +21,10 @@ const Items: React.FC = () => {
         gap-8
         justify-items-center"
       >
-        {modules.map((moduleName, index) => (
+        {tiles.map(tile => (
           <Link
-            key={`${moduleName}-${index}`}
-            href={`/module/${moduleName}`}
+            key={tile.id}
+            href={tile.href}
             className="group"
           >
             <div
@@ -63,12 +42,12 @@ const Items: React.FC = () => {
             >
               {/* IKONA */}
               <div className="text-3xl sm:text-4xl md:text-5xl text-white z-10">
-                {moduleIcons[moduleName]}
+                {tile.icon}
               </div>
 
               {/* NAZWA */}
               <span className="text-xs sm:text-sm md:text-base text-center mt-2 text-gray-200 z-10 px-2">
-                {t(`module.${moduleName}`)}
+                {tile.label}
               </span>
 
               {/* EFEKT BŁYSKU */}
@@ -93,6 +72,7 @@ const Items: React.FC = () => {
         ))}
       </div>
     </div>
+    </Stack>
   );
 };
 

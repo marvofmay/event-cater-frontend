@@ -48,8 +48,12 @@ const AvatarForm: React.FC<AvatarFormProps> = ({ data }) => {
     };
 
     const handleSave = async () => {
-        await save();
-        setHasSaved(true);
+        try {
+            await save();
+            setHasSaved(true);
+        } catch {
+            setHasSaved(false);
+        }
     };
 
     const shouldShowDefaultAvatarChoice =

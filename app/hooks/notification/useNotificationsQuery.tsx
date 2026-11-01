@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import Notification from "../../types/Notification";
 import axios from "axios";
@@ -49,7 +50,9 @@ const useNotificationsQuery = (
 ) => {
   const { t } = useTranslation();
 
+  const { ready } = usePreferences();
   return useQuery<NotificationsResponse>({
+    enabled: ready,
     queryKey: ["roles", pageSize, page, sortBy, sortDirection, phrase],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");

@@ -142,8 +142,8 @@ const Navigation: React.FC = () => {
 
           {isAuthenticated && (
             <>
-              {hasAccess("manage") && <ManageListNavigation />}
-              {hasAccess("settings") && <SettingsListNavigation />}
+              <ManageListNavigation />
+              <SettingsListNavigation />
             </>
           )}
 

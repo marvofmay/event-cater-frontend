@@ -2,9 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useUpdateAvatarMutation } from './useUpdateAvatarMutation';
 import Avatar from '@/app/types/Avatar';
+import { userAvatarUrl } from '@/app/utils/userAvatar';
 
 const DEFAULT_AVATAR = '/icons/avatar-default.png';
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const MAN_AVATAR_URL = '/icons/man.png';
 const WOMAN_AVATAR_URL = '/icons/woman.png';
 
@@ -23,7 +23,7 @@ export const useAvatarForm = () => {
 
     const setInitialAvatar = useCallback((avatar: Avatar) => {
         if (avatar.avatarType === 'custom') {
-            setAvatarUrl(`${API_URL}/upload/${avatar.avatarPath}`);
+            setAvatarUrl(userAvatarUrl(avatar) ?? DEFAULT_AVATAR);
             setIsCustomAvatar(true);
             setDefaultAvatar(null);
             setSelectedFile(null);

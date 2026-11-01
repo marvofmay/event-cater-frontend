@@ -2,9 +2,11 @@ import Address from "./Address";
 import ContractType from "./ContractType";
 import Position from "./Position";
 import Role from "./Role";
+import Avatar from "./Avatar";
 
 export default interface Employee {
     uuid: string;
+    avatar?: Avatar | null;
     externalCode?: string | null;
     internalCode?: string | null;
     company: {
@@ -24,11 +26,11 @@ export default interface Employee {
     lastName: string;
     pesel: string;
     isPeselFake?: boolean;
-    email: string;
-    employmentFrom: string;
+    email: string | null;
+    employmentFrom: string | null;
     employmentTo: string | null;
     position: Position;
-    contractType: ContractType;
+    contractType: ContractType | null;
     role: Role;
     active: boolean;
     address: Address;

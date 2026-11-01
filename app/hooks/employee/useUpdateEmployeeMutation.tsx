@@ -1,23 +1,24 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import Employee from '../../types/Employee';
+import axios from 'axios';
+import { useMutation } from '@tanstack/react-query';
+import EmployeePayload from '@/app/types/EmployeePayload';
+import { employeeRequestPayload } from '@/app/utils/employeeRequestPayload';
+import { SERVICE_COMPANY_URL } from '@/app/utils/constans';
 import { useTranslation } from 'react-i18next';
-
-const updateEmployee = async (updatedEmployee: Employee): Promise<[]> => {
-
-    return [];
-};
+import { notifyCompanyStructureChanged } from '@/app/utils/companyStructureChanges';
 
 const useUpdateEmployeeMutation = () => {
     const { t } = useTranslation();
-    const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: updateEmployee,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['employees'] });
-        },
-        onError: (error) => {
-            console.error(t('employee.update.error'), error);
+        onSuccess: notifyCompanyStructureChanged,
+        mutationFn: async (employee: EmployeePayload): Promise<string> => {
+            const token = localStorage.getItem('auth_token');
+            if (!token) throw new Error(t('common.message.tokenIsMissing'));
+            if (!employee.uuid) throw new Error('Brak identyfikatora pracownika.');
+            const response = await axios.put(`${SERVICE_COMPANY_URL}/api/employees/${encodeURIComponent(employee.uuid)}`, employeeRequestPayload(employee), {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            });
+            return response.data.message;
         },
     });
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, Chip, CircularProgress, Stack, Typography } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +10,7 @@ import { useUser } from "./context/userContext";
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
-  const { isAuthenticated, loading, employee, tenant } = useUser();
+  const { isAuthenticated, loading, employee, tenant, roles } = useUser();
 
   const queryClient = useMemo(() => new QueryClient(), []);
 
@@ -48,11 +48,12 @@ const Home: React.FC = () => {
             <Typography variant="h6" mb={3}>
               {t("common.welcome")}, {fullName}.
             </Typography>
-            {!employee?.uuid && tenant && (
+            {tenant && (
               <Typography variant="body1" mb={3}>
                 Zalogowano do firmy: <strong>{tenant.name}</strong> ({tenant.slug}).
               </Typography>
             )}
+            {roles.length > 0 && <Stack direction="row" spacing={1} sx={{ mb: 3 }} aria-label="Twoje role">{roles.map(role => <Chip key={role} label={role} size="small" />)}</Stack>}
 
             <Items />
           </Box>

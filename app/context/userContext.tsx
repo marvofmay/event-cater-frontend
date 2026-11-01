@@ -1,12 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { SERVICE_COMPANY_URL } from "../utils/constans";
 import Employee from "../types/Employee";
 import User from "../types/User";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { jwtDecode } from "jwt-decode";
+import { toast } from 'react-toastify';
+import { IDLE_ACTIVITY_KEY, IDLE_LOGOUT_MS, readLastActivity, writeLastActivity } from '@/app/utils/idleSession';
 
 interface UserContextType {
   user: User | null;
@@ -15,8 +17,11 @@ interface UserContextType {
   loading: boolean;
   token: string | null;
   tenant: { slug: string; name: string } | null;
+  mustChangePassword: boolean;
+  roles: string[];
+  changePassword: (currentPassword: string, newPassword: string, confirmation: string) => Promise<void>;
   login: (email: string, password: string, tenantSlug: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (reason?: 'inactivity') => Promise<void>;
   hasPermission: (permissionName: string) => boolean;
   hasAccess: (accessName: string) => boolean;
   hasModule: (moduleName: string) => boolean;
@@ -45,6 +50,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [tenant, setTenant] = useState<{ slug: string; name: string } | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
 
   const { t } = useTranslation();
 
@@ -98,6 +105,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (storedToken) {
       const payload = decodeJwt(storedToken);
       if (payload && payload.exp * 1000 > Date.now()) {
+        const lastActivity = readLastActivity(storedToken);
+        if (lastActivity !== null && Date.now() - lastActivity >= IDLE_LOGOUT_MS) {
+          void logout('inactivity');
+          setLoading(false);
+          return;
+        }
+        if (lastActivity === null) writeLastActivity(storedToken);
         document.cookie = `tenant_slug=${encodeURIComponent(payload.tenantSlug || "default")}; Path=/; SameSite=Lax`;
         setToken(storedToken);
         setUser(payload.user ?? null);
@@ -105,6 +119,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setModules(payload.modules ?? []);
         setAccesses(payload.accesses ?? []);
         setPermissions(payload.permissions ?? []);
+        setMustChangePassword(payload.mustChangePassword === true);
+        setRoles(payload.roles ?? []);
         setIsAuthenticated(true);
       }
     }
@@ -137,6 +153,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     localStorage.setItem("auth_token", data.token);
+    writeLastActivity(data.token);
     localStorage.setItem("selected_tenant", tenantSlug);
     document.cookie = `tenant_slug=${encodeURIComponent(tenantSlug)}; Path=/; SameSite=Lax`;
 
@@ -148,6 +165,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setModules(payload.modules ?? []);
     setAccesses(payload.accesses ?? []);
     setPermissions(payload.permissions ?? []);
+    setMustChangePassword(payload.mustChangePassword === true);
+    setRoles(payload.roles ?? []);
 
     setIsAuthenticated(true);
     setLoading(false);
@@ -155,26 +174,84 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     router.push("/");
   };
 
-  const logout = async () => {
+  const changePassword = async (currentPassword: string, newPassword: string, confirmation: string) => {
+    const response = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword, confirmation }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message ?? 'Nie udało się zmienić hasła.');
+    const payload = decodeJwt(result.token);
+    if (!payload || payload.mustChangePassword || !result.token) throw new Error('Zaloguj się ponownie, aby kontynuować.');
+    localStorage.setItem('auth_token', result.token);
+    writeLastActivity(result.token);
+    setToken(result.token);
+    setUser(payload.user ?? null);
+    setEmployee(payload.employee ?? null);
+    setModules(payload.modules ?? []);
+    setAccesses(payload.accesses ?? []);
+    setPermissions(payload.permissions ?? []);
+    setRoles(payload.roles ?? []);
+    setMustChangePassword(false);
+  };
+
+  const clearSession = useCallback(() => {
+    setUser(null);
+    setEmployee(null);
+    setToken(null);
+    setIsAuthenticated(false);
+    setModules([]);
+    setAccesses([]);
+    setPermissions([]);
+    setTenant(null);
+    setMustChangePassword(false);
+    setRoles([]);
+  }, []);
+
+  const logout = useCallback(async (reason?: 'inactivity') => {
+    const sessionToken = localStorage.getItem('auth_token');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem(IDLE_ACTIVITY_KEY);
+    clearSession();
+    if (sessionToken) {
+      toast.info(reason === 'inactivity' ? 'Sesja została zakończona z powodu bezczynności.' : 'Wylogowano pomyślnie.', { toastId: 'session-logout' });
+    }
+    router.replace('/login');
     try {
-      if (token) {
+      if (sessionToken) {
         await fetch(`${SERVICE_COMPANY_URL}/api/logout`, {
           method: "POST",
+          keepalive: true,
+          signal: AbortSignal.timeout(5000),
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${sessionToken}`,
+            'X-Tenant': decodeJwt(sessionToken)?.tenantSlug || 'default',
           },
         });
       }
     } catch (_) {}
 
-    localStorage.removeItem("auth_token");
+  }, [clearSession, router]);
 
-    setUser(null);
-    setEmployee(null);
-    setToken(null);
-    setIsAuthenticated(false);
-  };
+  useEffect(() => {
+    const synchronizeSession = (event: StorageEvent) => {
+      if ((event.key === 'auth_token' && event.newValue !== token) || event.key === null) {
+        if (!event.newValue) {
+          clearSession();
+          if (token) {
+            toast.info('Wylogowano pomyślnie.', { toastId: 'session-logout' });
+            router.replace('/login');
+          }
+        } else if (token) {
+          window.location.reload();
+        }
+      }
+    };
+    window.addEventListener('storage', synchronizeSession);
+    return () => window.removeEventListener('storage', synchronizeSession);
+  }, [token, clearSession, router]);
 
   const hasPermission = (accessPermission: string): boolean => {
     if (permissions.length === 0) return false;
@@ -206,6 +283,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         loading,
         token,
         tenant,
+        mustChangePassword,
+        roles,
+        changePassword,
         login,
         logout,
         hasPermission,

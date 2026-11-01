@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Table,
     TableBody,
@@ -14,9 +14,12 @@ import {
     CircularProgress,
     TextField,
     Checkbox,
+    MenuItem,
+    ToggleButton,
+    ToggleButtonGroup,
 } from '@mui/material';
 import Tooltip from "@mui/material/Tooltip";
-import { Preview, Edit, Delete, Add, Key, Search } from '@mui/icons-material';
+import { Preview, Edit, Delete, Add, Search, TableRowsOutlined, StickyNote2Outlined, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import Note from '@/app/types/Note';
 import CreateNoteModal from '@/app/components/note/modal/Create';
 import EditNoteModal from '@/app/components/note/modal/Edit';
@@ -35,8 +38,20 @@ import { useUser } from "@/app/context/userContext";
 import { SortDirection } from '@/app/types/SortDirection';
 import NotePayload from '@/app/types/NotePayload';
 import { renderNotePriority } from '@/app/components/note/renderNotePriority';
+import StickyNotes from '@/app/components/note/StickyNotes';
 
 const NotesTable = () => {
+    const [view, setView] = useState<'table' | 'board'>('board');
+    useEffect(() => {
+        try {
+            if (localStorage.getItem('notes:view') === 'table') setView('table');
+        } catch {}
+    }, []);
+    const handleViewChange = (_event: React.MouseEvent<HTMLElement>, nextView: 'table' | 'board' | null) => {
+        if (!nextView) return;
+        setView(nextView);
+        try { localStorage.setItem('notes:view', nextView); } catch {}
+    };
     const [pageSize, setPageSize] = useState(5);
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState('priority');
@@ -65,12 +80,15 @@ const NotesTable = () => {
     const handleSearch = () => {
         setPhrase(searchPhrase);
         setPage(1);
+        setSelected([]);
     };
 
     const handleSort = (column: string) => {
         const direction = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
         setSortBy(column);
         setSortDirection(direction);
+        setPage(1);
+        setSelected([]);
     };
 
     const openModal = (type: string, note: Note | null = null) => {
@@ -163,28 +181,40 @@ const NotesTable = () => {
         });
     };
 
+    const renderActions = (note: Note) => <>
+        {hasPermission('notes.view') && <Tooltip title={t('common.view')} placement="top"><IconButton aria-label={`${t('common.view')}: ${note.title || ''}`} onClick={() => openModal('preview', note)}><Preview fontSize="small" /></IconButton></Tooltip>}
+        {hasPermission('notes.update') && <Tooltip title={t('common.edit')} placement="top"><IconButton aria-label={`${t('common.edit')}: ${note.title || ''}`} onClick={() => openModal('edit', note)}><Edit fontSize="small" /></IconButton></Tooltip>}
+        {hasPermission('notes.delete') && <Tooltip title={t('common.delete')} placement="top"><IconButton aria-label={`${t('common.delete')}: ${note.title || ''}`} onClick={() => openModal('delete', note)}><Delete fontSize="small" /></IconButton></Tooltip>}
+    </>;
+
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2} gap={2} flexWrap="wrap">
+                <Box component="form" onSubmit={event => { event.preventDefault(); handleSearch(); }} display="flex" alignItems="center" gap={1} sx={{ flex: '1 1 300px', minWidth: 0 }}>
                     <TextField
                         variant="outlined"
                         placeholder={t('common.enterPhraseToSearch')}
                         size="small"
-                        sx={{ width: '500px' }}
+                        sx={{ flex: 1, maxWidth: 500 }}
+                        value={searchPhrase}
+                        inputProps={{ 'aria-label': t('note.view.search') }}
                         onChange={(e) => setSearchPhrase(e.target.value)}
                     />
                     <Button
                         startIcon={<Search />}
                         variant="contained"
                         color="primary"
-                        onClick={handleSearch}
+                        type="submit"
                     >
                         {t('common.button.search')}
                     </Button>
                 </Box>
 
-                <Box display="flex" alignItems="center" gap={1} ml="auto">
+                <Box display="flex" alignItems="center" gap={1} ml="auto" flexWrap="wrap">
+                    <ToggleButtonGroup value={view} exclusive onChange={handleViewChange} size="small" aria-label={t('note.view.mode')}>
+                        <ToggleButton value="table" aria-label={t('note.view.table')} sx={{ gap: 0.75 }}><TableRowsOutlined fontSize="small" />{t('note.view.table')}</ToggleButton>
+                        <ToggleButton value="board" aria-label={t('note.view.board')} sx={{ gap: 0.75 }}><StickyNote2Outlined fontSize="small" />{t('note.view.board')}</ToggleButton>
+                    </ToggleButtonGroup>
                     {hasPermission("notes.create") && (
                         <>
                             <Button
@@ -210,6 +240,14 @@ const NotesTable = () => {
                 </Box>
             </Box>
 
+            {view === 'board' && <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                <TextField select size="small" label={t('note.view.sortBy')} value={sortBy} onChange={event => { setSortBy(event.target.value); setPage(1); setSelected([]); }} sx={{ minWidth: 180 }}>
+                    {['priority', 'title', 'createdAt', 'updatedAt'].map(column => <MenuItem key={column} value={column}>{t(`note.table.column.${column}`)}</MenuItem>)}
+                </TextField>
+                <Tooltip title={t(sortDirection === 'asc' ? 'note.view.ascending' : 'note.view.descending')}><IconButton aria-label={t('note.view.changeDirection')} onClick={() => { setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc'); setPage(1); setSelected([]); }}>{sortDirection === 'asc' ? <ArrowUpward /> : <ArrowDownward />}</IconButton></Tooltip>
+                {hasPermission('notes.delete') && notes.length > 0 && <Box component="label" sx={{ display: 'flex', alignItems: 'center', ml: 'auto', fontSize: 13 }}><Checkbox checked={allSelected} indeterminate={selected.length > 0 && !allSelected} onChange={toggleSelectAll} inputProps={{ 'aria-label': t('note.view.selectPage') }} />{t('note.view.selectPage')}</Box>}
+            </Box>}
+
             {isLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
                     <CircularProgress />
@@ -222,6 +260,8 @@ const NotesTable = () => {
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
                     <div>{t('common.noData')}</div>
                 </Box>
+            ) : view === 'board' ? (
+                <StickyNotes notes={notes} selected={selected} canSelect={hasPermission('notes.delete')} onSelect={toggleSelectRow} renderActions={renderActions} />
             ) : (
                 <TableContainer
                     sx={{
@@ -240,15 +280,7 @@ const NotesTable = () => {
                                         />
                                     </TableCell>
                                 )}
-                                <TableCell
-                                    sortDirection={sortBy === 'id' ? sortDirection : false}
-                                    onClick={() => handleSort('id')}
-                                    sx={{ padding: '4px 8px' }}
-                                >
-                                    <TableSortLabel active={sortBy === 'id'} direction={sortBy === 'id' ? sortDirection : 'asc'}>
-                                        #
-                                    </TableSortLabel>
-                                </TableCell>
+                                <TableCell sx={{ padding: '4px 8px' }}>#</TableCell>
                                 <TableCell
                                     sortDirection={sortBy === 'title' ? sortDirection : false}
                                     onClick={() => handleSort('title')}
@@ -311,23 +343,7 @@ const NotesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(note.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{note.updatedAt ? moment(note.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>
-                                        {hasPermission("notes.view") && (
-                                            <Tooltip title={t('common.view')} placement="top">
-                                                <IconButton onClick={() => openModal('preview', note)}><Preview /></IconButton>
-                                            </Tooltip>
-                                        )}
-
-                                        {hasPermission("notes.update") && (
-                                            <Tooltip title={t('common.edit')} placement="top">
-                                                <IconButton onClick={() => openModal('edit', note)}><Edit /></IconButton>
-                                            </Tooltip>
-                                        )}
-
-                                        {hasPermission("notes.delete") && (
-                                            <Tooltip title={t('common.delete')} placement="top">
-                                                <IconButton onClick={() => openModal('delete', note)}><Delete /></IconButton>
-                                            </Tooltip>
-                                        )}
+                                        {renderActions(note)}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -358,6 +374,7 @@ const NotesTable = () => {
 
             {hasPermission("notes.view") && modalType === 'preview' && <PreviewNoteModal
                 open={true}
+                view={view}
                 selectedNote={selectedNote}
                 onClose={closeModal}
             />}

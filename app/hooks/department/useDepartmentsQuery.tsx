@@ -1,3 +1,4 @@
+import { usePreferences } from '@/app/context/preferencesContext';
 import { useQuery } from "@tanstack/react-query";
 import Department from "../../types/Department";
 import axios from "axios";
@@ -78,7 +79,9 @@ const useDepartmentsQuery = (
   const normalizedPhrase = phrase ?? undefined;
   const normalizedIncludes = includes ?? undefined;
 
+  const { ready } = usePreferences();
   return useQuery<DepartmentsResponse>({
+    enabled: ready,
     queryKey: [
       "departments",
       pageSize,

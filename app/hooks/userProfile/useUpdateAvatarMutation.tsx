@@ -1,6 +1,7 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
 import axios from 'axios';
 import { SERVICE_COMPANY_URL } from '@/app/utils/constans';
+import { AVATAR_UPDATED } from '@/app/utils/userAvatar';
 
 export type UpdateAvatarPayload = {
     type: 'custom' | 'default';
@@ -49,5 +50,6 @@ export const useUpdateAvatarMutation = (
 ): UseMutationResult<UpdateAvatarResponse, Error, UpdateAvatarPayload, unknown> => {
     return useMutation<UpdateAvatarResponse, Error, UpdateAvatarPayload>({
         mutationFn: (payload) => updateAvatar(payload, onProgress),
+        onSuccess: () => window.dispatchEvent(new Event(AVATAR_UPDATED)),
     });
 };
