@@ -44,6 +44,7 @@ export function Lookup({
   );
   return (
     <Autocomplete
+      size="small"
       sx={{ minWidth: 220, flex: 1 }}
       disabled={disabled}
       open={open}

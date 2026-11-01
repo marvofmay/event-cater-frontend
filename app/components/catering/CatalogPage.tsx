@@ -3,6 +3,8 @@ import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -39,6 +41,22 @@ import {
 import { CatalogItem, Page } from "./types";
 import { Lookup, LookupItem } from "./Lookup";
 import { EquipmentPhotoEditor, EquipmentPhotoGallery, EquipmentPhotoImage } from "./EquipmentPhotos";
+
+const secondaryCatalogButtonSx = {
+  minHeight: 40,
+  px: 1.5,
+  borderRadius: 2,
+  textTransform: "none",
+  fontWeight: 500,
+  whiteSpace: "nowrap",
+  color: "text.secondary",
+  borderColor: "divider",
+  bgcolor: "action.hover",
+  boxShadow: "none",
+  "&:hover": { color: "text.primary", bgcolor: "action.selected", borderColor: "text.disabled", boxShadow: "none" },
+  "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+};
+
 export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
   const api = useApi();
   const { hasPermission } = useUser();
@@ -115,7 +133,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
           )
         }
       >
-        <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+        <Stack direction="row" gap={2} flexWrap="wrap" alignItems="center" mb={2} sx={{ "& > .MuiButton-root": { minHeight: 40 } }}>
           <TextField
             size="small"
             label={kind === "equipment" ? "Szukaj po nazwie, nazwie slangowej lub kodzie" : "Szukaj po nazwie lub kodzie"}
@@ -171,11 +189,11 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
               Dodaj pozycję
             </Button>
           )}
-          <Button component={Link} href={kind === "equipment" ? "/catering/equipment/categories" : "/catering/supplies/categories"}>
+          <Button component={Link} variant="outlined" startIcon={<CategoryOutlinedIcon />} sx={secondaryCatalogButtonSx} href={kind === "equipment" ? "/catering/equipment/categories" : "/catering/supplies/categories"}>
             {kind === "equipment" ? "Kategorie sprzętu" : "Kategorie produktów"}
           </Button>
           {kind === "equipment" && (
-            <Button component={Link} href="/catering/equipment/locations">Miejsca sprzętu</Button>
+            <Button component={Link} variant="outlined" startIcon={<PlaceOutlinedIcon />} sx={secondaryCatalogButtonSx} href="/catering/equipment/locations">Miejsca sprzętu</Button>
           )}
           <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={remote.reload}>Odśwież</Button>
         </Stack>

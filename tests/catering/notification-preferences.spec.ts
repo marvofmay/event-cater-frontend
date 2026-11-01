@@ -6,7 +6,7 @@ for (const ownSettings of [false, true]) {
         const token = [Buffer.from('{"alg":"none"}').toString('base64url'), Buffer.from(JSON.stringify(claims)).toString('base64url'), 'test'].join('.');
         await page.addInitScript(value => localStorage.setItem('auth_token', value), token);
         const tenant = { pageSize: 25, channels: { sms: false, email: true, internal: true } };
-        const user = { pageSize: null, channels: { sms: null, email: ownSettings ? false : null, internal: null } as Record<string, boolean | null> };
+        const user = { pageSize: null, channels: { sms: ownSettings ? true : null, email: ownSettings ? false : null, internal: null } as Record<string, boolean | null> };
         let saves = 0;
         const snapshot = () => ({ tenant, user, effective: { pageSize: 25, channels: { sms: false, email: user.channels.email ?? true, internal: user.channels.internal ?? true } }, canManageTenant: true, tenantVersion: 0, userVersion: saves });
         await page.route('**/api/**', route => {

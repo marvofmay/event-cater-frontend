@@ -9,18 +9,21 @@ import MainFileManager from "@/app/components/fileManager/main";
 
 const FileManager: React.FC = () => {
   const { t } = useTranslation();
-  const { isAuthenticated, hasAccess, loading } = useUser();
+  const { isAuthenticated, hasAccess, hasPermission, loading } = useUser();
+  const canList = hasAccess("file_manager") && hasPermission("file_manager.list");
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/me/logout");
+      router.replace("/login");
     }
 
-    if (!loading && !hasAccess("file_manager")) {
-      router.push("/forbidden");
+    if (!loading && isAuthenticated && !canList) {
+      router.replace("/forbidden");
     }
-  }, [hasAccess, loading, router]);
+  }, [isAuthenticated, canList, loading, router]);
+
+  if (loading || !isAuthenticated || !canList) return null;
 
   return (
     <div className="grid grid-rows-[10px_1fr_10px] min-h-screen p-1 pb-1 sm:p-1 font-[family-name:var(--font-geist-sans)]">

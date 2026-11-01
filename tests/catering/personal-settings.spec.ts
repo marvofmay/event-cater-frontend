@@ -27,13 +27,16 @@ test('technical administrator settings edit tenant defaults only', async ({ page
     await expect.poll(() => saves).toBe(1);
 });
 
-test('nontechnical users manage personal preferences without catalog access', async ({ page }) => {
-    const claims = { exp: Math.floor(Date.now() / 1000) + 3600, tenantSlug: 'mapa-smakow', tenantName: 'Mapa Smaków', modules: ['company'], accesses: ['company_structure'], permissions: ['company_structure.view'] };
+test('users without management access cannot see catalog settings or request them directly', async ({ page }) => {
+    const claims = { exp: Math.floor(Date.now() / 1000) + 3600, tenantSlug: 'mapa-smakow', tenantName: 'Mapa Smaków', modules: ['company'], accesses: ['company_structure', 'employees'], permissions: ['company_structure.view', 'employees.list'] };
     const token = [Buffer.from('{"alg":"none"}').toString('base64url'), Buffer.from(JSON.stringify(claims)).toString('base64url'), 'test'].join('.');
     await page.addInitScript(value => localStorage.setItem('auth_token', value), token);
     const saves: unknown[] = [];
+    const catalogRequests: string[] = [];
     await page.route('**/api/**', route => {
         const path = new URL(route.request().url()).pathname;
+        if (path === '/api/preferences/dashboard') return route.fulfill({ json: { data: { order: [], version: 0 } } });
+        if (/^\/api\/preferences\/(companies|departments|employees|positions|roles|contractTypes|industries)$/.test(path)) catalogRequests.push(path);
         if (path.startsWith('/api/preferences/')) {
             if (route.request().method() === 'PUT') saves.push(route.request().postDataJSON());
             return route.fulfill({ json: { data: { tenant: { pageSize: 25, channels: { sms: false, email: true, internal: true } }, user: { pageSize: null, channels: { sms: null, email: null, internal: null } }, effective: { pageSize: 25, channels: { sms: false, email: true, internal: true } }, canManageTenant: true, tenantVersion: 0, userVersion: 0 } } });
@@ -42,13 +45,42 @@ test('nontechnical users manage personal preferences without catalog access', as
     });
     await page.goto('/settings/companies');
     await expect(page).toHaveURL(/\/me\/settings\?section=companies$/);
-    await expect(page.getByRole('tab', { name: 'Firmy', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Pulpit', exact: true })).toHaveAttribute('aria-selected', 'true');
+    for (const label of ['Firmy', 'Oddziały', 'Pracownicy', 'Stanowiska', 'Role', 'Formy zatrudnienia', 'Branże']) await expect(page.getByRole('tab', { name: label, exact: true })).toHaveCount(0);
+    expect(catalogRequests).toEqual([]);
     await expect(page.getByRole('tab', { name: 'Domyślne firmy' })).toHaveCount(0);
     await page.getByRole('tab', { name: 'Powiadomienia', exact: true }).click();
     const panel = page.getByRole('main').last();
     await expect(panel.getByRole('switch')).toHaveCount(3);
+    await expect(panel.getByRole('combobox')).toHaveCount(0);
     await panel.getByRole('switch', { name: 'E-mail', exact: true }).click();
     await panel.getByRole('button', { name: 'Zapisz ustawienia', exact: true }).click();
     await expect.poll(() => saves.length).toBe(1);
     expect(saves[0]).toMatchObject({ scope: 'user', channels: { email: false } });
+});
+
+test('personal catalog tabs require both management access and listing permission for that resource', async ({ page }) => {
+    const claims = { exp: Math.floor(Date.now() / 1000) + 3600, tenantSlug: 'mapa-smakow', tenantName: 'Mapa Smaków', modules: ['company'], accesses: ['manage', 'employees', 'positions'], permissions: ['employees.list', 'positions.create'] };
+    const token = [Buffer.from('{"alg":"none"}').toString('base64url'), Buffer.from(JSON.stringify(claims)).toString('base64url'), 'test'].join('.');
+    await page.addInitScript(value => localStorage.setItem('auth_token', value), token);
+    let saves = 0;
+    await page.route('**/api/**', route => {
+        const path = new URL(route.request().url()).pathname;
+        if (path === '/api/preferences/dashboard') return route.fulfill({ json: { data: { order: [], version: 0 } } });
+        if (path === '/api/preferences/employees') {
+            if (route.request().method() === 'PUT') {
+                expect(route.request().postDataJSON()).toEqual({ scope: 'user', version: 0, pageSize: 50 });
+                saves++;
+            }
+            return route.fulfill({ json: { data: { tenant: { pageSize: 25 }, user: { pageSize: null }, effective: { pageSize: 25 }, tenantVersion: 0, userVersion: 0, canManageTenant: false } } });
+        }
+        return route.fulfill({ json: { data: { pageSizes: {}, dashboardOrder: [] } } });
+    });
+    await page.goto('/me/settings?section=employees');
+    await expect(page.getByRole('tab', { name: 'Pracownicy', exact: true })).toHaveAttribute('aria-selected', 'true');
+    for (const label of ['Firmy', 'Oddziały', 'Stanowiska', 'Role', 'Formy zatrudnienia', 'Branże']) await expect(page.getByRole('tab', { name: label, exact: true })).toHaveCount(0);
+    await page.getByRole('combobox', { name: /^Rekordów na stronę/ }).click();
+    await page.getByRole('option', { name: '50', exact: true }).click();
+    await page.getByRole('button', { name: 'Zapisz ustawienia', exact: true }).click();
+    await expect.poll(() => saves).toBe(1);
 });

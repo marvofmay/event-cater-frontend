@@ -15,6 +15,7 @@ import ManageListNavigation from "../manage/navigation/List";
 import SettingsListNavigation from "../settings/navigation/List";
 import UserProfileNavigation from "../user/UserProfileNavigation";
 import { SERVICE_COMPANY_URL, SERVICE_MERCURE_URL } from "@/app/utils/constans";
+import { useUnreadMessagesCount } from '@/app/hooks/messages/useUnreadMessagesCount';
 
 const navLinks = [
   { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
@@ -30,7 +31,8 @@ const navLinks = [
 const Navigation: React.FC = () => {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const { isAuthenticated, hasModule, hasAccess, user } = useUser();
+  const { isAuthenticated, hasModule, hasAccess, hasPermission, user } = useUser();
+  const messageCount = useUnreadMessagesCount();
   const [notificationCount, setNotificationCount] = useState(0);
   const [hydrated, setHydrated] = useState(false);
 
@@ -168,7 +170,7 @@ const Navigation: React.FC = () => {
             </Link>
           )}
 
-          {isAuthenticated && hasModule("company") && hasAccess("messages") && (
+          {isAuthenticated && hasAccess("messages") && (hasPermission('messages.list') || hasPermission('messages.create')) && (
             <Link
               href="/messages"
               color="inherit"
@@ -181,8 +183,8 @@ const Navigation: React.FC = () => {
                 borderRadius: "4px",
               }}
             >
-              <Button color="inherit">
-                <EmailIcon />
+              <Button color="inherit" aria-label={messageCount ? `Wiadomości: ${messageCount} nieprzeczytanych` : 'Wiadomości'} sx={{ minWidth: { xs: 40, sm: 64 }, px: { xs: 1, sm: 2 } }}>
+                <Badge badgeContent={messageCount} color="error" max={99}><EmailIcon /></Badge>
               </Button>
             </Link>
           )}

@@ -89,6 +89,8 @@ const plSvar = {
 
     Rename: "Zmień nazwę",
     Delete: "Usuń",
+    "Are you sure you want to delete these items:": "Czy na pewno trwale usunąć zaznaczone pliki i foldery wraz z zawartością?",
+    Cut: "Wytnij",
     Copy: "Kopiuj",
     Paste: "Wklej",
     Download: "Pobierz",

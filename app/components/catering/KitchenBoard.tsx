@@ -30,8 +30,9 @@ export function KitchenBoard() {
     <Permission name="orders.list">
       <Permission name="orders.view">
         <Panel title="Dzienny plan kuchni">
-          <Stack direction="row" gap={2} flexWrap="wrap">
+          <Stack direction="row" gap={2} flexWrap="wrap" alignItems="center">
             <TextField
+              size="small"
               label="Dzień produkcji"
               type="date"
               value={date}
@@ -62,7 +63,7 @@ export function KitchenBoard() {
                 ),
               }}
             />
-            <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={remote.reload}>Odśwież plan</Button>
+            <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} sx={{ minHeight: 40 }} disabled={remote.loading} onClick={remote.reload}>Odśwież plan</Button>
           </Stack>
           <Typography color="text.secondary" mt={2}>
             Osobne karty dla każdego wydarzenia. Dzień produkcji może poprzedzać

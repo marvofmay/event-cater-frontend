@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Alert, Box, Button, Checkbox, CircularProgress, FormControlLabel, MenuItem, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, CircularProgress, FormControlLabel, MenuItem, Paper, Stack, Switch, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useUser } from '@/app/context/userContext';
 import { usePreferences, type PreferenceResource } from '@/app/context/preferencesContext';
+import NotificationTemplatesSettings from './NotificationTemplatesSettings';
+import { canConfigureListPreference } from '@/app/utils/preferenceAccess';
 
 type Channel = 'sms' | 'email' | 'internal';
 const labels: Record<PreferenceResource, string> = { companies: 'Firmy', departments: 'Oddziały / departamenty', employees: 'Pracownicy', positions: 'Stanowiska', roles: 'Role', contractTypes: 'Formy zatrudnienia', industries: 'Branże', notifications: 'Powiadomienia' };
@@ -15,7 +17,9 @@ interface Values { pageSize: number | null; channels?: Record<Channel, boolean |
 interface Snapshot { tenant: Values; user: Values; effective: Values; canManageTenant: boolean; tenantVersion: number; userVersion: number }
 
 export default function SettingsPanel({ resource, personalOnly = false }: { resource: PreferenceResource; personalOnly?: boolean }) {
-    const { token, tenant, user, roles, loading } = useUser();
+    const { token, tenant, user, roles, loading, hasAccess, hasPermission } = useUser();
+    const canConfigureList = !personalOnly || canConfigureListPreference(resource, hasAccess, hasPermission);
+    const canOpen = !personalOnly || resource === 'notifications' || canConfigureList;
     const router = useRouter();
     const technical = user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS');
     const { refresh } = usePreferences();
@@ -31,11 +35,14 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [reload, setReload] = useState(0);
+    const [notificationTab, setNotificationTab] = useState('channels');
+    const [templatesVisited, setTemplatesVisited] = useState(false);
+    const notificationSettings = resource === 'notifications' && scope === 'tenant';
     useEffect(() => {
         if (!loading && !personalOnly && !technical) router.replace(`/me/settings?section=${resource}`);
     }, [loading, personalOnly, technical, resource, router]);
     useEffect(() => {
-        if (!token || (!personalOnly && !technical)) return;
+        if (!token || !canOpen || (!personalOnly && !technical)) return;
         const controller = new AbortController();
         setData(null);
         setError('');
@@ -43,12 +50,13 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
             .then(response => setData(response.data.data))
             .catch(failure => { if (!controller.signal.aborted) setError(failure.response?.data?.message ?? 'Nie udało się pobrać ustawień.'); });
         return () => controller.abort();
-    }, [token, resource, reload, personalOnly, technical]);
+    }, [token, resource, reload, personalOnly, technical, canOpen]);
     useEffect(() => {
         if (!data) return;
         const values = data[scope];
         setPageSize(values.pageSize);
-        setChannels(values.channels ?? { sms: null, email: null, internal: null });
+        const selectedChannels = values.channels ?? { sms: null, email: null, internal: null };
+        setChannels(scope === 'tenant' ? selectedChannels : Object.fromEntries((Object.keys(channelLabels) as Channel[]).map(channel => [channel, selectedChannels[channel] === true && !data.tenant.channels?.[channel] ? null : selectedChannels[channel]])) as Record<Channel, boolean | null>);
         setSender(data.tenant.sms?.sender ?? '');
         setLimit(data.tenant.sms?.limit ?? 0);
         setQuotaMode(data.tenant.sms?.quotaMode ?? 'monthly');
@@ -61,7 +69,7 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
         setError('');
         try {
             const response = await axios.put(`/api/preferences/${resource}`, {
-                scope, version: scope === 'tenant' ? data.tenantVersion : data.userVersion, pageSize,
+                scope, version: scope === 'tenant' ? data.tenantVersion : data.userVersion, pageSize: canConfigureList ? pageSize : null,
                 ...(resource === 'notifications' ? { channels } : {}),
                 ...(resource === 'notifications' && scope === 'tenant' ? { sms: { sender, limit, quotaMode, apiKey, clearApiKey } } : {}),
             }, { headers: { Authorization: `Bearer ${token}` } });
@@ -74,17 +82,30 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
             toast.error('Nie udało się zapisać ustawień.');
         } finally { setSaving(false); }
     };
+    if (!canOpen) return <Alert severity="warning">Nie masz uprawnienia do ustawień tej listy.</Alert>;
     return <Box component="main" sx={{ maxWidth: 850, mx: 'auto', p: { xs: 2, sm: 3 } }}>
         <Typography variant="h5" gutterBottom>Ustawienia — {labels[resource]}</Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>{tenant?.name} · {personalOnly ? 'Twoje ustawienia dotyczą wyłącznie tej firmy.' : 'Ustawienia globalne dla tej firmy.'}</Typography>
         {error && <Alert severity="error" action={<Button onClick={() => setReload(value => value + 1)} color="inherit">Odśwież</Button>} sx={{ mb: 2 }}>{error}</Alert>}
         {!data ? !error && <CircularProgress aria-label="Ładowanie ustawień" /> : <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
+            {notificationSettings && <Tabs value={notificationTab} onChange={(_, value) => { setNotificationTab(value); if (value === 'templates') setTemplatesVisited(true); }} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label="Ustawienia powiadomień" sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
+                <Tab value="channels" label="Kanały" id="notification-tab-channels" aria-controls="notification-panel-channels" />
+                <Tab value="templates" label="Tytuły i treści" id="notification-tab-templates" aria-controls="notification-panel-templates" />
+                <Tab value="sms" label="SMS / Brevo" id="notification-tab-sms" aria-controls="notification-panel-sms" />
+                <Tab value="list" label="Lista" id="notification-tab-list" aria-controls="notification-panel-list" />
+            </Tabs>}
+            <Box hidden={notificationSettings && notificationTab !== 'channels'}>
             <Alert severity="info" sx={{ mb: 3 }}>{scope === 'tenant' ? 'Ustawienia nadrzędne obowiązują wszystkich użytkowników, którzy nie wybrali własnych wartości. Wyłączonego kanału nie może włączyć użytkownik.' : 'Możesz nadpisać ustawienia dla siebie lub pozostawić dziedziczenie ustawień firmy.'}</Alert>
+            </Box>
+            <Box hidden={!canConfigureList || (notificationSettings && notificationTab !== 'list')} role={notificationSettings ? 'tabpanel' : undefined} id={notificationSettings ? 'notification-panel-list' : undefined} aria-labelledby={notificationSettings ? 'notification-tab-list' : undefined}>
+            {notificationSettings && <Typography variant="h6" gutterBottom>Lista powiadomień</Typography>}
             <TextField select fullWidth label="Rekordów na stronę" value={pageSize ?? 'inherit'} onChange={event => setPageSize(event.target.value === 'inherit' ? null : Number(event.target.value))} disabled={saving} helperText={`Obecnie obowiązuje: ${scope === 'tenant' ? data.tenant.pageSize : data.effective.pageSize} rekordów na stronę.`}>
                 {scope === 'user' && <MenuItem value="inherit">Ustawienie firmy ({data.tenant.pageSize})</MenuItem>}
                 {[5, 10, 25, 50, 100].map(size => <MenuItem key={size} value={size}>{size}</MenuItem>)}
             </TextField>
+            </Box>
             {resource === 'notifications' && <>
+                <Box hidden={notificationSettings && notificationTab !== 'channels'} role={notificationSettings ? 'tabpanel' : undefined} id={notificationSettings ? 'notification-panel-channels' : undefined} aria-labelledby={notificationSettings ? 'notification-tab-channels' : undefined}>
                 <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Kanały powiadomień</Typography>
                 <Stack spacing={2}>
                     {(Object.keys(channelLabels) as Channel[]).map(channel => {
@@ -98,7 +119,8 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
                         </Box>;
                     })}
                 </Stack>
-                {scope === 'tenant' && <Box sx={{ mt: 3 }}>
+                </Box>
+                {scope === 'tenant' && <Box hidden={notificationSettings && notificationTab !== 'sms'} role="tabpanel" id="notification-panel-sms" aria-labelledby="notification-tab-sms">
                     <Typography variant="h6" gutterBottom>Brevo — SMS</Typography>
                     <Alert severity="warning" sx={{ mb: 2 }}>To lokalny limit aplikacji, nie saldo konta Brevo. Włączenie SMS umożliwia płatne wysyłki. Długie wiadomości mogą zużywać kilka segmentów.</Alert>
                     <Stack spacing={2}>
@@ -111,7 +133,8 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
                     </Stack>
                 </Box>}
             </>}
-            <Button variant="contained" onClick={save} disabled={saving} sx={{ mt: 3 }}>{saving ? 'Zapisywanie…' : 'Zapisz ustawienia'}</Button>
+            {(!notificationSettings || notificationTab !== 'templates') && <Button variant="contained" onClick={save} disabled={saving} sx={{ mt: 3 }}>{saving ? 'Zapisywanie…' : 'Zapisz ustawienia'}</Button>}
+            {notificationSettings && templatesVisited && <Box hidden={notificationTab !== 'templates'} role="tabpanel" id="notification-panel-templates" aria-labelledby="notification-tab-templates"><NotificationTemplatesSettings /></Box>}
         </Paper>}
     </Box>;
 }

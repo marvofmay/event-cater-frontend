@@ -9,6 +9,8 @@ export interface CustomerOption {
   uuid: string | null;
   name: string;
   nip?: string | null;
+  regon?: string | null;
+  krs?: string | null;
   address?: string | null;
   city?: string | null;
   street?: string | null;
@@ -21,14 +23,11 @@ export interface CustomerOption {
 const emptyCustomer = { name: "", nip: "", regon: "", krs: "", city: "", street: "", postalCode: "", country: "Polska", phone: "", email: "" };
 
 export function CustomerPicker({ value, onChange, disabled }: { value: CustomerOption | null; onChange: (customer: CustomerOption | null) => void; disabled: boolean }) {
-  const api = useApi();
-  const action = useAction();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState(value?.name ?? "");
   const enteredName = useRef(value?.name ?? "");
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState(false);
-  const [draft, setDraft] = useState({ ...emptyCustomer });
   useEffect(() => {
     const timer = setTimeout(() => setQuery(input), 250);
     return () => clearTimeout(timer);
@@ -57,18 +56,26 @@ export function CustomerPicker({ value, onChange, disabled }: { value: CustomerO
         }}
         renderInput={params => <TextField {...params} label="Klient / organizator" error={Boolean(remote.error)} helperText={remote.error || "Szukaj po nazwie, NIP, REGON, KRS, telefonie lub e-mailu."} />}
       />
-      {!disabled && <Tooltip title="Dodaj klienta / organizatora / kontrahenta"><IconButton type="button" aria-label="Dodaj kontrahenta" color="primary" onMouseDown={event => event.preventDefault()} onClick={() => { setDraft({ ...emptyCustomer, name: enteredName.current }); setOpen(false); setDialog(true); }} sx={{ mt: .75, border: 1, borderColor: "divider", borderRadius: 1.5 }}><AddIcon /></IconButton></Tooltip>}
+      {!disabled && <Tooltip title="Dodaj klienta / organizatora / kontrahenta"><IconButton type="button" aria-label="Dodaj kontrahenta" color="primary" onMouseDown={event => event.preventDefault()} onClick={() => { setOpen(false); setDialog(true); }} sx={{ mt: .75, border: 1, borderColor: "divider", borderRadius: 1.5 }}><AddIcon /></IconButton></Tooltip>}
     </Stack>
-    <Dialog open={dialog} onClose={() => { if (!action.busy) setDialog(false); }} fullWidth maxWidth="sm">
+    <CustomerCreateDialog open={dialog} initialName={enteredName.current} onClose={() => setDialog(false)} onCreated={customer => { onChange(customer); enteredName.current = customer.name; setInput(customer.name); }} />
+  </Box>;
+}
+
+export function CustomerCreateDialog({ open, onClose, onCreated, initialName = "" }: { open: boolean; onClose: () => void; onCreated: (customer: CustomerOption) => void; initialName?: string }) {
+  const api = useApi();
+  const action = useAction();
+  const [draft, setDraft] = useState({ ...emptyCustomer });
+  useEffect(() => { if (open) setDraft({ ...emptyCustomer, name: initialName }); }, [open, initialName]);
+  return (
+    <Dialog open={open} onClose={() => { if (!action.busy) onClose(); }} fullWidth maxWidth="sm">
       <Box component="form" onSubmit={event => {
         event.preventDefault();
         event.stopPropagation();
         action.run(async () => {
           const customer = await api<CustomerOption>("/event-customers", "POST", draft);
-          onChange(customer);
-          enteredName.current = customer.name;
-          setInput(customer.name);
-          setDialog(false);
+          onCreated(customer);
+          onClose();
         }, "Dodano kontrahenta.");
       }}>
         <DialogTitle>Nowy klient / organizator / kontrahent</DialogTitle>
@@ -94,10 +101,10 @@ export function CustomerPicker({ value, onChange, disabled }: { value: CustomerO
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button type="button" disabled={action.busy} onClick={() => setDialog(false)}>Anuluj</Button>
+          <Button type="button" disabled={action.busy} onClick={() => onClose()}>Anuluj</Button>
           <Button type="submit" variant="contained" disabled={action.busy || !draft.name.trim()}>Dodaj i wybierz</Button>
         </DialogActions>
       </Box>
     </Dialog>
-  </Box>;
+  );
 }

@@ -5,6 +5,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
 const sections = [
   ["events", "Wydarzenia", "events.list"],
+  ["customers", "Kontrahenci", "events.view"],
   ["venues", "Miejsca obsługi", "venues.list"],
   ["equipment", "Sprzęt", "equipment.list"],
   ["supplies", "Produkty i materiały", "consumables.list"],
@@ -28,7 +29,7 @@ export default function CateringLayout({
       </Typography>
       <Stack direction="row" gap={1} flexWrap="wrap" mb={3}>
         {sections
-          .filter((s) => hasPermission(s[2]))
+          .filter((section) => section[0] === "customers" ? ["events.view", "events.create", "events.update"].some(hasPermission) : hasPermission(section[2]))
           .map(([path, label]) => (
             <Button
               key={path}
