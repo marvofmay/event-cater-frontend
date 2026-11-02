@@ -49,7 +49,7 @@ export default function MyHoursPage() {
         <TextField label="Od" type="date" size="small" value={from} onChange={(e) => setFrom(e.target.value)} InputLabelProps={{ shrink: true }} />
         <TextField label="Do" type="date" size="small" value={to} onChange={(e) => setTo(e.target.value)} InputLabelProps={{ shrink: true }} />
         <Button startIcon={<Refresh />} onClick={remote.reload} disabled={remote.loading}>Odśwież</Button>
-        {canCreate && <Button startIcon={<Add />} variant="contained" onClick={() => setDialog({ date: "", plannedMinutes: 0 })}>Dodaj godziny</Button>}
+        {canCreate && <Button color="success" startIcon={<Add />} variant="contained" onClick={() => setDialog({ date: "", plannedMinutes: 0 })}>Dodaj godziny</Button>}
       </Stack>
       {remote.error && <Alert severity="error" sx={{ mb: 2 }}>{remote.error}</Alert>}
       {remote.loading && !remote.data ? <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box> : (
@@ -132,8 +132,14 @@ function HoursTable({ days, canCreate, onReport }: { days: WorkHoursDay[]; canCr
               </TableCell>
               <TableCell align="right">
                 {canCreate && (
-                  <Button size="small" onClick={() => onReport(day)}>
-                    {day.plannedMinutes > 0 ? "Zgłoś czas" : "Dodaj"}
+                  <Button
+                    size="small"
+                    color="success"
+                    variant="contained"
+                    startIcon={<Add fontSize="small" />}
+                    onClick={() => onReport(day)}
+                  >
+                    {day.plannedMinutes > 0 ? "Dodaj dodatkowy czas w tym wydarzeniu" : "Dodaj"}
                   </Button>
                 )}
               </TableCell>

@@ -34,14 +34,14 @@ export default function ReportHoursDialog({ open, onClose, onSaved, date = "", p
   return (
     <Dialog open={open} onClose={() => !action.busy && onClose()} fullWidth maxWidth="sm">
       <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
-        {plannedMinutes > 0 ? "Zgłoś faktyczny czas pracy" : "Dodaj godziny poza wydarzeniem"}
+        {plannedMinutes > 0 ? "Dodaj dodatkowy czas w tym wydarzeniu" : "Dodaj godziny poza wydarzeniem"}
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 2 }}>
           {action.error && <Alert severity="error">{action.error}</Alert>}
           <Typography variant="body2" color="text.secondary">
             {plannedMinutes > 0
-              ? `Zaplanowano z wydarzeń: ${Math.floor(plannedMinutes / 60)} h ${plannedMinutes % 60} min. Podaj faktyczny czas i obowiązkowo uzasadnij różnicę.`
+              ? `Zaplanowano z wydarzeń: ${Math.floor(plannedMinutes / 60)} h ${plannedMinutes % 60} min. Dodaj dodatkowy lub skorygowany czas i obowiązkowo uzasadnij różnicę.`
               : "Wpisz czas pracy w dniu bez wydarzenia (np. bar, sprzątanie, przygotowania) oraz obowiązkowy komentarz."}
           </Typography>
           <TextField
