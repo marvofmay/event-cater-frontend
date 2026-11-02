@@ -39,9 +39,10 @@ export function EquipmentPhotoImage({ equipmentUuid, photo, thumbnail = false }:
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [equipmentUuid, photo.uuid, token]);
+  const thumb = 40;
   if (error) return <Typography variant="caption">Nie udało się wczytać zdjęcia.</Typography>;
-  if (!url) return <Box sx={{ width: thumbnail ? 56 : "100%", height: thumbnail ? 56 : 180 }} aria-label="Wczytywanie zdjęcia" />;
-  return <Box component="img" src={url} alt={photo.name} sx={{ width: thumbnail ? 56 : "100%", height: thumbnail ? 56 : 180, objectFit: "contain", borderRadius: 1 }} />;
+  if (!url) return <Box sx={{ width: thumbnail ? thumb : "100%", height: thumbnail ? thumb : 180 }} aria-label="Wczytywanie zdjęcia" />;
+  return <Box component="img" src={url} alt={photo.name} sx={{ width: thumbnail ? thumb : "100%", height: thumbnail ? thumb : 180, objectFit: "contain", borderRadius: 1, display: "block" }} />;
 }
 
 function PendingPhoto({ file }: { file: File }) {
@@ -129,7 +130,7 @@ export function EquipmentPhotoEditor({ equipment, files, removed, onFilesChange,
             <Box key={file.name + index} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }}>
               <PendingPhoto file={file} />
               <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Typography variant="caption" sx={{ overflowWrap: "anywhere" }}>{file.name} · do dodania</Typography>
+                <Typography variant="caption" sx={{ overflowWrap: "anywhere" }}>{file.name} - do dodania</Typography>
                 <RowAction action="delete" label={"Usuń wybrane zdjęcie: " + file.name} disabled={disabled} onClick={() => onFilesChange(files.filter((_, photoIndex) => photoIndex !== index))} />
               </Stack>
             </Box>

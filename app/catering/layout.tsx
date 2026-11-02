@@ -25,7 +25,7 @@ export default function CateringLayout({
         Obsługa cateringu
       </Typography>
       <Typography color="text.secondary" mb={2}>
-        Przyjęcia i wydarzenia — wyjazdowo lub w bazie firmy
+        Przyjęcia i wydarzenia - wyjazdowo lub w bazie firmy
       </Typography>
       <Stack direction="row" gap={1} flexWrap="wrap" mb={3}>
         {sections

@@ -6,7 +6,7 @@ import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, Dialog
 
 type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; status: string; provisioning: string; version: number; history?: {action: string; reason: string; actor: string; createdAt: string}[] };
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
-const provisioning: Record<string,string> = {pending:'Przygotowanie bazy',ready:'Baza gotowa',failed:'Błąd przygotowania — wymagana pomoc operatora'};
+const provisioning: Record<string,string> = {pending:'Przygotowanie bazy',ready:'Baza gotowa',failed:'Błąd przygotowania - wymagana pomoc operatora'};
 
 export default function SaasPanel() {
     const [token,setToken] = useState<string|null>(null);
@@ -59,11 +59,11 @@ export default function SaasPanel() {
             {error && <Alert severity="error">{error}</Alert>}
             <Alert severity="info">Klient powstanie jako nieaktywny. Otrzyma osobną bazę i własne konto administratora firmy.</Alert>
             <TextField name="name" label="Nazwa firmy" required inputProps={{maxLength:200}} />
-            <TextField name="slug" label="Kod firmy" helperText="2–63 znaki: małe litery, cyfry, myślniki. Kod służy do logowania." required inputProps={{pattern:'[a-z0-9][a-z0-9-]{1,62}',maxLength:63}} />
+            <TextField name="slug" label="Kod firmy" helperText="2-63 znaki: małe litery, cyfry, myślniki. Kod służy do logowania." required inputProps={{pattern:'[a-z0-9][a-z0-9-]{1,62}',maxLength:63}} />
             <TextField name="ownerEmail" label="E-mail administratora firmy" type="email" required inputProps={{maxLength:100}} />
             <TextField name="ownerPassword" label="Początkowe hasło administratora" type="password" autoComplete="new-password" required inputProps={{minLength:12,maxLength:72}} />
         </Stack></DialogContent><DialogActions>{busy&&<CircularProgress size={22}/>}<Button color="primary" variant="contained" disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
-        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} — zarządzanie</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
+        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} - zarządzanie</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
             <Typography>{selected && provisioning[selected.provisioning]}</Typography>
@@ -72,7 +72,7 @@ export default function SaasPanel() {
             <TextField label="Uzasadnienie zmiany" value={reason} multiline minRows={2} onChange={e=>setReason(e.target.value)} inputProps={{maxLength:1000}} />
             <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" disabled={busy || !reason.trim() || status===selected?.status} onClick={changeStatus}>Zapisz status</Button>
             <Typography variant="h6">Historia</Typography>
-            {selected?.history?.map((entry,index)=><Box key={index}><Typography>{entry.createdAt} · {entry.actor} · {entry.action}</Typography><Typography color="text.secondary">{entry.reason}</Typography></Box>)}
+            {selected?.history?.map((entry,index)=><Box key={index}><Typography>{entry.createdAt} - {entry.actor} - {entry.action}</Typography><Typography color="text.secondary">{entry.reason}</Typography></Box>)}
         </Stack></DialogContent><DialogActions><Button variant="contained" color="primary" disabled={busy} onClick={()=>setSelected(null)}>Zamknij</Button></DialogActions></Dialog>
     </Box>;
 }

@@ -63,7 +63,7 @@ export default function CompanyStructureSearch({ onReveal }: { onReveal: (nodes:
         <TextField fullWidth label="Szukaj w całej strukturze" placeholder="Np. imię/nazwisko/dział/firma/telefon/email" value={value}
             onChange={event => { setValue(event.target.value); reveal.reset(); }}
             inputProps={{ maxLength: 100 }}
-            helperText="Wpisz co najmniej 2 znaki — imię, nazwisko, dział, firma, stanowisko, telefon lub e-mail."
+            helperText="Wpisz co najmniej 2 znaki - imię, nazwisko, dział, firma, stanowisko, telefon lub e-mail."
             InputProps={{ startAdornment: <InputAdornment position="start"><Search /></InputAdornment>, endAdornment: value ? <InputAdornment position="end"><IconButton aria-label="Wyczyść wyszukiwanie" onClick={() => { setValue(""); reveal.reset(); }} edge="end"><Close /></IconButton></InputAdornment> : undefined }} />
         {(search.isFetching || reveal.isPending) && <LinearProgress aria-label="Wyszukiwanie struktury" sx={{ mt: 1 }} />}
         {ready && search.isError && <Alert severity="error" action={<Button color="inherit" onClick={() => search.refetch()}>Ponów wyszukiwanie</Button>}>{search.error.message}</Alert>}
@@ -79,7 +79,7 @@ export default function CompanyStructureSearch({ onReveal }: { onReveal: (nodes:
                             <Avatar variant="rounded" sx={{ bgcolor: "#e0e7ff", color: "#3730a3", width: 32, height: 32 }}><Icon fontSize="small" /></Avatar>
                             <Box sx={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
                                 <Typography variant="body2" fontWeight={600}>{node.name}</Typography>
-                                <Typography variant="caption" color="text.secondary">{kind.label}{node.subtitle ? ` · ${node.subtitle}` : ""}</Typography>
+                                <Typography variant="caption" color="text.secondary">{kind.label}{node.subtitle ? ` - ${node.subtitle}` : ""}</Typography>
                                 {node.type !== "company" && <Typography component="div" variant="caption" color="text.secondary">{node.companyName}{node.type === "employee" && node.departmentName ? ` → ${node.departmentName}` : ""}</Typography>}
                             </Box>
                             {!node.active && <Chip size="small" label="Nieaktywny" />}

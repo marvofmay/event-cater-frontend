@@ -59,10 +59,10 @@ export function Lookup({
       getOptionLabel={(item) =>
         item.name +
         (item.slangName ? " (" + item.slangName + ")" : "") +
-        (item.code ? " · " + item.code : "") +
-        (item.kind === "equipment" ? " · Sprzęt" : "") +
-        (item.kind === "consumable" ? " · Produkt / materiał" : "") +
-        (item.location?.city ? " · " + item.location.city : "")
+        (item.code ? " - " + item.code : "") +
+        (item.kind === "equipment" ? " - Sprzęt" : "") +
+        (item.kind === "consumable" ? " - Produkt / materiał" : "") +
+        (item.location?.city ? " - " + item.location.city : "")
       }
       isOptionEqualToValue={(a, b) => a.uuid === b.uuid && a.kind === b.kind}
       onChange={(_, item) => onChange(item)}

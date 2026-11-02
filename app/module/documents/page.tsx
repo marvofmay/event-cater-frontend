@@ -1,39 +1,33 @@
 "use client";
 
-import { useUser } from "../../context/userContext";
-import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
+import { Box, CircularProgress } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import { useUser } from "@/app/context/userContext";
 import CenteredMessage from "@/app/components/shared/CenterdeMessage";
+import CompanyDocumentsPage from "@/app/components/documents/CompanyDocumentsPage";
 
-const Document: React.FC = () => {
+export default function DocumentsModulePage() {
   const { t } = useTranslation();
-  const { isAuthenticated, hasAccess, loading } = useUser();
+  const { isAuthenticated, loading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push("/me/logout");
-    }
+    if (!loading && !isAuthenticated) router.replace("/me/logout");
+  }, [loading, isAuthenticated, router]);
 
-    if (!loading && !hasAccess("documents")) {
-      router.push("/forbidden");
-    }
-  }, [hasAccess, loading, router]);
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+        <CircularProgress aria-label="Ładowanie" />
+      </Box>
+    );
+  }
 
-  return (
-    <div className="grid grid-rows-[10px_1fr_10px] min-h-screen p-1 pb-1 sm:p-1 font-[family-name:var(--font-geist-sans)]">
-      <main>
-        {!loading && !isAuthenticated ? (
-          <CenteredMessage message={t("common.message.youAreNotLogged")} />
-        ) : (
-          <>
-            <p>{t("documents.title")}</p>
-          </>
-        )}
-      </main>
-    </div>
-  );
-};
+  if (!isAuthenticated) {
+    return <CenteredMessage message={t("common.message.youAreNotLogged")} />;
+  }
 
-export default Document;
+  return <CompanyDocumentsPage />;
+}

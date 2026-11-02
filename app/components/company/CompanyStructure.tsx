@@ -53,7 +53,7 @@ function StructureRow({ node, path }: { node: StructureNode; path: string[] }) {
         <Avatar variant="rounded" sx={{ width: 34, height: 34, color: style.color, bgcolor: style.background }}><Icon fontSize="small" /></Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography component="span" sx={{ display: "block", fontSize: 14, fontWeight: node.type === "employee" ? 500 : 650, overflowWrap: "anywhere" }}>{node.name}</Typography>
-            <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block", overflowWrap: "anywhere" }}>{style.label}{node.subtitle && node.subtitle !== node.name ? ` · ${node.subtitle}` : ""}</Typography>
+            <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block", overflowWrap: "anywhere" }}>{style.label}{node.subtitle && node.subtitle !== node.name ? ` - ${node.subtitle}` : ""}</Typography>
         </Box>
         {!node.active && <Chip label="Nieaktywny" size="small" variant="outlined" sx={{ fontSize: 11 }} />}
         {node.type === 'employee' && <Tooltip title="Podgląd kontaktu"><IconButton size="small" aria-label={`Podgląd pracownika: ${node.name}`} onClick={() => preview(node)}><VisibilityOutlined fontSize="small" /></IconButton></Tooltip>}
@@ -162,7 +162,7 @@ export default function CompanyStructure() {
             </Stack>
             <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2 }}>
                 <CompanyStructureSearch onReveal={reveal} />
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>Wyszukaj firmę, oddział lub pracownika w całej strukturze — bez rozwijania gałęzi.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>Wyszukaj firmę, oddział lub pracownika w całej strukturze - bez rozwijania gałęzi.</Typography>
                 <Stack direction="row" spacing={2} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
                     {Object.entries(presentation).map(([key, style]) => <Typography key={key} variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><style.icon sx={{ fontSize: 16, color: style.color }} />{style.label}</Typography>)}
                 </Stack>

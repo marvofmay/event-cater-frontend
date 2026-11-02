@@ -81,7 +81,7 @@ export function KitchenBoard() {
         {remote.data?.items.map((order) => (
           <section key={order.uuid}>
             <Typography variant="h5">
-              {order.source.title} · wydarzenie {order.source.date}
+              {order.source.title} - wydarzenie {order.source.date}
             </Typography>
             {hasPermission("events.view") && (
               <RowAction

@@ -1,3 +1,32 @@
 {
-    "title": "Moduł dokumentów"
+  "title": "Dokumenty firmowe",
+  "intro": "Wspólna biblioteka plików firmy: umowy, HACCP, alergeny, instrukcje i wzory. To nie jest prywatny dysk — prywatne pliki są w Menedżerze plików.",
+  "empty": "Brak dokumentów w tej kategorii.",
+  "emptyAdmin": "Brak dokumentów. Dodaj pierwszy plik dla zespołu.",
+  "add": "Dodaj dokument",
+  "edit": "Edytuj",
+  "delete": "Usuń",
+  "download": "Pobierz",
+  "save": "Zapisz",
+  "cancel": "Anuluj",
+  "formTitle": "Tytuł",
+  "formDescription": "Opis (opcjonalnie)",
+  "formCategory": "Kategoria",
+  "formFile": "Plik",
+  "formFileHint": "PDF, DOC/DOCX, XLS/XLSX, TXT lub obraz. Max 25 MB.",
+  "formFileReplace": "Nowy plik (opcjonalnie)",
+  "confirmDelete": "Usunąć ten dokument?",
+  "saved": "Zapisano dokument.",
+  "deleted": "Usunięto dokument.",
+  "all": "Wszystkie",
+  "categories": {
+    "contracts": "Umowy i oferty",
+    "haccp": "BHP / sanepid / HACCP",
+    "allergens": "Alergeny i etykiety",
+    "instructions": "Instrukcje stanowiskowe",
+    "prices": "Cenniki i warunki",
+    "event_templates": "Wzory do wydarzeń",
+    "hr": "HR / pracownicy",
+    "other": "Inne"
+  }
 }

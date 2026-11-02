@@ -45,6 +45,7 @@ import { MenuEditor } from "./MenuEditor";
 import { PreparationPanel } from "./PreparationPanel";
 import { KitchenCard } from "./KitchenCard";
 import { HistoryPanel } from "./HistoryPanel";
+import PublishFacebookDialog from "@/app/components/facebook/PublishFacebookDialog";
 export function EventDetailsPage({ uuid }: { uuid: string }) {
   const { hasPermission } = useUser();
   const api = useApi();
@@ -105,8 +106,14 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
           >
             <Typography variant="h5">{event.title}</Typography>
             <Status value={event.status} />
+            {event.involvement?.onStaff ? (
+              <Chip size="small" color="success" label="Jesteś w obsadzie" />
+            ) : null}
+            {event.involvement?.isPacker ? (
+              <Chip size="small" color="warning" label="Kompletujesz katering" />
+            ) : null}
             <Typography>
-              {event.date} · {event.guestCount ?? "Nie ustalono liczby"} gości
+              {event.date} - {event.guestCount ?? "Nie ustalono liczby"} gości
             </Typography>
             <Button
               variant="outlined"
@@ -158,6 +165,15 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
               Wydarzenie jest{" "}
               {event.status === "cancelled" ? "anulowane" : "zakończone"}. Dane
               operacyjne pozostają w historii.
+            </Alert>
+          )}
+          {event.involvement && (event.involvement.onStaff || event.involvement.isPacker) && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {event.involvement.onStaff && event.involvement.isPacker
+                ? "Jesteś w obsadzie tego wydarzenia i jednocześnie kompletujesz katering."
+                : event.involvement.onStaff
+                  ? "Jesteś w obsadzie wydarzenia. Kompletacja to osobna rola - możesz nie być osobą kompletującą."
+                  : "Kompletujesz katering poza obsadą wydarzenia. Masz dostęp do listy kompletacji, nawet jeśli nie jesteś w zespole."}
             </Alert>
           )}
           {tab === "details" && (
@@ -257,8 +273,10 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
                 : ""}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setNextStatus("")}>Wróć</Button>
+              <Button color="primary" variant="contained" onClick={() => setNextStatus("")}>Anuluj</Button>
               <Button
+                color="primary"
+                variant="contained"
                 disabled={action.busy}
                 onClick={() =>
                   action.run(async () => {
@@ -328,7 +346,7 @@ function VenueSelection({
               <Typography>
                 {venue.location.street}, {venue.location.postalCode}{" "}
                 {venue.location.city}. {venue.location.instructions}{" "}
-                {venue.notes} · {venue.contacts?.length ?? 0} kontaktów
+                {venue.notes} - {venue.contacts?.length ?? 0} kontaktów
               </Typography>
             )}
             <FormControlLabel
@@ -554,8 +572,27 @@ function StaffSection({
     chef: "Kucharz",
     coordinator: "Koordynator",
   };
+  const packerUuid = event.preparation?.responsibleUuid ?? null;
   return (
     <Panel title="Zespół wydarzenia">
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Obsada i osoba kompletująca to osobne role. Pracownik może być w obsadzie bez kompletacji, kompletować poza obsadą albo łączyć obie role. Przy obsadzeniu i przy wyznaczeniu do kompletacji dostaje osobne powiadomienie.
+      </Alert>
+      {packerUuid ? (
+        <Typography sx={{ mb: 2 }} color="text.secondary">
+          Osoba kompletująca katering:{" "}
+          <strong>
+            {event.preparation?.responsibleName || packerUuid}
+            {event.staff.some((person) => person.employeeUuid === packerUuid)
+              ? " (jest też w obsadzie)"
+              : " (poza obsadą)"}
+          </strong>
+        </Typography>
+      ) : (
+        <Typography sx={{ mb: 2 }} color="text.secondary">
+          Nie wyznaczono jeszcze osoby kompletującej - ustawisz ją w zakładce Kompletacja.
+        </Typography>
+      )}
       {event.staff.length === 0 ? <Typography color="text.secondary">Nie przypisano jeszcze pracowników.</Typography> : <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ display: { xs: 'none', md: 'grid' }, gridTemplateColumns: allowed ? 'minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1fr) 88px' : 'minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1fr)', gap: 2, px: 2, py: 1, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
           <Typography variant="body2" color="text.secondary">Pracownik</Typography>
@@ -816,10 +853,22 @@ function MediaSection({
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [remove, setRemove] = useState<string | null>(null);
+  const [facebookOpen, setFacebookOpen] = useState(false);
   const allowed =
     hasPermission("events.manage_event_media") && event.status !== "cancelled";
+  const canPublishFacebook =
+    hasPermission("events.publish_facebook") && event.status !== "cancelled";
   return (
     <Panel title="Zdjęcia i filmy z wydarzenia">
+      {canPublishFacebook && (
+        <Button
+          variant="contained"
+          sx={{ mb: 2 }}
+          onClick={() => setFacebookOpen(true)}
+        >
+          Publikuj post na FB
+        </Button>
+      )}
       {event.attachments.map((attachment) => (
         <Stack
           direction="row"
@@ -829,8 +878,8 @@ function MediaSection({
           my={1}
         >
           <Typography>
-            {attachment.name} · {(attachment.size / 1024 / 1024).toFixed(1)} MB
-            · {attachment.description}
+            {attachment.name} - {(attachment.size / 1024 / 1024).toFixed(1)} MB
+            - {attachment.description}
           </Typography>
           <RowAction
             action="download"
@@ -923,6 +972,9 @@ function MediaSection({
           </Button>
         </DialogActions>
       </Dialog>
+      {facebookOpen && (
+        <PublishFacebookDialog open={facebookOpen} onClose={() => setFacebookOpen(false)} event={event} />
+      )}
     </Panel>
   );
 }

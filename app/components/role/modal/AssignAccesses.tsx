@@ -247,7 +247,7 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
 
   return (
     <Dialog open={open} onClose={() => { if (!isSaving) onClose(); }} maxWidth="lg" fullWidth>
-      <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
+      <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
         {t("role.modal.assignAccesses.title")}
       </DialogTitle>
       <DialogContent>

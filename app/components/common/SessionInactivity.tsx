@@ -87,7 +87,7 @@ export default function SessionInactivity() {
     }, [loading, isAuthenticated, token]);
 
     return <Dialog open={remaining !== null && isAuthenticated} disableEscapeKeyDown aria-labelledby={titleId} aria-describedby={descriptionId} fullWidth maxWidth="xs">
-        <DialogTitle id={titleId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><TimerOutlined color="warning" />Twoja sesja wkrótce wygaśnie</DialogTitle>
+        <DialogTitle id={titleId} sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}><TimerOutlined color="warning" />Twoja sesja wkrótce wygaśnie</DialogTitle>
         <DialogContent>
             <Typography id={descriptionId} variant="body2">Od 9 minut nie wykryto aktywności. Przedłuż sesję, aby kontynuować pracę. Bez odpowiedzi nastąpi automatyczne wylogowanie po 10 minutach bezczynności.</Typography>
             <Box sx={{ mt: 2, mb: 1, textAlign: 'center' }}>

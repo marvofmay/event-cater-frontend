@@ -108,7 +108,7 @@ export function TemplatesPage() {
         {remote.data?.items.map((t) => (
           <Panel key={t.uuid} title={t.name}>
             <Typography>
-              {t.description} · {t.active ? "Aktywny" : "Archiwalny"}
+              {t.description} - {t.active ? "Aktywny" : "Archiwalny"}
             </Typography>
             {hasPermission("preparation_templates.view") && (
               <RowAction
@@ -196,7 +196,7 @@ export function TemplatesPage() {
                         onChange={setItem}
                       />
                       <Tooltip
-                        title="Wyszukaj rzecz po nazwie lub kodzie, np. stół cateringowy albo serwetki. Rodzaj — sprzęt lub produkt — zostanie pobrany automatycznie z katalogu. Jeśli rzeczy nie ma na liście, najpierw dodaj ją w sekcji Sprzęt albo Produkty i materiały. Następnie kliknij Dodaj do szablonu i podaj potrzebną ilość."
+                        title="Wyszukaj rzecz po nazwie lub kodzie, np. stół cateringowy albo serwetki. Rodzaj - sprzęt lub produkt - zostanie pobrany automatycznie z katalogu. Jeśli rzeczy nie ma na liście, najpierw dodaj ją w sekcji Sprzęt albo Produkty i materiały. Następnie kliknij Dodaj do szablonu i podaj potrzebną ilość."
                         describeChild
                         arrow
                       >
@@ -246,7 +246,7 @@ export function TemplatesPage() {
                       sx={{ p: 2, border: "1px solid #ddd", borderRadius: 2, gap: 2 }}
                     >
                       <Typography>
-                        {line.name} · {line.unit ? unitLabels[line.unit] : ""}
+                        {line.name} - {line.unit ? unitLabels[line.unit] : ""}
                       </Typography>
                       <TemplateQuantityRule line={line} guests={exampleGuests} onChange={rule => update(i, { rule })} />
                       <SourceLocationAutocomplete
@@ -290,13 +290,13 @@ export function TemplatesPage() {
           </form>
         </Dialog>
         <Dialog open={deleting !== null} onClose={() => !action.busy && setDeleting(null)} fullWidth maxWidth="xs" aria-labelledby="delete-template-title">
-          <DialogTitle id="delete-template-title" sx={{ bgcolor: '#34495e', color: 'white' }}>Usunąć trwale szablon?</DialogTitle>
+          <DialogTitle id="delete-template-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć trwale szablon?</DialogTitle>
           <DialogContent>
             <Typography fontWeight={600} sx={{ mt: 2, mb: 2 }}>{deleting?.name}</Typography>
             <Alert severity="warning">Tej operacji nie można cofnąć. Listy rzeczy w istniejących wydarzeniach pozostaną bez zmian.</Alert>
           </DialogContent>
           <DialogActions>
-            <Button disabled={action.busy} onClick={() => setDeleting(null)}>Anuluj</Button>
+            <Button color="primary" variant="contained" disabled={action.busy} onClick={() => setDeleting(null)}>Anuluj</Button>
             <Button color="error" variant="contained" disabled={action.busy} onClick={() => action.run(async () => {
               if (!deleting) return;
               await api(`/preparation-templates/${deleting.uuid}`, 'DELETE', { version: deleting.version });

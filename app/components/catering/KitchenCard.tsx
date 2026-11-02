@@ -76,7 +76,7 @@ export function KitchenCard({
         <Status value={order.status} />
         <Typography>
           Rewizja {order.revision || "robocza"} ·{" "}
-          {order.source.guestCount ?? "—"} gości · produkcja{" "}
+          {order.source.guestCount ?? "-"} gości - produkcja{" "}
           {order.productionDate}
         </Typography>
         <Typography>
@@ -108,7 +108,7 @@ export function KitchenCard({
               {change.portionsDelta})
               {JSON.stringify(change.before.diets) !==
               JSON.stringify(change.after.diets)
-                ? " · zmiana diety"
+                ? " - zmiana diety"
                 : ""}
             </Typography>
           ))}
@@ -129,7 +129,7 @@ export function KitchenCard({
               order.pendingRevision.plan.dueAt,
               order.source.timezone,
             ).replace("T", " ")}{" "}
-            · produkcja {order.pendingRevision.plan.productionDate} ·{" "}
+            - produkcja {order.pendingRevision.plan.productionDate} ·{" "}
             {order.pendingRevision.plan.serviceMode === "on_site"
               ? "W bazie firmy"
               : "Wyjazd"}
@@ -394,11 +394,11 @@ function KitchenProgressRow({
       <TableCell>
         <Typography fontWeight={600}>{line.name}</Typography>
         <Typography variant="body2">
-          {line.diets.join(", ") || "Nie podano diety"} · alergeny:{" "}
+          {line.diets.join(", ") || "Nie podano diety"} - alergeny:{" "}
           {line.allergens.join(", ") || "do weryfikacji"}
         </Typography>
         <Typography variant="body2">
-          {line.portionSize} · {line.packing}
+          {line.portionSize} - {line.packing}
         </Typography>
         <Typography variant="body2">{line.notes}</Typography>
       </TableCell>
@@ -412,8 +412,8 @@ function KitchenProgressRow({
       </TableCell>
       <TableCell>
         <Typography variant="body2">
-          Przygotowano: {line.preparedPortions ?? 0} · przekazano:{" "}
-          {line.handedOverPortions ?? 0} · brak do przygotowania:{" "}
+          Przygotowano: {line.preparedPortions ?? 0} - przekazano:{" "}
+          {line.handedOverPortions ?? 0} - brak do przygotowania:{" "}
           {line.missingPreparedPortions ?? 0}
         </Typography>
         {editable && (

@@ -6,6 +6,7 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,6 +28,7 @@ import {
   useApi,
   useAction,
   useRemote,
+  downloadPrivate,
   eventDateTime,
   localDateTime,
 } from "./api";
@@ -88,7 +90,7 @@ function PreparationContent({
   mode: 'plan' | 'execution';
   setMode: (mode: 'plan' | 'execution') => void;
 }) {
-  const { hasPermission } = useUser();
+  const { hasPermission, token } = useUser();
   const can = (p: string) => hasPermission("events." + p);
   const api = useApi();
   const action = useAction();
@@ -128,8 +130,20 @@ function PreparationContent({
         <Tab value="plan" label="Planowanie" />
         <Tab value="execution" label="Kompletowanie" />
       </Tabs>}
-      <Typography color="text.secondary" sx={{ mb: 2 }}>{planning ? 'Ustal, co i ile zabrać, skąd to pobrać oraz wyznacz jedną osobę do skompletowania całej listy.' : 'To widok osoby fizycznie kompletującej rzeczy. Tutaj zapisujesz rzeczywiście przygotowane ilości.'}</Typography>
+      <Typography color="text.secondary" sx={{ mb: 2 }}>{planning ? 'Ustal, co i ile zabrać, skąd to pobrać oraz wyznacz jedną osobę do skompletowania całej listy. Osoba kompletująca nie musi być w obsadzie wydarzenia - to osobna rola.' : 'Zaznacz pozycje, które skompletowałeś. Na końcu potwierdź całą listę. W razie potrzeby możesz zmienić ilość albo dodać komentarz.'}</Typography>
+      {!planning && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {data.responsibleName
+            ? `Całą listę kompletuje: ${data.responsibleName}. Obsada wydarzenia to osobna rola.`
+            : 'Nie wyznaczono jeszcze osoby kompletującej. Możesz kompletować na podstawie uprawnień.'}
+        </Alert>
+      )}
       {!planning && data.status === 'draft' && <Alert severity="info" sx={{ mb: 2 }}>Lista jest jeszcze planowana. Organizator musi ją zatwierdzić przed rozpoczęciem kompletowania.</Alert>}
+      {planning && plan && data.status !== 'draft' && data.status !== 'loaded' && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Po zatwierdzeniu nadal możesz dopisać lub zmienić pozycje. Taka zmiana cofnie listę do szkicu i będzie wymagać ponownego zatwierdzenia.
+        </Alert>
+      )}
       <Stack direction="row" gap={2} alignItems="center">
         <Status value={data.status} />
         <Typography>Pozycji do zabrania: {data.lines.length}</Typography>
@@ -150,7 +164,7 @@ function PreparationContent({
           Wyjazd z zaakceptowanymi brakami: {data.acceptedShortagesReason}
         </Alert>
       )}
-      {(!planning || !plan) && <Typography sx={{ my: 2 }}>Całą listę kompletuje: <strong>{data.responsibleName || 'Nie wyznaczono jeszcze osoby'}</strong>{data.notes ? ` · ${data.notes}` : ''}</Typography>}
+      {(!planning || !plan) && <Typography sx={{ my: 2 }}>Całą listę kompletuje: <strong>{data.responsibleName || 'Nie wyznaczono jeszcze osoby'}</strong>{data.notes ? ` - ${data.notes}` : ''}</Typography>}
       {planning && plan && (
         <Panel title="Kto kompletuje całą listę i na kiedy">
           <form
@@ -334,6 +348,24 @@ function PreparationContent({
         </Table>
       </TableContainer>
       <Stack direction="row" gap={1} flexWrap="wrap" my={2}>
+        {data.lines.length > 0 && (
+          <Button
+            disabled={action.busy}
+            onClick={() =>
+              action.run(
+                () =>
+                  downloadPrivate(
+                    path + "/pdf",
+                    token,
+                    event.number + "-kompletacja.pdf",
+                  ),
+                "Pobrano listę PDF.",
+              )
+            }
+          >
+            Pobierz PDF do odhaczania
+          </Button>
+        )}
         {planning && plan && data.status === "draft" && (
           <Button disabled={action.busy} onClick={() => command("approve")}>
             Zatwierdź listę
@@ -350,7 +382,7 @@ function PreparationContent({
           !closed &&
           ["approved", "in_preparation"].includes(data.status) && (
             <Button disabled={action.busy} onClick={() => command("ready")}>
-              Potwierdź gotowość do załadunku
+              Potwierdź: złożyłem całą listę
             </Button>
           )}
         {!planning && can("dispatch_event_catering") &&
@@ -408,7 +440,7 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
     <TableRow>
       <TableCell>
         <Typography fontWeight={600}>{line.name}</Typography>
-        <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'} · {line.code}</Typography>
+        <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'} - {line.code}</Typography>
         {line.instructions && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{line.instructions}</Typography>}
       </TableCell>
       <TableCell sx={{ whiteSpace: 'nowrap' }}>{quantityText(line.requiredQuantity)} {unitLabels[line.unit]}</TableCell>
@@ -438,7 +470,7 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
           setEditing(false);
         }, 'Zapisano pozycję w planie.');
       }}>
-        <DialogTitle id={`preparation-line-${line.uuid}`} sx={{ bgcolor: '#34495e', color: 'white' }}>Edycja planu — {line.name}</DialogTitle>
+        <DialogTitle id={`preparation-line-${line.uuid}`} sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Edycja planu - {line.name}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 2 }}>
             <TextField required type="number" label={`Ilość do zabrania (${unitLabels[line.unit]})`} value={quantity} onChange={event => setQuantity(event.target.value)} disabled={action.busy || !canQuantity} slotProps={{ htmlInput: { min: ['kg', 'l'].includes(line.unit) ? 0.001 : 1, max: 1000000, step: ['kg', 'l'].includes(line.unit) ? 0.001 : 1 } }} />
@@ -447,17 +479,17 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
           </Stack>
         </DialogContent>
         <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {canQuantity && <Button color="error" disabled={action.busy} onClick={() => setRemoving(true)} sx={{ mr: 'auto' }}>Usuń z planu</Button>}
-          <Button disabled={action.busy} onClick={() => setEditing(false)}>Anuluj</Button>
+          {canQuantity && <Button color="error" variant="contained" disabled={action.busy} onClick={() => setRemoving(true)} sx={{ mr: 'auto' }}>Usuń z planu</Button>}
+          <Button color="primary" variant="contained" disabled={action.busy} onClick={() => setEditing(false)}>Anuluj</Button>
           <Button type="submit" variant="contained" disabled={action.busy} sx={{ bgcolor: '#34495e' }}>Zapisz pozycję w planie</Button>
         </DialogActions>
       </Box>
     </Dialog>
     <Dialog open={removing} onClose={() => !action.busy && setRemoving(false)} fullWidth maxWidth="xs" aria-labelledby={`remove-preparation-${line.uuid}`}>
-      <DialogTitle id={`remove-preparation-${line.uuid}`}>Usunąć pozycję z planu?</DialogTitle>
+      <DialogTitle id={`remove-preparation-${line.uuid}`} sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć pozycję z planu?</DialogTitle>
       <DialogContent>{line.name}</DialogContent>
       <DialogActions>
-        <Button disabled={action.busy} onClick={() => setRemoving(false)}>Anuluj</Button>
+        <Button color="primary" variant="contained" disabled={action.busy} onClick={() => setRemoving(false)}>Anuluj</Button>
         <Button color="error" variant="contained" disabled={action.busy} onClick={() => action.run(async () => {
           await api(line.kind === 'equipment' ? `/events/${list.eventUuid}/equipment/${line.itemUuid}` : `${path}/consumables/${line.itemUuid}`, 'DELETE', { version: list.version });
           onChange(await api<Preparation>(path));
@@ -487,16 +519,45 @@ function PreparationRow({
   const [loaded, setLoaded] = useState(String(Number(line.loadedQuantity)));
   const [reason, setReason] = useState("");
   const path = "/events/" + list.eventUuid + "/preparation";
+  const required = Number(line.requiredQuantity);
+  const checked = Number(line.preparedQuantity) >= required && required > 0;
+  const togglePrepared = (next: boolean) => {
+    if (!prepare || closed || list.status === "draft") return;
+    action.run(async () =>
+      onChange(
+        await api<Preparation>(path + "/lines/" + line.uuid + "/progress", "PUT", {
+          version: list.version,
+          preparedQuantity: next ? String(required) : "0",
+          correctionReason: next ? null : "Odznaczono pozycję na liście kompletacji",
+        }),
+      ),
+    );
+  };
   return (
     <TableRow>
       <TableCell>
-        <Typography fontWeight={600}>{line.name}</Typography>
-        <Typography variant="body2">
-          {line.kind === "equipment" ? "Sprzęt" : "Produkt / materiał"} ·{" "}
-          {line.code}
-        </Typography>
-        {line.sourceLocation && <Typography variant="body2">Skąd pobrać: {line.sourceLocation}</Typography>}
-        {line.instructions && <Typography variant="body2">{line.instructions}</Typography>}
+        <Stack direction="row" gap={1} alignItems="flex-start">
+          {!closed && list.status !== "draft" && prepare ? (
+            <Checkbox
+              checked={checked}
+              disabled={action.busy}
+              onChange={(_, value) => togglePrepared(value)}
+              inputProps={{ "aria-label": `Skompletowano: ${line.name}` }}
+              sx={{ mt: -0.5 }}
+            />
+          ) : null}
+          <Box>
+            <Typography fontWeight={600} sx={{ textDecoration: checked ? "line-through" : "none" }}>
+              {line.name}
+            </Typography>
+            <Typography variant="body2">
+              {line.kind === "equipment" ? "Sprzęt" : "Produkt / materiał"} ·{" "}
+              {line.code}
+            </Typography>
+            {line.sourceLocation && <Typography variant="body2">Skąd pobrać: {line.sourceLocation}</Typography>}
+            {line.instructions && <Typography variant="body2">{line.instructions}</Typography>}
+          </Box>
+        </Stack>
       </TableCell>
       <TableCell>
         {quantityText(line.requiredQuantity)} {unitLabels[line.unit]}
@@ -509,7 +570,7 @@ function PreparationRow({
       </TableCell>
       <TableCell>
         <Typography variant="body2">
-          Przygotowano: {quantityText(line.preparedQuantity)} · załadowano:{" "}
+          Przygotowano: {quantityText(line.preparedQuantity)} - załadowano:{" "}
           {quantityText(line.loadedQuantity)}
         </Typography>
         {!closed && list.status !== 'draft' && (prepare || load) && (
@@ -569,7 +630,7 @@ function PreparationRow({
               )}
               <TextField
                 size="small"
-                label="Powód korekty przy zmniejszeniu"
+                label="Komentarz / powód korekty"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />

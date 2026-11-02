@@ -38,6 +38,10 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
     const [notificationTab, setNotificationTab] = useState('channels');
     const [templatesVisited, setTemplatesVisited] = useState(false);
     const notificationSettings = resource === 'notifications' && scope === 'tenant';
+    const smsReady = !clearApiKey
+        && Boolean(apiKey.trim() || data?.tenant.sms?.hasApiKey)
+        && Boolean(sender.trim())
+        && limit > 0;
     useEffect(() => {
         if (!loading && !personalOnly && !technical) router.replace(`/me/settings?section=${resource}`);
     }, [loading, personalOnly, technical, resource, router]);
@@ -63,14 +67,20 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
         setApiKey('');
         setClearApiKey(false);
     }, [data, scope]);
+    const disableSmsIfBrevoIncomplete = (nextReady: boolean) => {
+        if (scope === 'tenant' && !nextReady) {
+            setChannels(current => current.sms ? { ...current, sms: false } : current);
+        }
+    };
     const save = async () => {
         if (!data || saving) return;
         setSaving(true);
         setError('');
         try {
+            const tenantChannels = smsReady ? channels : { ...channels, sms: false };
             const response = await axios.put(`/api/preferences/${resource}`, {
                 scope, version: scope === 'tenant' ? data.tenantVersion : data.userVersion, pageSize: canConfigureList ? pageSize : null,
-                ...(resource === 'notifications' ? { channels } : {}),
+                ...(resource === 'notifications' ? { channels: scope === 'user' ? { ...channels, internal: null } : tenantChannels } : {}),
                 ...(resource === 'notifications' && scope === 'tenant' ? { sms: { sender, limit, quotaMode, apiKey, clearApiKey } } : {}),
             }, { headers: { Authorization: `Bearer ${token}` } });
             setData(response.data.data);
@@ -84,8 +94,8 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
     };
     if (!canOpen) return <Alert severity="warning">Nie masz uprawnienia do ustawień tej listy.</Alert>;
     return <Box component="main" sx={{ maxWidth: 850, mx: 'auto', p: { xs: 2, sm: 3 } }}>
-        <Typography variant="h5" gutterBottom>Ustawienia — {labels[resource]}</Typography>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>{tenant?.name} · {personalOnly ? 'Twoje ustawienia dotyczą wyłącznie tej firmy.' : 'Ustawienia globalne dla tej firmy.'}</Typography>
+        <Typography variant="h5" gutterBottom>Ustawienia - {labels[resource]}</Typography>
+        <Typography color="text.secondary" sx={{ mb: 2 }}>{tenant?.name} - {personalOnly ? 'Twoje ustawienia dotyczą wyłącznie tej firmy.' : 'Ustawienia globalne dla tej firmy.'}</Typography>
         {error && <Alert severity="error" action={<Button onClick={() => setReload(value => value + 1)} color="inherit">Odśwież</Button>} sx={{ mb: 2 }}>{error}</Alert>}
         {!data ? !error && <CircularProgress aria-label="Ładowanie ustawień" /> : <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
             {notificationSettings && <Tabs value={notificationTab} onChange={(_, value) => { setNotificationTab(value); if (value === 'templates') setTemplatesVisited(true); }} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label="Ustawienia powiadomień" sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
@@ -95,7 +105,7 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
                 <Tab value="list" label="Lista" id="notification-tab-list" aria-controls="notification-panel-list" />
             </Tabs>}
             <Box hidden={notificationSettings && notificationTab !== 'channels'}>
-            <Alert severity="info" sx={{ mb: 3 }}>{scope === 'tenant' ? 'Ustawienia nadrzędne obowiązują wszystkich użytkowników, którzy nie wybrali własnych wartości. Wyłączonego kanału nie może włączyć użytkownik.' : 'Możesz nadpisać ustawienia dla siebie lub pozostawić dziedziczenie ustawień firmy.'}</Alert>
+            <Alert severity="info" sx={{ mb: 3 }}>{scope === 'tenant' ? 'Ustawienia nadrzędne obowiązują wszystkich użytkowników, którzy nie wybrali własnych wartości. Wyłączonego kanału nie może włączyć użytkownik. SMS wymaga uzupełnionego Brevo (klucz API, nadawca i dodatnia pula).' : 'Możesz nadpisać SMS i e-mail dla siebie. Kanał systemowy jest zawsze włączony, gdy firma go udostępnia.'}</Alert>
             </Box>
             <Box hidden={!canConfigureList || (notificationSettings && notificationTab !== 'list')} role={notificationSettings ? 'tabpanel' : undefined} id={notificationSettings ? 'notification-panel-list' : undefined} aria-labelledby={notificationSettings ? 'notification-tab-list' : undefined}>
             {notificationSettings && <Typography variant="h6" gutterBottom>Lista powiadomień</Typography>}
@@ -109,27 +119,48 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
                 <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Kanały powiadomień</Typography>
                 <Stack spacing={2}>
                     {(Object.keys(channelLabels) as Channel[]).map(channel => {
-                        const blocked = scope === 'user' && !data.tenant.channels?.[channel];
+                        const companyOff = scope === 'user' && !data.tenant.channels?.[channel];
+                        const mandatory = scope === 'user' && channel === 'internal' && Boolean(data.tenant.channels?.internal);
+                        const smsNeedsBrevo = scope === 'tenant' && channel === 'sms' && !smsReady;
+                        const blocked = companyOff || mandatory || smsNeedsBrevo;
                         const checked = scope === 'tenant'
-                            ? Boolean(channels[channel])
-                            : !blocked && Boolean(channels[channel] ?? data.tenant.channels?.[channel]);
+                            ? Boolean(channels[channel]) && !(channel === 'sms' && !smsReady)
+                            : !companyOff && (mandatory || Boolean(channels[channel] ?? data.tenant.channels?.[channel]));
                         return <Box key={channel}>
-                            <FormControlLabel control={<Switch checked={checked} disabled={saving || blocked} onChange={(_, enabled) => setChannels(current => ({ ...current, [channel]: enabled }))} />} label={channelLabels[channel]} />
-                            {blocked && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Kanał wyłączony przez firmę.</Typography>}
+                            <FormControlLabel control={<Switch checked={checked} disabled={saving || blocked} onChange={(_, enabled) => setChannels(current => ({ ...current, [channel]: channel === 'internal' && scope === 'user' ? null : enabled }))} />} label={channelLabels[channel]} />
+                            {companyOff && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Kanał wyłączony przez firmę.</Typography>}
+                            {mandatory && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Kanał systemowy jest zawsze włączony.</Typography>}
+                            {smsNeedsBrevo && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Najpierw uzupełnij klucz Brevo, nadawcę i dodatnią pulę w zakładce SMS / Brevo.</Typography>}
                         </Box>;
                     })}
                 </Stack>
                 </Box>
                 {scope === 'tenant' && <Box hidden={notificationSettings && notificationTab !== 'sms'} role="tabpanel" id="notification-panel-sms" aria-labelledby="notification-tab-sms">
-                    <Typography variant="h6" gutterBottom>Brevo — SMS</Typography>
-                    <Alert severity="warning" sx={{ mb: 2 }}>To lokalny limit aplikacji, nie saldo konta Brevo. Włączenie SMS umożliwia płatne wysyłki. Długie wiadomości mogą zużywać kilka segmentów.</Alert>
+                    <Typography variant="h6" gutterBottom>Brevo - SMS</Typography>
+                    <Alert severity="warning" sx={{ mb: 2 }}>To lokalny limit aplikacji, nie saldo konta Brevo. Bez klucza API, nadawcy i dodatniej puli nie da się włączyć kanału SMS. Długie wiadomości mogą zużywać kilka segmentów.</Alert>
                     <Stack spacing={2}>
-                        <TextField type="password" label="Klucz API Brevo" autoComplete="new-password" value={apiKey} disabled={saving || clearApiKey} onChange={event => setApiKey(event.target.value)} helperText={data.tenant.sms?.hasApiKey ? 'Klucz zapisany. Zostaw pole puste, aby go zachować.' : 'Klucz nie został jeszcze zapisany.'} />
-                        <FormControlLabel control={<Checkbox checked={clearApiKey} disabled={saving} onChange={(_, checked) => setClearApiKey(checked)} />} label="Usuń zapisany klucz API" />
-                        <TextField label="Nadawca SMS" value={sender} onChange={event => setSender(event.target.value)} inputProps={{ maxLength: 11 }} helperText="Do 11 liter lub cyfr. Nadawca musi być akceptowany przez Brevo." disabled={saving} />
+                        <TextField type="password" label="Klucz API Brevo" autoComplete="new-password" value={apiKey} disabled={saving || clearApiKey} onChange={event => {
+                            const value = event.target.value;
+                            setApiKey(value);
+                            disableSmsIfBrevoIncomplete(!clearApiKey && Boolean(value.trim() || data.tenant.sms?.hasApiKey) && Boolean(sender.trim()) && limit > 0);
+                        }} helperText={data.tenant.sms?.hasApiKey ? 'Klucz zapisany. Zostaw pole puste, aby go zachować.' : 'Klucz nie został jeszcze zapisany.'} />
+                        <FormControlLabel control={<Checkbox checked={clearApiKey} disabled={saving} onChange={(_, checked) => {
+                            setClearApiKey(checked);
+                            disableSmsIfBrevoIncomplete(!checked && Boolean(apiKey.trim() || data.tenant.sms?.hasApiKey) && Boolean(sender.trim()) && limit > 0);
+                        }} />} label="Usuń zapisany klucz API" />
+                        <TextField label="Nadawca SMS" value={sender} onChange={event => {
+                            const value = event.target.value;
+                            setSender(value);
+                            disableSmsIfBrevoIncomplete(!clearApiKey && Boolean(apiKey.trim() || data.tenant.sms?.hasApiKey) && Boolean(value.trim()) && limit > 0);
+                        }} inputProps={{ maxLength: 11 }} helperText="Do 11 liter lub cyfr. Nadawca musi być akceptowany przez Brevo." disabled={saving} />
                         <TextField select label="Rodzaj puli" value={quotaMode} onChange={event => setQuotaMode(event.target.value as 'monthly' | 'pool')} disabled={saving}><MenuItem value="monthly">Limit miesięczny</MenuItem><MenuItem value="pool">Jednorazowa pula (łącznie)</MenuItem></TextField>
-                        <TextField type="number" label="Limit segmentów SMS" value={limit} onChange={event => setLimit(Number(event.target.value))} inputProps={{ min: 0, max: 10000000, step: 1 }} disabled={saving} />
-                        <Typography variant="body2">Zużyte / zarezerwowane: {data.tenant.sms?.used ?? 0} · Pozostało: {data.tenant.sms?.remaining ?? 0}{quotaMode === 'monthly' ? ` · Okres: ${data.tenant.sms?.period ?? ''}` : ''}</Typography>
+                        <TextField type="number" label="Limit segmentów SMS" value={limit} onChange={event => {
+                            const value = Number(event.target.value);
+                            setLimit(value);
+                            disableSmsIfBrevoIncomplete(!clearApiKey && Boolean(apiKey.trim() || data.tenant.sms?.hasApiKey) && Boolean(sender.trim()) && value > 0);
+                        }} inputProps={{ min: 0, max: 10000000, step: 1 }} disabled={saving} />
+                        <Typography variant="body2">Zużyte / zarezerwowane: {data.tenant.sms?.used ?? 0} - Pozostało: {data.tenant.sms?.remaining ?? 0}{quotaMode === 'monthly' ? ` - Okres: ${data.tenant.sms?.period ?? ''}` : ''}</Typography>
+                        {!smsReady && <Alert severity="info">Po uzupełnieniu klucza, nadawcy i limitu będzie można włączyć kanał SMS w zakładce Kanały.</Alert>}
                     </Stack>
                 </Box>}
             </>}

@@ -6,6 +6,7 @@ import { RowAction } from "../common/RowAction";
 import { useRouter } from "next/navigation";
 import {
   Button,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -40,6 +41,7 @@ export function EventsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("");
+  const [involvement, setInvolvement] = useState("");
   const [page, setPage] = useState(1);
   const [create, setCreate] = useState(false);
   const params = new URLSearchParams({
@@ -48,6 +50,8 @@ export function EventsPage() {
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
     ...(status ? { status } : {}),
+    ...(involvement === "staff" ? { mine: "1" } : {}),
+    ...(involvement === "packing" ? { packing: "1" } : {}),
   });
   const remote = useRemote<Page<EventItem>>(
     hasPermission("events.list") ? "/events?" + params : null,
@@ -108,6 +112,19 @@ export function EventsPage() {
               ),
             }}
           />
+          <FieldSelect
+            label="Mój udział"
+            value={involvement}
+            onChange={(v) => {
+              setInvolvement(v);
+              setPage(1);
+            }}
+            options={{
+              "": "Wszystkie",
+              staff: "Moja obsada",
+              packing: "Moja kompletacja",
+            }}
+          />
           {hasPermission("events.create") && (
             <Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" onClick={() => setCreate(true)}>
               Dodaj wydarzenie
@@ -125,6 +142,7 @@ export function EventsPage() {
                 <TableCell>Wydarzenie</TableCell>
                 <TableCell>Goście</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Twój udział</TableCell>
                 <TableCell />
               </TableRow>
             </TableHead>
@@ -136,9 +154,22 @@ export function EventsPage() {
                     <Typography fontWeight={600}>{event.title}</Typography>
                     <Typography variant="caption">{event.number}</Typography>
                   </TableCell>
-                  <TableCell>{event.guestCount ?? "—"}</TableCell>
+                  <TableCell>{event.guestCount ?? "-"}</TableCell>
                   <TableCell>
                     <Status value={event.status} />
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                      {event.involvement?.onStaff ? (
+                        <Chip size="small" color="success" variant="outlined" label="Obsada" />
+                      ) : null}
+                      {event.involvement?.isPacker ? (
+                        <Chip size="small" color="warning" variant="outlined" label="Kompletacja" />
+                      ) : null}
+                      {event.involvement && !event.involvement.onStaff && !event.involvement.isPacker ? (
+                        <Typography variant="caption" color="text.secondary">-</Typography>
+                      ) : null}
+                    </Stack>
                   </TableCell>
                   <TableCell>
                     {hasPermission("events.view") && (

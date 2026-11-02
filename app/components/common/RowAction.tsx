@@ -19,24 +19,27 @@ export function RowAction({
   onClick,
   href,
   disabled = false,
+  size = "medium",
 }: {
   action: keyof typeof icons;
   label: string;
   onClick?: () => void;
   href?: string;
   disabled?: boolean;
+  size?: "small" | "medium";
 }) {
   const Icon = icons[action];
+  const iconFont = size === "small" ? "small" : "medium";
   return (
     <Tooltip title={label}>
       <span style={{ display: "inline-flex" }}>
         {href ? (
-          <IconButton component={Link} href={href} aria-label={label} disabled={disabled}>
-            <Icon fontSize="medium" />
+          <IconButton component={Link} href={href} aria-label={label} disabled={disabled} size={size}>
+            <Icon fontSize={iconFont} />
           </IconButton>
         ) : (
-          <IconButton onClick={onClick} aria-label={label} disabled={disabled}>
-            <Icon fontSize="medium" />
+          <IconButton onClick={onClick} aria-label={label} disabled={disabled} size={size}>
+            <Icon fontSize={iconFont} />
           </IconButton>
         )}
       </span>

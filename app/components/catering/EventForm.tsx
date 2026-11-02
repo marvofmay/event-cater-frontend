@@ -175,10 +175,10 @@ export function EventForm({
                 slotProps={{ htmlInput: { min: 1, max: 1000000, step: 1 } }}
               />
             </Stack>
-            <Stack direction={{ xs: "column", md: "row" }} gap={2}>
+            <Stack direction={{ xs: "column", md: "row" }} gap={2} alignItems={{ md: "center" }}>
               <CustomerPicker value={customer} disabled={!canSave || action.busy || !!created} onChange={value => { setCustomer(value); onDirty?.(true); }} />
               {hasPermission("events.assign_event_staff") && (
-                <Box sx={{ flex: { md: '1 1 320px' }, minWidth: 0, width: { xs: '100%', md: 320 }, '& .MuiAutocomplete-root': { minWidth: 0, width: '100%' } }}>
+                <Box sx={{ flex: { md: '1 1 280px' }, minWidth: 0, width: { xs: '100%', md: 280 }, '& .MuiAutocomplete-root': { minWidth: 0, width: '100%' } }}>
                 <Lookup
                   label="Koordynator"
                   path="/events/staff-options"
@@ -191,16 +191,18 @@ export function EventForm({
                 </Box>
               )}
               <TextField
+                size="small"
                 label="Strefa czasowa"
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
                 required
+                sx={{ flex: { md: '0 1 220px' }, minWidth: { md: 180 } }}
               />
             </Stack>
             {date && (
               <>
                 <Typography variant="subtitle2">
-                  Harmonogram — godziny w strefie {timezone}
+                  Harmonogram - godziny w strefie {timezone}
                 </Typography>
                 <Stack direction={{ xs: "column", md: "row" }} gap={2}>
                   {[

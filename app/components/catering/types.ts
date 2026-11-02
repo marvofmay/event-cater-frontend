@@ -72,6 +72,11 @@ export interface MenuItem {
   allergens: string[];
   notes?: string | null;
 }
+export interface EventInvolvement {
+  onStaff: boolean;
+  isPacker: boolean;
+  myFunctions: string[];
+}
 export interface EventItem {
   uuid: string;
   number: string;
@@ -83,6 +88,7 @@ export interface EventItem {
   version: number;
   startsAt: string | null;
   endsAt: string | null;
+  involvement?: EventInvolvement;
 }
 export interface EventDetails extends EventItem {
   description: string | null;
@@ -119,6 +125,12 @@ export interface EventDetails extends EventItem {
     size: number;
     description: string | null;
   }[];
+  preparation?: {
+    responsibleUuid?: string | null;
+    responsibleName?: string | null;
+    status?: string | null;
+  } | null;
+  involvement?: EventInvolvement;
 }
 export interface PreparationLine {
   uuid: string;

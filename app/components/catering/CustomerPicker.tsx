@@ -35,8 +35,9 @@ export function CustomerPicker({ value, onChange, disabled }: { value: CustomerO
   const remote = useRemote<{ items: CustomerOption[] }>(open && !disabled ? `/event-customers?q=${encodeURIComponent(query)}` : null);
 
   return <Box sx={{ flex: 1, minWidth: 0 }}>
-    <Stack direction="row" gap={.5} alignItems="flex-start">
+    <Stack direction="row" gap={0.5} alignItems="center">
       <Autocomplete<CustomerOption>
+        size="small"
         fullWidth disabled={disabled} open={open} openOnFocus
         onOpen={() => setOpen(true)} onClose={() => setOpen(false)}
         value={value} inputValue={input}
@@ -51,12 +52,42 @@ export function CustomerPicker({ value, onChange, disabled }: { value: CustomerO
           const { key, ...rest } = props;
           return <Box component="li" key={key} {...rest} sx={{ display: "block !important", overflowWrap: "anywhere" }}>
             <Typography variant="body2" fontWeight={600}>{customer.name}</Typography>
-            <Typography variant="caption" color="text.secondary">{[customer.nip && `NIP: ${customer.nip}`, customer.address, customer.phone, customer.email].filter(Boolean).join(" · ")}</Typography>
+            <Typography variant="caption" color="text.secondary">{[customer.nip && `NIP: ${customer.nip}`, customer.address, customer.phone, customer.email].filter(Boolean).join(" - ")}</Typography>
           </Box>;
         }}
-        renderInput={params => <TextField {...params} label="Klient / organizator" error={Boolean(remote.error)} helperText={remote.error || "Szukaj po nazwie, NIP, REGON, KRS, telefonie lub e-mailu."} />}
+        renderInput={params => (
+          <TextField
+            {...params}
+            size="small"
+            label="Klient / organizator"
+            error={Boolean(remote.error)}
+            helperText={remote.error || undefined}
+            placeholder="Szukaj po nazwie, NIP, REGON, KRS…"
+          />
+        )}
       />
-      {!disabled && <Tooltip title="Dodaj klienta / organizatora / kontrahenta"><IconButton type="button" aria-label="Dodaj kontrahenta" color="primary" onMouseDown={event => event.preventDefault()} onClick={() => { setOpen(false); setDialog(true); }} sx={{ mt: .75, border: 1, borderColor: "divider", borderRadius: 1.5 }}><AddIcon /></IconButton></Tooltip>}
+      {!disabled && (
+        <Tooltip title="Dodaj klienta / organizatora / kontrahenta">
+          <IconButton
+            type="button"
+            aria-label="Dodaj kontrahenta"
+            color="primary"
+            size="small"
+            onMouseDown={event => event.preventDefault()}
+            onClick={() => { setOpen(false); setDialog(true); }}
+            sx={{
+              width: 40,
+              height: 40,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              flexShrink: 0,
+            }}
+          >
+            <AddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
     <CustomerCreateDialog open={dialog} initialName={enteredName.current} onClose={() => setDialog(false)} onCreated={customer => { onChange(customer); enteredName.current = customer.name; setInput(customer.name); }} />
   </Box>;
@@ -78,7 +109,7 @@ export function CustomerCreateDialog({ open, onClose, onCreated, initialName = "
           onClose();
         }, "Dodano kontrahenta.");
       }}>
-        <DialogTitle>Nowy klient / organizator / kontrahent</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient / organizator / kontrahent</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" mb={2}>Wymagana jest tylko nazwa. Pozostałe dane możesz pozostawić puste.</Typography>
           <Stack gap={2}>
@@ -101,7 +132,7 @@ export function CustomerCreateDialog({ open, onClose, onCreated, initialName = "
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button type="button" disabled={action.busy} onClick={() => onClose()}>Anuluj</Button>
+          <Button type="button" color="primary" variant="contained" disabled={action.busy} onClick={() => onClose()}>Anuluj</Button>
           <Button type="submit" variant="contained" disabled={action.busy || !draft.name.trim()}>Dodaj i wybierz</Button>
         </DialogActions>
       </Box>

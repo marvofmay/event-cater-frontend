@@ -248,14 +248,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
             fullWidth
             maxWidth="xl"
         >
-            <DialogTitle
-                sx={{
-                    backgroundColor: '#34495e',
-                    color: 'white',
-                    fontSize: '1.2rem',
-                    fontWeight: 'bold',
-                }}
-            >
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t(employee ? 'employee.modal.edit.title' : 'employee.modal.add.title')}
             </DialogTitle>
             <Formik<EmployeePayload>
@@ -550,7 +543,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
                                         isOptionEqualToValue={(option, value) => option.uuid === value.uuid}
                                         value={(Array.isArray(supervisors) ? supervisors : []).find(option => option.uuid === values.parentEmployeeUUID) ?? (employee?.parentEmployee?.uuid && employee.parentEmployee.uuid === values.parentEmployeeUUID ? { uuid: employee.parentEmployee.uuid, fullName: `${employee.parentEmployee.firstName} ${employee.parentEmployee.lastName}`.trim() } : null)}
                                         onChange={(_, option) => setFieldValue('parentEmployeeUUID', option?.uuid ?? '')}
-                                        renderOption={(props, option) => <li {...props} key={option.uuid}>{option.fullName}{option.departmentName ? ` — ${option.departmentName}` : ''}</li>}
+                                        renderOption={(props, option) => <li {...props} key={option.uuid}>{option.fullName}{option.departmentName ? ` - ${option.departmentName}` : ''}</li>}
                                         renderInput={parameters => <TextField {...parameters} label="Bezpośredni przełożony" margin="normal" error={supervisorError} helperText={supervisorError ? 'Nie udało się pobrać przełożonych.' : 'Opcjonalnie. Możesz wybrać osobę z dowolnego działu tej firmy.'} />}
                                     />
                                     <Field

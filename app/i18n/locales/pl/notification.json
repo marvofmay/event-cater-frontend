@@ -16,14 +16,20 @@
     "markAsReadChecked": "oznacz zaznaczone powiadomienia jako przeczytane"
   },
   "delete": {
+    "success": "Powiadomienie zostało usunięte",
+    "error": "Nie udało się usunąć powiadomienia",
     "multiple": {
+      "success": "Wybrane powiadomienia zostały usunięte",
       "error": "Usuwanie powiadomień zostało zakończone niepowodzeniem"
     }
   },
   "markAsRead": {
     "title": "Oznacz powiadomienie jako przeczytane",
+    "success": "Powiadomienie zostało oznaczone jako przeczytane",
+    "error": "Nie udało się oznaczyć powiadomienia jako przeczytane",
     "multiple": {
-      "error": "Oznaczanie powiadomień jako przeczytane, zostało zakończone niepowodzeniem"
+      "success": "Wybrane powiadomienia zostały oznaczone jako przeczytane",
+      "error": "Oznaczanie powiadomień jako przeczytane zostało zakończone niepowodzeniem"
     }
   },
   "modal": {

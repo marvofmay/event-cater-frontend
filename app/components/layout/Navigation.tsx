@@ -21,7 +21,7 @@ const navLinks = [
   { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
   {
     href: "/info",
-    label: "Info",
+    label: "info",
     activePath: "/info",
     icon: <InfoIcon />,
     name: "info",

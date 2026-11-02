@@ -48,7 +48,11 @@
     "locations": "miejsca sprzętu",
     "supplies": "produkty",
     "templates": "szablony",
-    "kitchen": "kuchnia"
+    "kitchen": "kuchnia",
+    "my-hours": "moje godziny",
+    "employee-hours": "godziny pracowników",
+    "facebook": "Facebook",
+    "callback": "powrót z Facebooka"
   },
   "button": {
     "cancel": "anuluj",

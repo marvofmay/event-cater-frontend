@@ -70,7 +70,7 @@ export function EquipmentLocationsPage() {
               remote.reload();
             });
           }}>
-            <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>{edit?.uuid ? "Edytuj miejsce sprzętu" : "Dodaj miejsce sprzętu"}</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{edit?.uuid ? "Edytuj miejsce sprzętu" : "Dodaj miejsce sprzętu"}</DialogTitle>
             <DialogContent>
               <TextField autoFocus required fullWidth label="Nazwa miejsca sprzętu" value={edit?.name ?? ""} onChange={(event) => setEdit({ ...edit, name: event.target.value })} slotProps={{ htmlInput: { maxLength: 200 } }} sx={{ mt: 1 }} />
             </DialogContent>
@@ -81,7 +81,7 @@ export function EquipmentLocationsPage() {
           </form>
         </Dialog>
         <Dialog open={remove !== null} onClose={() => !action.busy && setRemove(null)} fullWidth maxWidth="sm">
-          <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>Usunąć miejsce przechowywania?</DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć miejsce przechowywania?</DialogTitle>
           <DialogContent>
             {remove?.name}. Sprzęt przypisany do tego miejsca, także archiwalny, pozostanie w katalogu bez wskazanego miejsca przechowywania.
           </DialogContent>

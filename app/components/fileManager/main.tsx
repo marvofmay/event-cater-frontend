@@ -130,7 +130,7 @@ function FileWorkspace() {
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     {!snapshot && !error && <CircularProgress aria-label="Wczytywanie plików" />}
     {snapshot && parsed && <>
-      <Typography variant="caption" color="text.secondary">Wykorzystano {(snapshot.usedBytes / 1024 / 1024).toFixed(1)} MiB z {snapshot.maxBytes / 1024 / 1024 / 1024} GiB · {snapshot.items.length} z {snapshot.maxEntries} plików i folderów</Typography>
+      <Typography variant="caption" color="text.secondary">Wykorzystano {(snapshot.usedBytes / 1024 / 1024).toFixed(1)} MiB z {snapshot.maxBytes / 1024 / 1024 / 1024} GiB - {snapshot.items.length} z {snapshot.maxEntries} plików i folderów</Typography>
       <Locale words={plSvar}><Willow>
         <Box aria-busy={busy} sx={{ height: "70vh", minHeight: 500, position: "relative", pointerEvents: busy ? "none" : "auto", opacity: busy ? 0.65 : 1 }}>
           {busy && <CircularProgress size={28} aria-label="Zapisywanie plików" sx={{ position: "absolute", top: 12, right: 12, zIndex: 2 }} />}

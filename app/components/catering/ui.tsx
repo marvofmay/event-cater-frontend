@@ -136,7 +136,7 @@ export function Pager({
         Poprzednia
       </Button>
       <Typography>
-        Strona {page} · {total} pozycji
+        Strona {page} - {total} pozycji
       </Typography>
       <Button disabled={page * 20 >= total} onClick={() => onChange(page + 1)}>
         Następna

@@ -150,7 +150,7 @@ export function EquipmentCategoriesPage({ kind = "equipment" }: { kind?: "equipm
                 <Typography>Pozycje przypisane do tej kategorii: {assignedEquipment.data.total}.</Typography>
                 {assignedEquipment.data.items.map((item) => (
                   <Typography key={item.uuid}>
-                    {item.name} ({item.code}) — {item.active ? "aktywny" : "archiwalny"}
+                    {item.name} ({item.code}) - {item.active ? "aktywny" : "archiwalny"}
                   </Typography>
                 ))}
                 <Button component={Link} href={catalogPath}>

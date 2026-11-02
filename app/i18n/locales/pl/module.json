@@ -7,7 +7,7 @@
   "department": "departamenty",
   "calendar": "kalendarz",
   "notification": "powiadomienia",
-  "documents": "dokumenty",
+  "documents": "Dokumenty",
   "feedback": "feedback",
   "trip": "delegacje",
   "request": "wnioski pracownicze",
@@ -16,5 +16,8 @@
   "events": "Wydarzenia",
   "equipment": "Sprzęt",
   "supplies": "Produkty i materiały",
-  "kitchen": "Kuchnia"
+  "kitchen": "Kuchnia",
+  "my_hours": "Moje godziny",
+  "employee_hours": "Godziny pracowników",
+  "company_notices": "Ogłoszenia firmowe"
 }

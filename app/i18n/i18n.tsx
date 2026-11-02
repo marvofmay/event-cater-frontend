@@ -22,6 +22,7 @@ import documentsPL from "./locales/pl/documents.json";
 import systemPL from "./locales/pl/system.json";
 import countryPL from "./locales/pl/country.json";
 import fileManagerPL from "./locales/pl/fileManager.json";
+import infoPL from "./locales/pl/info.json";
 
 const resources = {
   en: {
@@ -50,6 +51,7 @@ const resources = {
       system: systemPL,
       country: countryPL,
       fileManager: fileManagerPL,
+      info: infoPL,
     },
   },
 };

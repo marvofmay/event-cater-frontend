@@ -15,11 +15,17 @@ const menuItems = [
     { label: "contractTypes", href: "/settings/contractTypes", key: "contract_types" },
     { label: "industries", href: "/settings/industries", key: "industries" },
     { label: "notifications", href: "/settings/notifications", key: "notifications" },
+    { label: "facebook", href: "/settings/facebook", key: "facebook" },
 ];
 
 const SettingsListNavigation: React.FC = () => {
     const { hasAccess, hasPermission, user, roles } = useUser();
-    const visibleItems = menuItems.filter(item => hasAccess(item.key) && hasPermission(`${item.key}.list`));
+    const isTechnical = user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS');
+    const canFacebook = hasPermission("events.publish_facebook");
+    const visibleItems = menuItems.filter(item => {
+        if (item.key === "facebook") return canFacebook;
+        return isTechnical && hasAccess(item.key) && hasPermission(`${item.key}.list`);
+    });
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const pathname = usePathname();
@@ -48,7 +54,7 @@ const SettingsListNavigation: React.FC = () => {
         }
     }, [pathname]);
 
-    if (!(user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS')) || visibleItems.length === 0) return null;
+    if (visibleItems.length === 0) return null;
     return (
         <>
             <Button

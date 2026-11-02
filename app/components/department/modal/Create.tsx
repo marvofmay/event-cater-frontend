@@ -212,14 +212,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({
             fullWidth
             maxWidth="lg"
         >
-            <DialogTitle
-                sx={{
-                    backgroundColor: '#34495e',
-                    color: 'white',
-                    fontSize: '1.2rem',
-                    fontWeight: 'bold',
-                }}
-            >
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t('department.modal.add.title')}
             </DialogTitle>
 

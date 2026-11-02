@@ -33,6 +33,8 @@ for (const ownSettings of [false, true]) {
         await expect(sms).not.toBeChecked();
         await expect(sms).toBeDisabled();
         await expect(internal).toBeChecked();
+        await expect(internal).toBeDisabled();
+        await expect(panel.getByText('Kanał systemowy jest zawsze włączony.')).toBeVisible();
         if (ownSettings) {
             await expect(email).not.toBeChecked();
         } else {
@@ -46,6 +48,7 @@ for (const ownSettings of [false, true]) {
         if (ownSettings) await expect(email).toBeChecked();
         else await expect(email).not.toBeChecked();
         await expect(internal).toBeChecked();
+        await expect(internal).toBeDisabled();
         await expect(sms).not.toBeChecked();
         await expect(panel).not.toContainText('dzwoneczek');
     });

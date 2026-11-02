@@ -41,7 +41,7 @@ function valueText(value: unknown, field?: string): string {
   if (Array.isArray(value)) return value.length ? value.map(item => valueText(item)).join("\n") : "Brak pozycji";
   if (typeof value === "object") {
     const parts = Object.entries(record(value)).filter(([key, item]) => labels[key] && item !== null && item !== "");
-    return parts.length ? parts.map(([key, item]) => `${labels[key]}: ${valueText(item, key)}`).join(" · ") : "Zapisano dane";
+    return parts.length ? parts.map(([key, item]) => `${labels[key]}: ${valueText(item, key)}`).join(" - ") : "Zapisano dane";
   }
   if (typeof value === "boolean") return value ? "Tak" : "Nie";
   if (typeof value === "string" && /At$/.test(field ?? "")) return formatDate(value);
@@ -90,7 +90,7 @@ export function HistoryPanel({ path }: { path: string }) {
             <Typography component="h3" variant="subtitle2" fontWeight={700}>{actions[entry.action] ?? "Zaktualizowano dane"}</Typography>
             {(entry.revision ?? entry.orderVersion) !== undefined && <Chip size="small" label={`Wersja ${entry.revision ?? entry.orderVersion}`} sx={{ flexShrink: 0 }} />}
           </Stack>
-          <Typography variant="caption" color="text.secondary" component="p" mb={1.5}><Box component="time" dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</Box>{" · "}{entry.actorName ?? "Użytkownik niedostępny"}</Typography>
+          <Typography variant="caption" color="text.secondary" component="p" mb={1.5}><Box component="time" dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</Box>{" - "}{entry.actorName ?? "Użytkownik niedostępny"}</Typography>
           <EntryDetails entry={entry} />
         </Paper>
       </Box>)}

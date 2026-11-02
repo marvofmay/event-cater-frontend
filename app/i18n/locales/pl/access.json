@@ -25,5 +25,8 @@
   "accesses": "dostępy",
   "permissions": "uprawnienia",
   "notes": "notatki",
-  "file_manager": "menedżer plików"
+  "file_manager": "menedżer plików",
+  "my_hours": "moje godziny",
+  "employee_hours": "godziny pracowników",
+  "company_notices": "ogłoszenia firmowe"
 }

@@ -39,7 +39,7 @@ export default function ForgotPassword({ open, handleClose, tenantSlug, initialL
     };
     return <Dialog open={open} onClose={saving ? undefined : handleClose} fullWidth maxWidth="xs" aria-labelledby="forgot-password-title">
         <form onSubmit={submit}>
-            <DialogTitle id="forgot-password-title">Odzyskaj dostęp do konta</DialogTitle>
+            <DialogTitle id="forgot-password-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Odzyskaj dostęp do konta</DialogTitle>
             <DialogContent>
                 <DialogContentText sx={{ mb: 2 }}>Podaj login lub przypisany do konta e-mail. Wyślemy link do ustawienia nowego hasła. Działa to również dla hasła startowego.</DialogContentText>
                 {!validTenant && <Alert severity="warning" sx={{ mb: 2 }}>Najpierw wybierz firmę w formularzu logowania.</Alert>}
@@ -48,7 +48,7 @@ export default function ForgotPassword({ open, handleClose, tenantSlug, initialL
                     : <TextField label="Login lub e-mail" value={login} onChange={event => setLogin(event.target.value)} fullWidth required autoFocus autoComplete="username" disabled={saving} inputProps={{ maxLength: 254 }} />}
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose} disabled={saving}>{message ? 'Zamknij' : 'Anuluj'}</Button>
+                <Button color="primary" variant="contained" onClick={handleClose} disabled={saving}>{message ? 'Zamknij' : 'Anuluj'}</Button>
                 {!message && <Button variant="contained" type="submit" disabled={saving || !validTenant || !login.trim()}>{saving ? 'Wysyłanie…' : 'Wyślij link'}</Button>}
             </DialogActions>
         </form>

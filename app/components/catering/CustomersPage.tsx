@@ -42,26 +42,26 @@ function CustomerWorkspace() {
         <TableBody>
           {(remote.data?.items ?? []).map(customer => <TableRow key={customer.uuid} hover>
             <TableCell><Typography variant="body2" fontWeight={600}>{customer.name}</Typography></TableCell>
-            <TableCell>{customer.nip || "—"}</TableCell>
-            <TableCell sx={{ maxWidth: 300, overflowWrap: "anywhere" }}>{customer.address || "—"}</TableCell>
-            <TableCell>{customer.phone || "—"}</TableCell>
-            <TableCell sx={{ overflowWrap: "anywhere" }}>{customer.email || "—"}</TableCell>
+            <TableCell>{customer.nip || "-"}</TableCell>
+            <TableCell sx={{ maxWidth: 300, overflowWrap: "anywhere" }}>{customer.address || "-"}</TableCell>
+            <TableCell>{customer.phone || "-"}</TableCell>
+            <TableCell sx={{ overflowWrap: "anywhere" }}>{customer.email || "-"}</TableCell>
             <TableCell align="center"><Tooltip title="Podgląd"><IconButton size="small" aria-label={"Podgląd: " + customer.name} onClick={() => setSelected(customer)}><VisibilityOutlined fontSize="small" /></IconButton></Tooltip></TableCell>
           </TableRow>)}
           {!remote.loading && !remote.error && !remote.data?.items.length && <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}>Brak kontrahentów spełniających kryteria.</TableCell></TableRow>}
         </TableBody>
       </Table>
     </TableContainer>
-    <TablePagination component="div" count={remote.data?.total ?? 0} page={page} rowsPerPage={limit} rowsPerPageOptions={[20, 50, 100]} onPageChange={(_, value) => setPage(value)} onRowsPerPageChange={event => { setLimit(Number(event.target.value)); setPage(0); }} labelRowsPerPage="Rekordów na stronę" labelDisplayedRows={({ from, to, count }) => `${from}–${to} z ${count}`} getItemAriaLabel={type => type === "next" ? "Następna strona" : "Poprzednia strona"} />
+    <TablePagination component="div" count={remote.data?.total ?? 0} page={page} rowsPerPage={limit} rowsPerPageOptions={[20, 50, 100]} onPageChange={(_, value) => setPage(value)} onRowsPerPageChange={event => { setLimit(Number(event.target.value)); setPage(0); }} labelRowsPerPage="Rekordów na stronę" labelDisplayedRows={({ from, to, count }) => `${from}-${to} z ${count}`} getItemAriaLabel={type => type === "next" ? "Następna strona" : "Poprzednia strona"} />
     {canWrite && <CustomerCreateDialog open={create} onClose={() => setCreate(false)} onCreated={() => { setPage(0); remote.reload(); }} />}
     <Dialog open={selected !== null} onClose={() => setSelected(null)} maxWidth="sm" fullWidth>
-      <DialogTitle>{selected?.name}</DialogTitle>
+      <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name}</DialogTitle>
       <DialogContent dividers>
         <Box component="dl" sx={{ m: 0, display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: 1.5, "& dd": { m: 0, overflowWrap: "anywhere" }, "& dt": { color: "text.secondary" } }}>
-          {([['NIP', selected?.nip], ['REGON', selected?.regon], ['KRS', selected?.krs], ['Adres', selected?.address], ['Telefon', selected?.phone], ['E-mail', selected?.email]] as const).map(([label, value]) => <Box key={label} sx={{ display: "contents" }}><Typography component="dt" variant="body2">{label}</Typography><Typography component="dd" variant="body2">{value || "—"}</Typography></Box>)}
+          {([['NIP', selected?.nip], ['REGON', selected?.regon], ['KRS', selected?.krs], ['Adres', selected?.address], ['Telefon', selected?.phone], ['E-mail', selected?.email]] as const).map(([label, value]) => <Box key={label} sx={{ display: "contents" }}><Typography component="dt" variant="body2">{label}</Typography><Typography component="dd" variant="body2">{value || "-"}</Typography></Box>)}
         </Box>
       </DialogContent>
-      <DialogActions><Button onClick={() => setSelected(null)}>Zamknij</Button></DialogActions>
+      <DialogActions><Button color="primary" variant="contained" onClick={() => setSelected(null)}>Zamknij</Button></DialogActions>
     </Dialog>
   </Panel>;
 }

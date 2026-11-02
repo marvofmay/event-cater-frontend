@@ -1,29 +1,39 @@
 "use client";
 
-import { useUser } from "@/app/context/userContext";
+import { Box, CircularProgress } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { Box, CircularProgress } from '@mui/material';
-import CenteredMessage from '@/app/components/shared/CenterdeMessage';
+import { useUser } from "@/app/context/userContext";
+import CenteredMessage from "@/app/components/shared/CenterdeMessage";
+import CompanyNoticesBoard from "@/app/components/info/CompanyNoticesBoard";
 
-const Info: React.FC = () => {
-    const { t } = useTranslation();
-    const { isAuthenticated, loading } = useUser();
+export default function InfoPage() {
+  const { t } = useTranslation();
+  const { isAuthenticated, loading } = useUser();
 
+  if (loading) {
     return (
-        <div className="grid grid-rows-[10px_1fr_10px] min-h-screen p-1 pb-1 sm:p-1 font-[family-name:var(--font-geist-sans)]">
-            <main>
-                {loading ? (
-                    <Box display="flex" justifyContent="center" alignItems="center" height="300px">
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    <>{isAuthenticated ? "Info" :
-                        <CenteredMessage message={t('common.message.youAreNotLogged')} />
-                    }</>
-                )}
-            </main>
-        </div>
+      <Box minHeight="60vh" display="flex" justifyContent="center" alignItems="center">
+        <CircularProgress aria-label="Ładowanie" />
+      </Box>
     );
-};
+  }
 
-export default Info;
+  if (!isAuthenticated) {
+    return <CenteredMessage message={t("common.message.youAreNotLogged")} />;
+  }
+
+  return (
+    <Box
+      component="main"
+      sx={{
+        minHeight: "80vh",
+        px: 2,
+        py: 4,
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <CompanyNoticesBoard />
+    </Box>
+  );
+}

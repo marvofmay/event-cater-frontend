@@ -26,14 +26,14 @@ export function TemplateQuantityRule({ line, guests, onChange }: { line: Templat
                 {rule.reservePercent > 0 ? <Box sx={{ flex: 1 }}>
                     <Typography variant="body2">Dotychczasowy zapas: {rule.reservePercent}% ilości obliczonej dla gości.</Typography>
                     <Button type="button" size="small" onClick={() => onChange({ ...rule, reservePercent: 0, reserveQuantity: '0' })}>Zamiast procentów wpisz liczbę {unit}</Button>
-                </Box> : <TextField size="small" type="number" label="Dodatkowy zapas" value={rule.reserveQuantity ?? '0'} onChange={event => onChange({ ...rule, reserveQuantity: event.target.value, reservePercent: 0 })} helperText={`Np. 5 oznacza 5 dodatkowych ${unit} — 0 oznacza brak zapasu.`} sx={{ width: { xs: '100%', sm: 220 } }} slotProps={{ htmlInput: { min: 0, max: 1000000, step: fractional ? 0.001 : 1 }, input: { endAdornment: <InputAdornment position="end">{unit}</InputAdornment> } }} />}
+                </Box> : <TextField size="small" type="number" label="Dodatkowy zapas" value={rule.reserveQuantity ?? '0'} onChange={event => onChange({ ...rule, reserveQuantity: event.target.value, reservePercent: 0 })} helperText={`Np. 5 oznacza 5 dodatkowych ${unit} - 0 oznacza brak zapasu.`} sx={{ width: { xs: '100%', sm: 220 } }} slotProps={{ htmlInput: { min: 0, max: 1000000, step: fractional ? 0.001 : 1 }, input: { endAdornment: <InputAdornment position="end">{unit}</InputAdornment> } }} />}
             </>}
         </Stack>
         <Alert severity={result === null ? 'warning' : 'info'}>
             {result === null ? 'Uzupełnij poprawne ilości, aby zobaczyć przykład wyliczenia. Maksymalna ilość to 1 000 000.' : <>
                 <Typography variant="body2" fontWeight={600}>{perGuest ? `Dla ${format(guests)} gości zabierz: ${format(result)} ${unit}` : `Na każde wydarzenie zabierz: ${format(result)} ${unit}`}</Typography>
                 {perGuest && <Typography variant="body2">{rule.reservePercent ? `Wynik uwzględnia dotychczasowy zapas ${rule.reservePercent}%.` : `${format(base ?? 0)} ${unit} dla gości + ${format(Number(rule.reserveQuantity ?? 0))} ${unit} zapasu = ${format(result)} ${unit}`}</Typography>}
-                {perGuest && !rule.reservePercent && <Typography variant="caption">Zapas jest stałą dodatkową ilością — nie zmieni się wraz z liczbą gości.</Typography>}
+                {perGuest && !rule.reservePercent && <Typography variant="caption">Zapas jest stałą dodatkową ilością - nie zmieni się wraz z liczbą gości.</Typography>}
             </>}
         </Alert>
     </Stack>;
