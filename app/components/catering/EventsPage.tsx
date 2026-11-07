@@ -41,7 +41,7 @@ export function EventsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("");
-  const [involvement, setInvolvement] = useState("");
+  const [involvement, setInvolvement] = useState("staff");
   const [page, setPage] = useState(1);
   const [create, setCreate] = useState(false);
   const params = new URLSearchParams({
@@ -121,7 +121,7 @@ export function EventsPage() {
             }}
             options={{
               "": "Wszystkie",
-              staff: "Moja obsada",
+              staff: "Uczestniczę w nich",
               packing: "Moja kompletacja",
             }}
           />

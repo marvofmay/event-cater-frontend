@@ -3,17 +3,19 @@ import { useUser } from "@/app/context/userContext";
 import { Lookup, LookupItem } from "./Lookup";
 
 export function PreparationLookup({
-  label,
+  label = "Dodaj rzecz",
   value,
   onChange,
   equipment = true,
   consumables = true,
+  disabled = false,
 }: {
-  label: string;
+  label?: string;
   value: LookupItem | null;
   onChange: (value: LookupItem | null) => void;
   equipment?: boolean;
   consumables?: boolean;
+  disabled?: boolean;
 }) {
   const { hasPermission } = useUser();
   const canUseEquipment = equipment && hasPermission("equipment.list");
@@ -29,7 +31,7 @@ export function PreparationLookup({
       path={"/preparation-options?kind=" + kind}
       value={value}
       onChange={onChange}
-      disabled={!canUseEquipment && !canUseConsumables}
+      disabled={disabled || (!canUseEquipment && !canUseConsumables)}
     />
   );
 }

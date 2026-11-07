@@ -15,6 +15,8 @@ import {
   CircularProgress,
   TextField,
   Checkbox,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { Preview, Delete, Search } from "@mui/icons-material";
@@ -44,6 +46,7 @@ const NotificationsTable = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchPhrase, setSearchPhrase] = useState<string>("");
   const [phrase, setPhrase] = useState<string>("");
+  const [unreadFilter, setUnreadFilter] = useState<"unread" | "read" | "all">("all");
   const [modalType, setModalType] = useState<string | null>(null);
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
@@ -58,12 +61,15 @@ const NotificationsTable = () => {
   const { t } = useTranslation();
   const { hasPermission } = useUser();
 
+  const unreadParam =
+    unreadFilter === "unread" ? "true" : unreadFilter === "read" ? "false" : null;
   const result = useNotificationsQuery(
     pageSize,
     page,
     sortBy,
     sortDirection,
     phrase,
+    unreadParam,
   );
   const { data: rawData, isLoading, error, refetch } = result;
 
@@ -226,12 +232,27 @@ const NotificationsTable = () => {
         alignItems="center"
         marginBottom={2}
       >
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={unreadFilter}
+            onChange={(_, value) => {
+              if (!value) return;
+              setUnreadFilter(value);
+              setPage(1);
+            }}
+            aria-label="Filtr przeczytania"
+          >
+            <ToggleButton value="unread">Nieprzeczytane</ToggleButton>
+            <ToggleButton value="read">Przeczytane</ToggleButton>
+            <ToggleButton value="all">Wszystkie</ToggleButton>
+          </ToggleButtonGroup>
           <TextField
             variant="outlined"
             placeholder={t("common.enterPhraseToSearch")}
             size="small"
-            sx={{ width: "500px" }}
+            sx={{ width: { xs: "100%", sm: "320px" } }}
             onChange={(e) => setSearchPhrase(e.target.value)}
           />
           <Button

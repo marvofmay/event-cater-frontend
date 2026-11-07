@@ -45,6 +45,7 @@ import { MenuEditor } from "./MenuEditor";
 import { PreparationPanel } from "./PreparationPanel";
 import { KitchenCard } from "./KitchenCard";
 import { HistoryPanel } from "./HistoryPanel";
+import { EventNotificationRecipients } from "./EventNotificationRecipients";
 import PublishFacebookDialog from "@/app/components/facebook/PublishFacebookDialog";
 export function EventDetailsPage({ uuid }: { uuid: string }) {
   const { hasPermission } = useUser();
@@ -83,9 +84,15 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
     ["contacts", "Kontakty"],
     ["menu", "Menu"],
     ["staff", "Zespół"],
+    ["notifications", "Powiadomienia"],
     ["preparation", "Kompletacja"],
     ...(hasPermission("orders.view") ? [["kitchen", "Kuchnia"]] : []),
-    ["media", "Zdjęcia i filmy"],
+    ...(hasPermission("events.view_event_media") ||
+    hasPermission("events.add_event_media") ||
+    hasPermission("events.delete_event_media") ||
+    hasPermission("events.publish_facebook")
+      ? [["media", "Zdjęcia i filmy"]]
+      : []),
     ["history", "Historia"],
   ];
   return (
@@ -237,6 +244,9 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
               closed={closed}
             />
           )}
+          {tab === "notifications" && (
+            <EventNotificationRecipients eventUuid={event.uuid} closed={closed} />
+          )}
           {tab === "staff" && (
             <StaffSection
               key={event.version}
@@ -265,11 +275,11 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
             <HistoryPanel path={"/events/" + uuid + "/history"} />
           )}
           <Dialog open={!!nextStatus} onClose={() => setNextStatus("")}>
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Zmienić etap wydarzenia?</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Zmiana etapu wydarzenia</DialogTitle>
             <DialogContent>
-              {stateLabels[nextStatus]}.{" "}
+              Czy zmienić etap z „{stateLabels[event.status] || event.status}” na „{stateLabels[nextStatus] || nextStatus}”?
               {nextStatus === "cancelled"
-                ? "Anulowanie zablokuje dalszą obsługę i produkcję kuchni. Historia zostanie zachowana."
+                ? " Anulowanie zablokuje dalszą obsługę i produkcję kuchni. Historia zostanie zachowana."
                 : ""}
             </DialogContent>
             <DialogActions>
@@ -804,7 +814,7 @@ function KitchenSection({
                       options={{ off_site: "Wyjazd", on_site: "W bazie firmy" }}
                     />
                     <Lookup
-                      label="Odpowiedzialny za kuchnię"
+                      label="Osoba odpowiedzialna za kuchnię"
                       path="/kitchen-orders/staff-options"
                       value={owner}
                       onChange={setOwner}
@@ -854,10 +864,14 @@ function MediaSection({
   const [description, setDescription] = useState("");
   const [remove, setRemove] = useState<string | null>(null);
   const [facebookOpen, setFacebookOpen] = useState(false);
-  const allowed =
-    hasPermission("events.manage_event_media") && event.status !== "cancelled";
+  const notCancelled = event.status !== "cancelled";
+  const canView = hasPermission("events.view_event_media");
+  const canAdd =
+    hasPermission("events.add_event_media") && notCancelled;
+  const canDelete =
+    hasPermission("events.delete_event_media") && notCancelled;
   const canPublishFacebook =
-    hasPermission("events.publish_facebook") && event.status !== "cancelled";
+    hasPermission("events.publish_facebook") && notCancelled;
   return (
     <Panel title="Zdjęcia i filmy z wydarzenia">
       {canPublishFacebook && (
@@ -869,7 +883,8 @@ function MediaSection({
           Publikuj post na FB
         </Button>
       )}
-      {event.attachments.map((attachment) => (
+      {(canView || canDelete) &&
+        event.attachments.map((attachment) => (
         <Stack
           direction="row"
           gap={1}
@@ -881,27 +896,29 @@ function MediaSection({
             {attachment.name} - {(attachment.size / 1024 / 1024).toFixed(1)} MB
             - {attachment.description}
           </Typography>
-          <RowAction
-            action="download"
-            label="Pobierz"
-            onClick={() =>
-              action.run(
-                () =>
-                  downloadPrivate(
-                    "/events/" + event.uuid + "/attachments/" + attachment.uuid,
-                    token,
-                    attachment.name,
-                  ),
-                "Pobrano plik.",
-              )
-            }
-          />
-          {allowed && (
+          {canView && (
+            <RowAction
+              action="download"
+              label="Pobierz"
+              onClick={() =>
+                action.run(
+                  () =>
+                    downloadPrivate(
+                      "/events/" + event.uuid + "/attachments/" + attachment.uuid,
+                      token,
+                      attachment.name,
+                    ),
+                  "Pobrano plik.",
+                )
+              }
+            />
+          )}
+          {canDelete && (
             <RowAction action="delete" label="Usuń załącznik" onClick={() => setRemove(attachment.uuid)} />
           )}
         </Stack>
       ))}
-      {allowed && (
+      {canAdd && (
         <form
           onSubmit={(e) => {
             e.preventDefault();

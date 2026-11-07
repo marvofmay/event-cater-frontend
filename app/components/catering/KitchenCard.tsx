@@ -4,6 +4,7 @@ import { RowAction } from "../common/RowAction";
 import { useState } from "react";
 import {
   Alert,
+  Box,
   Button,
   Stack,
   TextField,
@@ -40,6 +41,58 @@ const newLine = (): KitchenLine => ({
   notes: "",
   responsibleUuid: null,
 });
+
+const softBtn = {
+  textTransform: "none" as const,
+  fontWeight: 600,
+  borderRadius: 2,
+  px: 1.75,
+  py: 0.85,
+  boxShadow: "none",
+  border: "1px solid",
+  borderColor: "rgba(15, 23, 42, 0.12)",
+  bgcolor: "#fff",
+  color: "#0F172A",
+  "&:hover": {
+    bgcolor: "rgba(15, 39, 68, 0.04)",
+    borderColor: "rgba(15, 39, 68, 0.22)",
+    boxShadow: "none",
+  },
+  "&.Mui-disabled": {
+    bgcolor: "rgba(15, 23, 42, 0.03)",
+    borderColor: "rgba(15, 23, 42, 0.08)",
+    color: "rgba(15, 23, 42, 0.38)",
+  },
+};
+
+const primaryBtn = {
+  ...softBtn,
+  bgcolor: "#34495e",
+  borderColor: "#34495e",
+  color: "#fff",
+  "&:hover": {
+    bgcolor: "#2c3e50",
+    borderColor: "#2c3e50",
+    boxShadow: "0 6px 16px rgba(52, 73, 94, 0.22)",
+  },
+  "&.Mui-disabled": {
+    bgcolor: "rgba(52, 73, 94, 0.35)",
+    borderColor: "transparent",
+    color: "rgba(255,255,255,0.75)",
+  },
+};
+
+const dangerBtn = {
+  ...softBtn,
+  bgcolor: "#fff",
+  borderColor: "rgba(185, 28, 28, 0.28)",
+  color: "#B91C1C",
+  "&:hover": {
+    bgcolor: "rgba(185, 28, 28, 0.06)",
+    borderColor: "rgba(185, 28, 28, 0.45)",
+    boxShadow: "none",
+  },
+};
 export function KitchenCard({
   order,
   onChange,
@@ -167,7 +220,9 @@ export function KitchenCard({
               "T",
               " ",
             ) || "Nie ustalono"}{" "}
-            ({order.source.timezone}). {order.notes}
+            ({order.source.timezone}). Osoba odpowiedzialna za kuchnię:{" "}
+            {order.responsibleName?.trim() || "nie wyznaczono"}
+            {order.notes ? `. ${order.notes}` : ""}
           </Typography>
           <TableContainer>
             <Table>
@@ -202,116 +257,159 @@ export function KitchenCard({
               </TableBody>
             </Table>
           </TableContainer>
-          <Stack direction="row" gap={1} flexWrap="wrap" my={2}>
-            {can("plan_kitchen_production") &&
-              !blocked &&
-              !order.pendingRevision && (
+          <Box
+            sx={{
+              my: 2,
+              p: 1.5,
+              borderRadius: 2.5,
+              border: "1px solid",
+              borderColor: "rgba(15, 23, 42, 0.08)",
+              bgcolor: "rgba(248, 250, 252, 0.9)",
+            }}
+          >
+            <Stack direction="row" gap={1} flexWrap="wrap" useFlexGap alignItems="center">
+              {can("plan_kitchen_production") &&
+                !blocked &&
+                !order.pendingRevision && (
+                  <Button
+                    disableElevation
+                    sx={softBtn}
+                    disabled={action.busy}
+                    onClick={() => {
+                      setEditing(true);
+                      onDirty?.(true);
+                    }}
+                  >
+                    {order.status === "draft"
+                      ? "Edytuj kartę kuchni"
+                      : "Zaproponuj zmianę karty"}
+                  </Button>
+                )}
+              {order.status === "draft" && can("release_kitchen_production") && (
                 <Button
-                  disabled={action.busy}
-                  onClick={() => {
-                    setEditing(true);
-                    onDirty?.(true);
-                  }}
+                  disableElevation
+                  sx={primaryBtn}
+                  disabled={action.busy || blocked || order.sourceChanged}
+                  onClick={() => command("release")}
                 >
-                  {order.status === "draft"
-                    ? "Edytuj kartę kuchni"
-                    : "Zaproponuj zmianę karty"}
+                  Wydaj kartę do kuchni
                 </Button>
               )}
-            {order.status === "draft" && can("release_kitchen_production") && (
-              <Button
-                variant="contained"
-                disabled={action.busy || blocked || order.sourceChanged}
-                onClick={() => command("release")}
-              >
-                Wydaj kartę do kuchni
-              </Button>
-            )}
-            {order.status === "released" && can("prepare_kitchen_meals") && (
-              <Button
-                disabled={
-                  action.busy ||
-                  blocked ||
-                  order.sourceChanged ||
-                  !!order.pendingRevision
-                }
-                onClick={() => command("start")}
-              >
-                Rozpocznij przygotowanie
-              </Button>
-            )}
-            {["released", "in_production"].includes(order.status) &&
-              can("prepare_kitchen_meals") && (
+              {order.status === "released" && can("prepare_kitchen_meals") && (
                 <Button
+                  disableElevation
+                  sx={primaryBtn}
                   disabled={
                     action.busy ||
                     blocked ||
                     order.sourceChanged ||
                     !!order.pendingRevision
                   }
-                  onClick={() => command("ready")}
+                  onClick={() => command("start")}
                 >
-                  Potwierdź gotowość potraw
+                  Rozpocznij przygotowanie
                 </Button>
               )}
-            {order.status === "ready" && can("hand_over_kitchen_meals") && (
-              <Button
-                variant="contained"
-                disabled={
-                  action.busy ||
-                  blocked ||
-                  order.sourceChanged ||
-                  !!order.pendingRevision
-                }
-                onClick={() => command("hand-over")}
-              >
-                {order.serviceMode === "on_site"
-                  ? "Potwierdź przekazanie do obsługi"
-                  : "Potwierdź przekazanie do transportu"}
-              </Button>
-            )}
-            {can("pdf") && order.revision > 0 && (
-              <>
-                <TextField
-                  size="small"
-                  label="Rewizja wydruku"
-                  type="number"
-                  value={printRevision}
-                  onChange={(e) => setPrintRevision(e.target.value)}
-                  slotProps={{
-                    htmlInput: { min: 1, max: order.revision, step: 1 },
-                  }}
-                  sx={{ width: 150 }}
-                />
+              {["released", "in_production"].includes(order.status) &&
+                can("prepare_kitchen_meals") && (
+                  <Button
+                    disableElevation
+                    sx={softBtn}
+                    disabled={
+                      action.busy ||
+                      blocked ||
+                      order.sourceChanged ||
+                      !!order.pendingRevision
+                    }
+                    onClick={() => command("ready")}
+                  >
+                    Potwierdź gotowość potraw
+                  </Button>
+                )}
+              {order.status === "ready" && can("hand_over_kitchen_meals") && (
                 <Button
-                  disabled={action.busy}
-                  onClick={() =>
-                    action.run(
-                      () =>
-                        downloadPrivate(
-                          path +
-                            "/pdf?revision=" +
-                            encodeURIComponent(
-                              printRevision || String(order.revision),
-                            ),
-                          token,
-                          order.number +
-                            "-r" +
-                            (printRevision || order.revision) +
-                            ".pdf",
-                        ),
-                      "Pobrano kartę PDF.",
-                    )
+                  disableElevation
+                  sx={primaryBtn}
+                  disabled={
+                    action.busy ||
+                    blocked ||
+                    order.sourceChanged ||
+                    !!order.pendingRevision
                   }
+                  onClick={() => command("hand-over")}
                 >
-                  Pobierz kartę PDF
+                  {order.serviceMode === "on_site"
+                    ? "Potwierdź przekazanie do obsługi"
+                    : "Potwierdź przekazanie do transportu"}
                 </Button>
-              </>
-            )}
-            <Button onClick={() => setHistory((v) => !v)}>
-              {history ? "Ukryj historię" : "Historia karty"}
-            </Button>
-          </Stack>
+              )}
+
+              {can("pdf") && order.revision > 0 && (
+                <>
+                  <Divider
+                    flexItem
+                    orientation="vertical"
+                    sx={{ display: { xs: "none", md: "block" }, mx: 0.5 }}
+                  />
+                  <TextField
+                    size="small"
+                    label="Rewizja wydruku"
+                    type="number"
+                    value={printRevision}
+                    onChange={(e) => setPrintRevision(e.target.value)}
+                    slotProps={{
+                      htmlInput: { min: 1, max: order.revision, step: 1 },
+                    }}
+                    sx={{
+                      width: 140,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        bgcolor: "#fff",
+                      },
+                    }}
+                  />
+                  <Button
+                    disableElevation
+                    sx={softBtn}
+                    disabled={action.busy}
+                    onClick={() =>
+                      action.run(
+                        () =>
+                          downloadPrivate(
+                            path +
+                              "/pdf?revision=" +
+                              encodeURIComponent(
+                                printRevision || String(order.revision),
+                              ),
+                            token,
+                            order.number +
+                              "-r" +
+                              (printRevision || order.revision) +
+                              ".pdf",
+                          ),
+                        "Pobrano kartę PDF.",
+                      )
+                    }
+                  >
+                    Pobierz kartę PDF
+                  </Button>
+                </>
+              )}
+
+              <Divider
+                flexItem
+                orientation="vertical"
+                sx={{ display: { xs: "none", md: "block" }, mx: 0.5 }}
+              />
+              <Button
+                disableElevation
+                sx={softBtn}
+                onClick={() => setHistory((v) => !v)}
+              >
+                {history ? "Ukryj historię" : "Historia karty"}
+              </Button>
+            </Stack>
+          </Box>
         </>
       )}
       {editing && (
@@ -348,15 +446,38 @@ export function KitchenCard({
       {can("cancel_kitchen_order") &&
         order.status !== "cancelled" &&
         !editing && (
-          <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
+          <Stack
+            direction="row"
+            gap={1}
+            flexWrap="wrap"
+            useFlexGap
+            alignItems="center"
+            mt={2}
+            sx={{
+              p: 1.5,
+              borderRadius: 2.5,
+              border: "1px dashed",
+              borderColor: "rgba(185, 28, 28, 0.22)",
+              bgcolor: "rgba(254, 242, 242, 0.45)",
+            }}
+          >
             <TextField
               size="small"
               label="Powód anulowania karty (min. 10 znaków)"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
+              sx={{
+                minWidth: 260,
+                flex: 1,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  bgcolor: "#fff",
+                },
+              }}
             />
             <Button
-              color="error"
+              disableElevation
+              sx={dangerBtn}
               disabled={action.busy || reason.trim().length < 10}
               onClick={() => command("cancel", { reason })}
             >
@@ -501,7 +622,10 @@ function KitchenPlanEditor({
   );
   const [owner, setOwner] = useState<LookupItem | null>(
     order.responsibleUuid
-      ? { uuid: order.responsibleUuid, name: "Zapisana osoba odpowiedzialna" }
+      ? {
+          uuid: order.responsibleUuid,
+          name: order.responsibleName?.trim() || "Wybrana osoba",
+        }
       : null,
   );
   const [reason, setReason] = useState("");
@@ -600,7 +724,7 @@ function KitchenPlanEditor({
               options={{ off_site: "Wyjazd", on_site: "W bazie firmy" }}
             />
             <Lookup
-              label="Odpowiedzialny za kuchnię"
+              label="Osoba odpowiedzialna za kuchnię"
               path="/kitchen-orders/staff-options"
               value={owner}
               onChange={setOwner}

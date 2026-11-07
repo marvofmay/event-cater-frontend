@@ -18,13 +18,21 @@ const fetchNotifications = async (
   sortBy: string,
   sortDirection: SortDirection,
   phrase?: string | null,
+  unread?: "true" | "false" | null,
 ): Promise<NotificationsResponse> => {
   try {
     const response = await axios.get(
       `${SERVICE_COMPANY_URL}/api/notification-messages`,
       {
         headers: { Authorization: `Bearer ${token}` },
-        params: { pageSize, page, sortBy, sortDirection, phrase },
+        params: {
+          pageSize,
+          page,
+          sortBy,
+          sortDirection,
+          phrase,
+          ...(unread ? { unread } : {}),
+        },
       },
     );
 
@@ -47,13 +55,14 @@ const useNotificationsQuery = (
   sortBy: string,
   sortDirection: SortDirection,
   phrase?: string | null,
+  unread?: "true" | "false" | null,
 ) => {
   const { t } = useTranslation();
 
   const { ready } = usePreferences();
   return useQuery<NotificationsResponse>({
     enabled: ready,
-    queryKey: ["roles", pageSize, page, sortBy, sortDirection, phrase],
+    queryKey: ["roles", pageSize, page, sortBy, sortDirection, phrase, unread],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");
       if (!token) throw new Error(t("common.message.tokenIsMissing"));
@@ -65,6 +74,7 @@ const useNotificationsQuery = (
         sortBy,
         sortDirection,
         phrase,
+        unread,
       );
     },
   });

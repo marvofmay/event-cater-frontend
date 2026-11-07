@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useUser } from '@/app/context/userContext';
 import { usePreferences } from '@/app/context/preferencesContext';
-import { AccessTime, CalendarToday, Dashboard, Description, FolderOpen, Groups, Settings, StickyNote2, Task } from '@mui/icons-material';
+import { AccessTime, CalendarToday, Dashboard, Description, FolderOpen, Groups, StickyNote2, Task } from '@mui/icons-material';
 
 const icons: Record<string, React.ReactNode> = {
     events: <CalendarToday fontSize="inherit" />, equipment: <Description fontSize="inherit" />,
     supplies: <Task fontSize="inherit" />, kitchen: <Task fontSize="inherit" />,
-    company: <Dashboard fontSize="inherit" />, system: <Settings fontSize="inherit" />,
+    company: <Dashboard fontSize="inherit" />,
     notes: <StickyNote2 fontSize="inherit" />, documents: <Description fontSize="inherit" />,
     file_manager: <FolderOpen fontSize="inherit" />,
     my_hours: <AccessTime fontSize="inherit" />,
@@ -31,7 +31,6 @@ export function useDashboardTiles() {
         kitchen: permitted('orders') ? '/module/kitchen' : null,
         notes: permitted('notes') ? '/module/notes' : null,
         company: hasAccess('company_structure') && hasPermission('company_structure.view') ? '/module/company' : null,
-        system: permitted('notification_messages') ? '/notifications' : permitted('notifications') ? '/settings/notifications' : null,
         file_manager: hasAccess('file_manager') ? '/module/file_manager' : null,
         documents: '/module/documents',
         my_hours: permitted('my_hours') && employee ? '/module/my-hours' : null,

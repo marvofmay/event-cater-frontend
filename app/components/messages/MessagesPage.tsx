@@ -31,7 +31,7 @@ function MessagesWorkspace() {
     const [sortBy, setSortBy] = useState('createdAt');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [search, setSearch] = useState('');
-    const [unread, setUnread] = useState(false);
+    const [unread, setUnread] = useState(true);
     const [compose, setCompose] = useState(false);
     const [reply, setReply] = useState<ReplyContext | null>(null);
     const [selected, setSelected] = useState<string[]>([]);

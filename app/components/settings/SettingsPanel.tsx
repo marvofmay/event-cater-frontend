@@ -93,9 +93,15 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
         } finally { setSaving(false); }
     };
     if (!canOpen) return <Alert severity="warning">Nie masz uprawnienia do ustawień tej listy.</Alert>;
-    return <Box component="main" sx={{ maxWidth: 850, mx: 'auto', p: { xs: 2, sm: 3 } }}>
-        <Typography variant="h5" gutterBottom>Ustawienia - {labels[resource]}</Typography>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>{tenant?.name} - {personalOnly ? 'Twoje ustawienia dotyczą wyłącznie tej firmy.' : 'Ustawienia globalne dla tej firmy.'}</Typography>
+    return <Box component={personalOnly ? 'div' : 'main'} sx={personalOnly ? { minWidth: 0 } : { maxWidth: 850, mx: 'auto', p: { xs: 2, sm: 3 } }}>
+        {!personalOnly && <Typography variant="h5" gutterBottom>Ustawienia - {labels[resource]}</Typography>}
+        {personalOnly ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {labels[resource]} · {tenant?.name} · tylko Twoje ustawienia w tej firmie
+            </Typography>
+        ) : (
+            <Typography color="text.secondary" sx={{ mb: 2 }}>{tenant?.name} - Ustawienia globalne dla tej firmy.</Typography>
+        )}
         {error && <Alert severity="error" action={<Button onClick={() => setReload(value => value + 1)} color="inherit">Odśwież</Button>} sx={{ mb: 2 }}>{error}</Alert>}
         {!data ? !error && <CircularProgress aria-label="Ładowanie ustawień" /> : <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
             {notificationSettings && <Tabs value={notificationTab} onChange={(_, value) => { setNotificationTab(value); if (value === 'templates') setTemplatesVisited(true); }} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label="Ustawienia powiadomień" sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>

@@ -30,6 +30,8 @@ const useAccessesQuery = () => {
 
       return fetchAccesses(token);
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 };
 

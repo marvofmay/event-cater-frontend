@@ -74,7 +74,7 @@ export default function DashboardLayoutSettings() {
         } finally { setSaving(false); }
     };
 
-    return <Box sx={{ py: 3 }}>
+    return <Box>
         <Typography variant="h6" gutterBottom>Kolejność kafelków na pulpicie</Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>Przeciągnij kafelki lub użyj strzałek, a następnie zapisz. Układ dotyczy tylko Ciebie w firmie {tenant?.name}.</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => setReload(value => value + 1)} disabled={saving}>Odśwież</Button>}>{error}</Alert>}

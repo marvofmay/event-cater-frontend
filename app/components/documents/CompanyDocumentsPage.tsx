@@ -11,8 +11,6 @@ import {
   DialogTitle,
   MenuItem,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -93,21 +91,20 @@ export default function CompanyDocumentsPage() {
         )}
       </Stack>
 
-      <Tabs
+      <TextField
+        select
+        label={t("documents.formCategory")}
         value={category}
-        onChange={(_, value) => setCategory(value)}
-        variant="scrollable"
-        scrollButtons="auto"
-        sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+        onChange={(e) => setCategory(e.target.value)}
+        size="small"
+        sx={{ mb: 2, minWidth: 260, maxWidth: 360 }}
       >
         {categories.map((id) => (
-          <Tab
-            key={id}
-            value={id}
-            label={id === "all" ? t("documents.all") : t(`documents.categories.${id}`)}
-          />
+          <MenuItem key={id} value={id}>
+            {id === "all" ? t("documents.all") : t(`documents.categories.${id}`)}
+          </MenuItem>
         ))}
-      </Tabs>
+      </TextField>
 
       {remote.error && <Alert severity="error" sx={{ mb: 2 }}>{remote.error}</Alert>}
       {action.error && <Alert severity="error" sx={{ mb: 2 }}>{action.error}</Alert>}

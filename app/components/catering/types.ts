@@ -48,7 +48,7 @@ export interface EquipmentPhoto {
   name: string;
   mimeType: string;
   size: number;
-  createdAt: string;
+  createdAt?: string;
 }
 export interface EquipmentCategory {
   uuid: string;
@@ -150,6 +150,8 @@ export interface PreparationLine {
   responsibleName: string | null;
   sourceLocation: string | null;
   instructions: string | null;
+  photo?: { uuid: string; name: string } | null;
+  photos?: { uuid: string; name: string }[];
 }
 export interface Preparation {
   uuid: string;
@@ -163,6 +165,9 @@ export interface Preparation {
   lines: PreparationLine[];
   summary: { hasShortages: boolean; hasSurplus: boolean };
   acceptedShortagesReason: string | null;
+  readyComment?: string | null;
+  readyBy?: string | null;
+  readyAt?: string | null;
 }
 export interface KitchenLine {
   uuid?: string;
@@ -185,6 +190,7 @@ export interface KitchenPlan {
   productionDate: string;
   dueAt: string | null;
   responsibleUuid: string | null;
+  responsibleName?: string | null;
   notes: string | null;
   lines: KitchenLine[];
 }

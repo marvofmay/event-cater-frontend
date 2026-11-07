@@ -1,7 +1,9 @@
 "use client";
 import AddIcon from "@mui/icons-material/Add";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { RowAction } from "../common/RowAction";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -11,6 +13,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Stack,
   TextField,
   Typography,
@@ -43,8 +46,179 @@ import {
 import { Lookup, LookupItem } from "./Lookup";
 import { PreparationLookup } from "./PreparationLookup";
 import { SourceLocationAutocomplete } from './SourceLocationAutocomplete';
-
 const quantityText = (value: string) => Number(value).toLocaleString('pl-PL', { maximumFractionDigits: 3 });
+
+function usePreparationPhotoUrl(
+  eventUuid: string,
+  itemUuid: string,
+  photoUuid: string | undefined,
+  token: string | null,
+) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    if (!photoUuid || !token) {
+      setUrl("");
+      return;
+    }
+    const controller = new AbortController();
+    let objectUrl = "";
+    fetch(
+      `/api/events/${eventUuid}/preparation/equipment/${itemUuid}/photos/${photoUuid}`,
+      {
+        headers: { Authorization: "Bearer " + token },
+        signal: controller.signal,
+        cache: "no-store",
+      },
+    )
+      .then(async (response) => {
+        if (!response.ok) throw new Error("photo");
+        const blob = await response.blob();
+        if (controller.signal.aborted) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setUrl("");
+      });
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [eventUuid, itemUuid, photoUuid, token]);
+  return url;
+}
+
+function PreparationLinePhoto({
+  eventUuid,
+  line,
+}: {
+  eventUuid: string;
+  line: PreparationLine;
+}) {
+  const { token } = useUser();
+  const photos = line.kind === "equipment" ? line.photos ?? (line.photo ? [line.photo] : []) : [];
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const thumbUrl = usePreparationPhotoUrl(eventUuid, line.itemUuid, photos[0]?.uuid, token);
+  const active = photos[index];
+  const activeUrl = usePreparationPhotoUrl(eventUuid, line.itemUuid, open ? active?.uuid : undefined, token);
+  if (!photos.length || !thumbUrl) return null;
+  return (
+    <>
+      <Box
+        component="button"
+        type="button"
+        onClick={() => {
+          setIndex(0);
+          setOpen(true);
+        }}
+        aria-label={`Powiększ zdjęcia: ${line.name}`}
+        sx={{
+          p: 0,
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 1,
+          overflow: "hidden",
+          cursor: "pointer",
+          bgcolor: "transparent",
+          flexShrink: 0,
+          position: "relative",
+        }}
+      >
+        <Box
+          component="img"
+          src={thumbUrl}
+          alt={photos[0].name || line.name}
+          sx={{ width: 56, height: 56, objectFit: "cover", display: "block" }}
+        />
+        {photos.length > 1 ? (
+          <Typography
+            variant="caption"
+            sx={{
+              position: "absolute",
+              right: 2,
+              bottom: 2,
+              px: 0.5,
+              borderRadius: 0.5,
+              bgcolor: "rgba(0,0,0,0.65)",
+              color: "#fff",
+              fontWeight: 700,
+              lineHeight: 1.4,
+            }}
+          >
+            {photos.length}
+          </Typography>
+        ) : null}
+      </Box>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            setIndex((current) => Math.max(0, current - 1));
+          }
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            setIndex((current) => Math.min(photos.length - 1, current + 1));
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Typography component="span" fontWeight={700}>
+            {line.name}
+          </Typography>
+          <Button onClick={() => setOpen(false)}>Zamknij</Button>
+        </DialogTitle>
+        <DialogContent>
+          <Stack alignItems="center" gap={2}>
+            <Stack direction="row" alignItems="center" gap={1} sx={{ width: "100%" }}>
+              {photos.length > 1 ? (
+                <IconButton
+                  aria-label="Poprzednie zdjęcie"
+                  disabled={index <= 0}
+                  onClick={() => setIndex((current) => Math.max(0, current - 1))}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+              ) : null}
+              <Box sx={{ flex: 1, display: "flex", justifyContent: "center", minHeight: 240 }}>
+                {activeUrl ? (
+                  <Box
+                    component="img"
+                    src={activeUrl}
+                    alt={active?.name || line.name}
+                    sx={{ maxWidth: "100%", maxHeight: "70vh", objectFit: "contain" }}
+                  />
+                ) : (
+                  <Typography color="text.secondary" alignSelf="center">
+                    Wczytywanie zdjęcia…
+                  </Typography>
+                )}
+              </Box>
+              {photos.length > 1 ? (
+                <IconButton
+                  aria-label="Następne zdjęcie"
+                  disabled={index >= photos.length - 1}
+                  onClick={() => setIndex((current) => Math.min(photos.length - 1, current + 1))}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              ) : null}
+            </Stack>
+            {photos.length > 1 ? (
+              <Typography variant="body2">
+                {index + 1} / {photos.length}
+              </Typography>
+            ) : null}
+          </Stack>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 export function PreparationPanel({
   event,
   onChanged,
@@ -66,7 +240,6 @@ export function PreparationPanel({
       {remote.loading && <Loading />}
       {remote.data && (
         <PreparationContent
-          key={remote.data.version}
           data={remote.data}
           event={event}
           onChange={changed}
@@ -115,6 +288,7 @@ function PreparationContent({
   const [quantity, setQuantity] = useState("1");
   const [template, setTemplate] = useState<LookupItem | null>(null);
   const [shortages, setShortages] = useState("");
+  const [readyComment, setReadyComment] = useState("");
   const command = (name: string, body: object = {}) =>
     action.run(async () =>
       onChange(
@@ -139,6 +313,9 @@ function PreparationContent({
         </Alert>
       )}
       {!planning && data.status === 'draft' && <Alert severity="info" sx={{ mb: 2 }}>Lista jest jeszcze planowana. Organizator musi ją zatwierdzić przed rozpoczęciem kompletowania.</Alert>}
+      {!planning && can("prepare_event_catering") && !closed && data.status !== "draft" && data.status !== "loaded" && (
+        <ExecutionAmendments list={data} path={path} onChange={onChange} />
+      )}
       {planning && plan && data.status !== 'draft' && data.status !== 'loaded' && (
         <Alert severity="info" sx={{ mb: 2 }}>
           Po zatwierdzeniu nadal możesz dopisać lub zmienić pozycje. Taka zmiana cofnie listę do szkicu i będzie wymagać ponownego zatwierdzenia.
@@ -381,10 +558,35 @@ function PreparationContent({
         {!planning && can("prepare_event_catering") &&
           !closed &&
           ["approved", "in_preparation"].includes(data.status) && (
-            <Button disabled={action.busy} onClick={() => command("ready")}>
-              Potwierdź: złożyłem całą listę
-            </Button>
+            <Stack gap={1} sx={{ minWidth: 280, flex: 1 }}>
+              <TextField
+                label="Komentarz do potwierdzenia (opcjonalnie)"
+                value={readyComment}
+                onChange={(e) => setReadyComment(e.target.value)}
+                disabled={action.busy}
+                multiline
+                minRows={2}
+                fullWidth
+                helperText="Po potwierdzeniu powiadomienie idzie do koordynatora oraz kierowcy/logistyki (nie do kompletującego)."
+              />
+              <Button
+                disabled={action.busy}
+                onClick={() =>
+                  command("ready", {
+                    comment: readyComment.trim() ? readyComment.trim() : null,
+                  })
+                }
+              >
+                Potwierdź: złożyłem całą listę
+              </Button>
+            </Stack>
           )}
+        {!planning && data.status === "ready_for_loading" ? (
+          <Alert severity="success" sx={{ width: "100%" }}>
+            Lista potwierdzona jako złożona — gotowa do załadunku.
+            {data.readyComment ? ` Komentarz: ${data.readyComment}` : ""}
+          </Alert>
+        ) : null}
         {!planning && can("dispatch_event_catering") &&
           !closed &&
           ["ready_for_loading", "in_preparation", "approved"].includes(
@@ -439,9 +641,14 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
   return <>
     <TableRow>
       <TableCell>
-        <Typography fontWeight={600}>{line.name}</Typography>
-        <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'} - {line.code}</Typography>
-        {line.instructions && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{line.instructions}</Typography>}
+        <Stack direction="row" gap={1.5} alignItems="flex-start" justifyContent="space-between">
+          <Box sx={{ minWidth: 0 }}>
+            <Typography fontWeight={600}>{line.name}</Typography>
+            <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'} - {line.code}</Typography>
+            {line.instructions && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{line.instructions}</Typography>}
+          </Box>
+          <PreparationLinePhoto eventUuid={list.eventUuid} line={line} />
+        </Stack>
       </TableCell>
       <TableCell sx={{ whiteSpace: 'nowrap' }}>{quantityText(line.requiredQuantity)} {unitLabels[line.unit]}</TableCell>
       <TableCell>{line.sourceLocation || 'Nie wskazano miejsca'}</TableCell>
@@ -499,6 +706,79 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
   </>;
 }
 
+function ExecutionAmendments({
+  list,
+  path,
+  onChange,
+}: {
+  list: Preparation;
+  path: string;
+  onChange: (d: Preparation) => void;
+}) {
+  const api = useApi();
+  const action = useAction();
+  const [item, setItem] = useState<LookupItem | null>(null);
+  const [quantity, setQuantity] = useState("1");
+  const [comment, setComment] = useState("");
+  return (
+    <Alert severity="info" sx={{ mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom>
+        Korekta listy podczas kompletowania
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 1 }}>
+        Możesz dodać pozycję bez uprawnień planowania — wymagany jest komentarz (min. 10 znaków).
+        Lista nie wraca do szkicu.
+      </Typography>
+      <Stack direction={{ xs: "column", md: "row" }} gap={1} alignItems="flex-start">
+        <PreparationLookup value={item} onChange={setItem} disabled={action.busy} />
+        <TextField
+          size="small"
+          label={item?.kind === "equipment" ? "Ilość (szt.)" : "Ilość"}
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          disabled={action.busy}
+          sx={{ width: 120 }}
+        />
+        <TextField
+          size="small"
+          label="Komentarz"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          disabled={action.busy}
+          sx={{ minWidth: 220, flex: 1 }}
+        />
+        <Button
+          variant="contained"
+          disabled={action.busy || !item || comment.trim().length < 10}
+          onClick={() =>
+            action.run(async () => {
+              if (!item) return;
+                  onChange(
+                await api<Preparation>(path + "/amendments", "POST", {
+                  version: list.version,
+                  action: "add",
+                  kind: item.kind === "equipment" ? "equipment" : "consumable",
+                  itemUuid: item.itemUuid || item.uuid,
+                  comment: comment.trim(),
+                  ...(item.kind === "equipment"
+                    ? { equipmentQuantity: Number(quantity) }
+                    : { requiredQuantity: quantity }),
+                }),
+              );
+              setItem(null);
+              setQuantity("1");
+              setComment("");
+            }, "Dodano pozycję do listy.")
+          }
+          sx={{ bgcolor: "#34495e" }}
+        >
+          Dodaj z komentarzem
+        </Button>
+      </Stack>
+    </Alert>
+  );
+}
+
 function PreparationRow({
   line,
   list,
@@ -518,20 +798,45 @@ function PreparationRow({
   const [prepared, setPrepared] = useState(String(Number(line.preparedQuantity)));
   const [loaded, setLoaded] = useState(String(Number(line.loadedQuantity)));
   const [reason, setReason] = useState("");
+  const [requiredQty, setRequiredQty] = useState(String(Number(line.requiredQuantity)));
+  const [amendComment, setAmendComment] = useState("");
   const path = "/events/" + list.eventUuid + "/preparation";
   const required = Number(line.requiredQuantity);
   const checked = Number(line.preparedQuantity) >= required && required > 0;
+  useEffect(() => {
+    setPrepared(String(Number(line.preparedQuantity)));
+    setLoaded(String(Number(line.loadedQuantity)));
+    setRequiredQty(String(Number(line.requiredQuantity)));
+  }, [line.uuid, line.preparedQuantity, line.loadedQuantity, line.requiredQuantity]);
   const togglePrepared = (next: boolean) => {
     if (!prepare || closed || list.status === "draft") return;
-    action.run(async () =>
-      onChange(
-        await api<Preparation>(path + "/lines/" + line.uuid + "/progress", "PUT", {
-          version: list.version,
-          preparedQuantity: next ? String(required) : "0",
-          correctionReason: next ? null : "Odznaczono pozycję na liście kompletacji",
-        }),
+    const preparedQuantity = next ? String(required) : "0";
+    const previous = list;
+    onChange({
+      ...list,
+      lines: list.lines.map((entry) =>
+        entry.uuid === line.uuid
+          ? {
+              ...entry,
+              preparedQuantity,
+              missingToPrepare: String(Math.max(0, required - Number(preparedQuantity))),
+            }
+          : entry,
       ),
-    );
+    });
+    void action
+      .run(async () =>
+        onChange(
+          await api<Preparation>(path + "/lines/" + line.uuid + "/progress", "PUT", {
+            version: list.version,
+            preparedQuantity,
+            correctionReason: next ? null : "Odznaczono pozycję na liście kompletacji",
+          }),
+        ),
+      )
+      .then((ok) => {
+        if (!ok) onChange(previous);
+      });
   };
   return (
     <TableRow>
@@ -546,8 +851,19 @@ function PreparationRow({
               sx={{ mt: -0.5 }}
             />
           ) : null}
-          <Box>
-            <Typography fontWeight={600} sx={{ textDecoration: checked ? "line-through" : "none" }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              key={checked ? "done" : "todo"}
+              fontWeight={600}
+              component="span"
+              sx={{
+                display: "inline",
+                color: checked ? "text.secondary" : "text.primary",
+                textDecoration: checked ? "line-through" : "none",
+                textDecorationThickness: checked ? "1px" : undefined,
+                textDecorationColor: checked ? "rgba(100,116,139,0.85)" : undefined,
+              }}
+            >
               {line.name}
             </Typography>
             <Typography variant="body2">
@@ -557,6 +873,7 @@ function PreparationRow({
             {line.sourceLocation && <Typography variant="body2">Skąd pobrać: {line.sourceLocation}</Typography>}
             {line.instructions && <Typography variant="body2">{line.instructions}</Typography>}
           </Box>
+          <PreparationLinePhoto eventUuid={list.eventUuid} line={line} />
         </Stack>
       </TableCell>
       <TableCell>
@@ -630,15 +947,79 @@ function PreparationRow({
               )}
               <TextField
                 size="small"
-                label="Komentarz / powód korekty"
+                label="Komentarz (wymagany przy zmianie ilości)"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
+                helperText="Min. 10 znaków, oprócz odhaczenia pełnej ilości."
               />
               <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" type="submit" disabled={action.busy}>
                 Zapisz ilości
               </Button>
             </Stack>
           </form>
+        )}
+        {!closed && list.status !== "draft" && prepare && (
+          <Stack gap={1} mt={2}>
+            <TextField
+              size="small"
+              label="Nowa ilość do zabrania"
+              value={requiredQty}
+              onChange={(e) => setRequiredQty(e.target.value)}
+            />
+            <TextField
+              size="small"
+              label="Komentarz do zmiany planu pozycji"
+              value={amendComment}
+              onChange={(e) => setAmendComment(e.target.value)}
+              helperText="Min. 10 znaków"
+            />
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={action.busy || amendComment.trim().length < 10}
+                onClick={() =>
+                  action.run(async () =>
+                    onChange(
+                      await api<Preparation>(path + "/amendments", "POST", {
+                        version: list.version,
+                        action: "set_required",
+                        kind: line.kind,
+                        itemUuid: line.itemUuid,
+                        comment: amendComment.trim(),
+                        ...(line.kind === "equipment"
+                          ? { equipmentQuantity: Number(requiredQty) }
+                          : { requiredQuantity: requiredQty }),
+                      }),
+                    ),
+                  )
+                }
+              >
+                Zmień ilość do zabrania
+              </Button>
+              <Button
+                size="small"
+                color="error"
+                variant="outlined"
+                disabled={action.busy || amendComment.trim().length < 10}
+                onClick={() =>
+                  action.run(async () =>
+                    onChange(
+                      await api<Preparation>(path + "/amendments", "POST", {
+                        version: list.version,
+                        action: "remove",
+                        kind: line.kind,
+                        itemUuid: line.itemUuid,
+                        comment: amendComment.trim(),
+                      }),
+                    ),
+                  )
+                }
+              >
+                Usuń z listy
+              </Button>
+            </Stack>
+          </Stack>
         )}
       </TableCell>
     </TableRow>
