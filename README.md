@@ -37,3 +37,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 
 Obsługa cateringu, baza miejsc i ekrany Kuchni: [dokumentacja](docs/catering.md).
+
+## Logowanie nowego pracownika
+
+Po utworzeniu konta pracownika (formularz lub import):
+
+- **Login:** pierwszy numer telefonu pracownika (znormalizowany) — nie e-mail.
+- **Hasło startowe:** PESEL (także fikcyjny, jeśli tak oznaczono).
+- Przy pierwszym logowaniu system wymaga **zmiany hasła**.
+
+Szczegóły po stronie API: [event-cater-backend/README.md](../event-cater-backend/README.md).
