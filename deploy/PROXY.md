@@ -15,6 +15,23 @@ EventCater nasłuchuje lokalnie:
 docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
 ```
 
+### Caddy (`caddy_symfony` / obraz `caddy:2-alpine`) — ten droplet
+
+Na tym serwerze edge to **Caddy** z stacka Symfony/aestio (`caddy_symfony` na `:80`/`:443`).
+
+```bash
+bash /home/marcin/apps/eventcater/frontend/deploy/scripts/attach-caddy-eventcater.sh
+```
+
+Skrypt pokaże mount Caddyfile na hoście oraz aktualną treść. Dopisz fragment z `caddy/eventcater.pl.caddy` (z właściwym IP bramy Dockera), potem:
+
+```bash
+docker exec caddy_symfony caddy reload --config /etc/caddy/Caddyfile
+# albo: docker restart caddy_symfony
+```
+
+Caddy sam ogarnie HTTPS (Let's Encrypt), gdy DNS `eventcater.pl` wskazuje na droplet.
+
 ### Nginx Proxy Manager (obraz `jc21/nginx-proxy-manager` lub podobny)
 
 Panel zwykle na `http://IP_DROPLETA:81` albo `:8088`.
