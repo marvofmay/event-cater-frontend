@@ -1,13 +1,16 @@
-# Fragment do dopisania w Caddyfile używanym przez kontener caddy_symfony.
-# Frontend i Mercure wiszą na hoście (loopback) — z Caddy w Dockerze celuj w bramę:
-#   zwykle 172.17.0.1 (sprawdź: docker network inspect bridge --format '{{(index .IPAM.Config 0).Gateway}}')
+# Dopisz do Caddyfile stacka aestio (kontener caddy_symfony).
+# Wzorzec jak demolightcms: osobny host → HTTP-01 LE (nie wpada w catch-all :443 on_demand).
+# Upstream: porty hosta EventCater przez bramę bridge (zwykle 172.17.0.1).
+
+http://eventcater.pl, http://www.eventcater.pl {
+	redir https://{host}{uri} permanent
+}
 
 eventcater.pl, www.eventcater.pl {
-	encode gzip
+	encode gzip zstd
 
 	handle /.well-known/mercure* {
 		reverse_proxy 172.17.0.1:3011 {
-			# SSE — bez buforowania odpowiedzi
 			flush_interval -1
 		}
 	}
