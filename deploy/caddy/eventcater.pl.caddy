@@ -1,10 +1,6 @@
-# Dopisz do Caddyfile stacka aestio (kontener caddy_symfony).
-# Wzorzec jak demolightcms: osobny host → HTTP-01 LE (nie wpada w catch-all :443 on_demand).
-# Upstream: porty hosta EventCater przez bramę bridge (zwykle 172.17.0.1).
-
-http://eventcater.pl, http://www.eventcater.pl {
-	redir https://{host}{uri} permanent
-}
+# Dopisz do /home/marcin/apps/aestio/docker/caddy/Caddyfile (kontener caddy_symfony).
+# Bez osobnego bloku http://… — Caddy sam robi HTTP→HTTPS i ACME HTTP-01.
+# Jeśli www.eventcater.pl nie ma jeszcze rekordu A, zostaw tylko eventcater.pl.
 
 eventcater.pl, www.eventcater.pl {
 	encode gzip zstd
