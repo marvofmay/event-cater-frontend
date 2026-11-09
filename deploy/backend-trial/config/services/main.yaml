@@ -29,7 +29,7 @@ services:
     class: Gedmo\Mapping\Driver\AttributeReader
 
   gedmo.listener.softdeleteable:
-    class: Gedmo\SoftDeleteable\Filter\SoftDeleteableListener
+    class: Gedmo\SoftDeleteable\SoftDeleteableListener
     tags:
       - { name: doctrine.event_listener, event: 'onFlush' }
       - { name: doctrine.event_listener, event: 'loadClassMetadata' }
