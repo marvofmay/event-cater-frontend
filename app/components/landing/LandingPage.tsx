@@ -115,8 +115,6 @@ const LandingPage = () => {
           <h2>Masz już konto firmy?</h2>
           <p>
             Klienci EventCater logują się kodem firmy na stronie logowania.
-            Panel SaaS służy do zarządzania tenantami - nie zastępuje logowania
-            pracowników.
           </p>
           <Link className="ec-btn ec-btn-primary" href="/login">
             Zaloguj się

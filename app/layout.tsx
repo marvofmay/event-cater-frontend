@@ -27,9 +27,17 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-    title: "EventCater — system dla cateringu wydarzeń",
+    title: "EventCater - system dla cateringu wydarzeń",
     description:
-        "SaaS dla firm cateringowych obsługujących wydarzenia na miejscu i w terenie: wydarzenia, kuchnia, kompletacja i zespół w jednym systemie.",
+        "System dla firm cateringowych obsługujących wydarzenia na miejscu i w terenie: wydarzenia, kuchnia, kompletacja i zespół w jednym systemie.",
+    icons: {
+        icon: [
+            { url: "/favicon.ico" },
+            { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+            { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        ],
+        apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    },
 };
 
 const RootLayout = ({ children, }: Readonly<{ children: React.ReactNode; }>) => {
