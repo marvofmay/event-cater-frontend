@@ -5,10 +5,11 @@
 eventcater.pl, www.eventcater.pl {
 	encode gzip
 
-	handle_path /.well-known/mercure* {
-		reverse_proxy 172.17.0.1:3011
-		# SSE — bez buforowania odpowiedzi
-		flush_interval -1
+	handle /.well-known/mercure* {
+		reverse_proxy 172.17.0.1:3011 {
+			# SSE — bez buforowania odpowiedzi
+			flush_interval -1
+		}
 	}
 
 	handle {
