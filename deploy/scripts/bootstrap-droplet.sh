@@ -128,10 +128,12 @@ if [[ ! -f backend/config/jwt/private.pem ]]; then
   chmod 644 backend/config/jwt/public.pem
 fi
 
-# Remove committed dev .env from backend so container uses compose env
-if [[ -f backend/.env ]]; then
-  mv backend/.env "backend/.env.dev-backup-$(date +%Y%m%d%H%M%S)" || true
+# Keep a backend/.env for image builds; runtime mounts APP_ROOT/.env into the container.
+if [[ -f backend/.env ]] && [[ ! -f backend/.env.dev-backup ]]; then
+  cp backend/.env "backend/.env.dev-backup-$(date +%Y%m%d%H%M%S)" || true
 fi
+cp -f .env backend/.env
+chmod 600 backend/.env
 
 echo "==> Building and starting containers (this may take several minutes)"
 # Build API image first so workers (same image, pull_policy: never) do not hit Docker Hub.

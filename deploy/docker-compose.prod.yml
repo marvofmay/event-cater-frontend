@@ -122,6 +122,8 @@ services:
       - backend-uploads:/var/www/html/public/upload
       - backend-storage:/var/www/html/storage
       - ./backend/config/jwt:/var/www/html/config/jwt:ro
+      # Symfony Dotenv always opens .env even when Compose injects the same vars.
+      - ./.env:/var/www/html/.env:ro
     depends_on:
       service-company-db:
         condition: service_healthy
@@ -201,6 +203,7 @@ services:
       - backend-uploads:/var/www/html/public/upload
       - backend-storage:/var/www/html/storage
       - ./backend/config/jwt:/var/www/html/config/jwt:ro
+      - ./.env:/var/www/html/.env:ro
     depends_on:
       - service-company
       - rabbitmq
@@ -236,6 +239,7 @@ services:
       - backend-uploads:/var/www/html/public/upload
       - backend-storage:/var/www/html/storage
       - ./backend/config/jwt:/var/www/html/config/jwt:ro
+      - ./.env:/var/www/html/.env:ro
     depends_on:
       - service-company
     networks:
