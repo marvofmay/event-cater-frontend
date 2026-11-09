@@ -10,6 +10,7 @@ import { colors } from "@mui/material";
 import { APP_NAME } from "../../utils/constans";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/context/userContext";
+import { isPublicMarketingPath } from "@/app/lib/publicMarketing";
 
 interface ContentProps {
   children: ReactNode;
@@ -20,13 +21,13 @@ const Content: React.FC<ContentProps> = ({ children }) => {
   const pathname = usePathname();
   const { isAuthenticated, loading } = useUser();
   const pathParts = pathname ? pathname.split("/").filter(Boolean) : [];
-  const isMarketingHome = pathname === "/" && !isAuthenticated;
+  const marketing = isPublicMarketingPath(pathname) && !isAuthenticated;
 
-  if (loading && pathname === "/") {
+  if (loading && isPublicMarketingPath(pathname)) {
     return <>{children}</>;
   }
 
-  if (isMarketingHome) {
+  if (marketing) {
     return <>{children}</>;
   }
 

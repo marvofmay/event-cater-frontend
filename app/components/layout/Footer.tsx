@@ -6,13 +6,14 @@ import "../../i18n/i18n";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "../../utils/constans";
 import { useUser } from "@/app/context/userContext";
+import { isPublicMarketingPath } from "@/app/lib/publicMarketing";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const pathname = usePathname();
   const { isAuthenticated } = useUser();
 
-  if (!isAuthenticated && pathname === "/") {
+  if (!isAuthenticated && isPublicMarketingPath(pathname)) {
     return null;
   }
 

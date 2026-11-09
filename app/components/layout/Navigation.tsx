@@ -16,6 +16,7 @@ import SettingsListNavigation from "../settings/navigation/List";
 import UserProfileNavigation from "../user/UserProfileNavigation";
 import { SERVICE_COMPANY_URL, SERVICE_MERCURE_URL } from "@/app/utils/constans";
 import { useUnreadMessagesCount } from '@/app/hooks/messages/useUnreadMessagesCount';
+import { isPublicMarketingPath } from "@/app/lib/publicMarketing";
 
 const navLinks = [
   { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
@@ -101,8 +102,8 @@ const Navigation: React.FC = () => {
     return null;
   }
 
-  // Public marketing homepage has its own composition; hide the app chrome.
-  if (!isAuthenticated && pathname === "/") {
+  // Public marketing pages have their own composition; hide the app chrome.
+  if (!isAuthenticated && isPublicMarketingPath(pathname)) {
     return null;
   }
 
