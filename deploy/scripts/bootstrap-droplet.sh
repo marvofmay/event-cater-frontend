@@ -28,6 +28,21 @@ if [[ -z "${FRONTEND_REF:-}" ]]; then
   fi
 fi
 
+# Read KEY=value from .env without bash-evaluating the file (regexes/URLs break `source`).
+env_get() {
+  local key="$1"
+  local line
+  line="$(grep -E "^${key}=" .env | tail -n1 || true)"
+  [[ -n "${line}" ]] || return 1
+  line="${line#*=}"
+  if [[ "${line}" =~ ^\".*\"$ ]]; then
+    line="${line:1:${#line}-2}"
+  elif [[ "${line}" =~ ^\'.*\'$ ]]; then
+    line="${line:1:${#line}-2}"
+  fi
+  printf '%s' "${line}"
+}
+
 echo "==> EventCater bootstrap → ${APP_ROOT}"
 echo "==> Frontend ref: ${FRONTEND_REF}"
 
@@ -80,25 +95,30 @@ if [[ ! -f .env ]]; then
   # Keep DATABASE_URL / MESSENGER DSN in sync with generated passwords
   sed -i \
     -e "s|MYSQL_PASSWORD=.*|MYSQL_PASSWORD=${MYSQL_PASSWORD}|" \
-    -e "s|DATABASE_URL=.*|DATABASE_URL=mysql://eventcater:${MYSQL_PASSWORD}@service-company-db:3306/service_company?serverVersion=9.3.0\&charset=utf8mb4|" \
+    -e "s|DATABASE_URL=.*|DATABASE_URL=\"mysql://eventcater:${MYSQL_PASSWORD}@service-company-db:3306/service_company?serverVersion=9.3.0\&charset=utf8mb4\"|" \
     -e "s|RABBITMQ_DEFAULT_PASS=.*|RABBITMQ_DEFAULT_PASS=${RABBIT_PASS}|" \
-    -e "s|MESSENGER_TRANSPORT_DSN=.*|MESSENGER_TRANSPORT_DSN=amqp://eventcater:${RABBIT_PASS}@rabbitmq:5672/%2f|" \
+    -e "s|MESSENGER_TRANSPORT_DSN=.*|MESSENGER_TRANSPORT_DSN=\"amqp://eventcater:${RABBIT_PASS}@rabbitmq:5672/%2f\"|" \
     .env
 
   chmod 600 .env
   echo "==> Generated ${APP_ROOT}/.env (secrets filled). Review MAILER_DSN before go-live."
 else
   echo "==> Keeping existing ${APP_ROOT}/.env"
+  # Repair unquoted CORS regex from earlier bootstrap runs (breaks bash `source`, harmless for Compose when quoted)
+  if grep -qE "^CORS_ALLOW_ORIGIN=\^" .env; then
+    sed -i "s|^CORS_ALLOW_ORIGIN=.*|CORS_ALLOW_ORIGIN='^https://(www\\.)?eventcater\\.pl\$'|" .env
+    echo "==> Quoted CORS_ALLOW_ORIGIN in existing .env"
+  fi
 fi
 
 mkdir -p backend/config/jwt
 if [[ ! -f backend/config/jwt/private.pem ]]; then
   echo "==> Generating JWT key pair"
-  # Passphrase is read from .env
-  # shellcheck disable=SC1091
-  set -a
-  source .env
-  set +a
+  JWT_PASSPHRASE="$(env_get JWT_PASSPHRASE)"
+  if [[ -z "${JWT_PASSPHRASE}" ]]; then
+    echo "!! Brak JWT_PASSPHRASE w .env" >&2
+    exit 1
+  fi
   # Lexik JWT: encrypted private key + matching passphrase from .env
   openssl genpkey -out backend/config/jwt/private.pem -aes256 -algorithm rsa \
     -pkeyopt rsa_keygen_bits:4096 -pass "pass:${JWT_PASSPHRASE}"
@@ -129,10 +149,8 @@ docker compose exec -T service-company php bin/console doctrine:migrations:migra
 docker compose exec -T service-company php bin/console app:initialize-system-default-data --no-interaction || true
 
 echo "==> Applying SaaS provisioning grants for tenant databases"
-# shellcheck disable=SC1091
-set -a
-source .env
-set +a
+MYSQL_ROOT_PASSWORD="$(env_get MYSQL_ROOT_PASSWORD)"
+MYSQL_USER="$(env_get MYSQL_USER)"
 docker compose exec -T service-company-db mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e \
   "GRANT ALL PRIVILEGES ON \`ec\\_tenant\\_%\`.* TO '${MYSQL_USER}'@'%'; FLUSH PRIVILEGES;"
 
