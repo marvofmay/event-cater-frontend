@@ -18,6 +18,10 @@ const sans = localFont({
   weight: "100 900",
 });
 
+const NAME_MIN = 2;
+const NAME_MAX = 200;
+const EMAIL_MAX = 100;
+
 type TrialResult = {
   name: string;
   slug: string;
@@ -59,6 +63,19 @@ const TrialPage = () => {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (
+      trimmedName.length < NAME_MIN ||
+      trimmedName.length > NAME_MAX
+    ) {
+      setError(`Nazwa firmy: ${NAME_MIN}-${NAME_MAX} znaków.`);
+      return;
+    }
+    if (!trimmedEmail || trimmedEmail.length > EMAIL_MAX) {
+      setError(`E-mail administratora: max ${EMAIL_MAX} znaków.`);
+      return;
+    }
     const policy = passwordPolicyErrors(password, confirmation);
     if (policy.length) {
       setError(policy.join(" "));
@@ -66,7 +83,7 @@ const TrialPage = () => {
     }
     if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(slug)) {
       setError(
-        "Kod firmy: 2–63 znaki, małe litery, cyfry i myślniki (bez spacji).",
+        "Kod firmy: 2-63 znaki, małe litery, cyfry i myślniki (bez spacji).",
       );
       return;
     }
@@ -76,9 +93,9 @@ const TrialPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
+          name: trimmedName,
           slug,
-          ownerEmail: email.trim(),
+          ownerEmail: trimmedEmail,
           ownerPassword: password,
           ownerPasswordConfirmation: confirmation,
         }),
@@ -97,7 +114,8 @@ const TrialPage = () => {
         email: data.email,
         password: data.password,
         trialEndsAt: data.trialEndsAt,
-        loginUrl: data.loginUrl || `/login?tenant=${encodeURIComponent(data.slug)}`,
+        loginUrl:
+          data.loginUrl || `/login?tenant=${encodeURIComponent(data.slug)}`,
       });
     } catch (e) {
       setError((e as Error).message);
@@ -115,8 +133,9 @@ const TrialPage = () => {
         <h1>30-dniowy trial</h1>
         <p className="ec-legal-meta">
           Pełny dostęp do systemu dla Twojej firmy cateringowej. Po 30 dniach
-          konto zostaje zawieszone, a dane pozostają zachowane — po opłaceniu
-          abonamentu przywracamy dostęp.
+          konto zostaje zawieszone, a dane pozostają zachowane - po opłaceniu
+          abonamentu przywracamy dostęp. Jeśli abonament nie zostanie opłacony,
+          dane usuwamy 7 dni po zakończeniu triala.
         </p>
 
         {!result ? (
@@ -128,8 +147,8 @@ const TrialPage = () => {
                 Przypomnienia e-mail 5 dni, 3 dni i 24 h przed końcem triala
               </li>
               <li>
-                Po wygaśnięciu: zawieszenie bez usuwania danych; kontakt:{" "}
-                <a href="mailto:kontakt@eventcater.pl">kontakt@eventcater.pl</a>
+                Po wygaśnięciu: zawieszenie bez usuwania danych - dane zostaną
+                usunięte po 7 dniach od zakończenia triala
               </li>
             </ul>
 
@@ -144,15 +163,19 @@ const TrialPage = () => {
                 <input
                   name="name"
                   required
-                  maxLength={200}
+                  minLength={NAME_MIN}
+                  maxLength={NAME_MAX}
                   value={name}
                   onChange={(e) => {
-                    const next = e.target.value;
+                    const next = e.target.value.slice(0, NAME_MAX);
                     setName(next);
                     if (!slugTouched) setSlug(slugify(next));
                   }}
                   autoComplete="organization"
                 />
+                <span className="ec-field-hint">
+                  {NAME_MIN}-{NAME_MAX} znaków ({name.trim().length}/{NAME_MAX})
+                </span>
               </label>
               <label>
                 Kod firmy (do logowania)
@@ -164,12 +187,12 @@ const TrialPage = () => {
                   value={slug}
                   onChange={(e) => {
                     setSlugTouched(true);
-                    setSlug(e.target.value.toLowerCase());
+                    setSlug(e.target.value.toLowerCase().slice(0, 63));
                   }}
                   autoComplete="off"
                 />
                 <span className="ec-field-hint">
-                  2–63 znaki: a–z, cyfry, myślnik. Przykład: mapa-smakow
+                  2-63 znaki: a-z, cyfry, myślnik. Przykład: mapa-smakow
                 </span>
               </label>
               <label>
@@ -178,14 +201,14 @@ const TrialPage = () => {
                   name="ownerEmail"
                   type="email"
                   required
-                  maxLength={100}
+                  maxLength={EMAIL_MAX}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.slice(0, EMAIL_MAX))}
                   autoComplete="email"
                 />
                 <span className="ec-field-hint">
-                  Na ten adres wyślemy login, hasło i przypomnienia o końcu
-                  triala.
+                  Max {EMAIL_MAX} znaków ({email.trim().length}/{EMAIL_MAX}). Na
+                  ten adres wyślemy login, hasło i przypomnienia o końcu triala.
                 </span>
               </label>
               <label>
@@ -214,7 +237,7 @@ const TrialPage = () => {
                   autoComplete="new-password"
                 />
                 <span className="ec-field-hint">
-                  8–64 znaków, duża i mała litera, cyfra oraz znak specjalny.
+                  8-64 znaków, duża i mała litera, cyfra oraz znak specjalny.
                 </span>
               </label>
               {livePasswordErrors.length > 0 && (
@@ -229,13 +252,11 @@ const TrialPage = () => {
                 type="submit"
                 disabled={busy || livePasswordErrors.length > 0}
               >
-                {busy ? "Zakładam konto…" : "Załóż 30-dniowy trial"}
+                {busy ? "Zakładam konto..." : "Załóż 30-dniowy trial"}
               </button>
               <p className="ec-trial-legal">
                 Zakładając trial akceptujesz{" "}
                 <Link href="/polityka-prywatnosci">politykę prywatności</Link>.
-                O nowym trialu powiadomimy też{" "}
-                <a href="mailto:kontakt@eventcater.pl">kontakt@eventcater.pl</a>.
               </p>
             </form>
           </>

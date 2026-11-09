@@ -50,7 +50,7 @@ const LandingPage = () => {
             <Link className="ec-btn ec-btn-ghost" href="/login">
               Przejdź do logowania
             </Link>
-            <Link className="ec-btn ec-btn-primary" href="/trial">
+            <Link className="ec-btn ec-btn-ghost" href="/trial">
               30-dniowy trial
             </Link>
           </div>
@@ -118,11 +118,12 @@ const LandingPage = () => {
           <h2>Wypróbuj albo zaloguj się</h2>
           <p>
             Nowi klienci mogą uruchomić 30-dniowy trial. Po jego zakończeniu
-            konto zostaje zawieszone, a dane firmy pozostają zachowane.
+            konto zostaje zawieszone, a dane firmy pozostają zachowane przez
+            7 dni - potem są usuwane, jeśli abonament nie zostanie opłacony.
             Istniejący klienci logują się kodem firmy.
           </p>
           <div className="ec-cta">
-            <Link className="ec-btn ec-btn-primary" href="/trial">
+            <Link className="ec-btn ec-btn-ghost" href="/trial">
               30-dniowy trial
             </Link>
             <Link className="ec-btn ec-btn-ghost" href="/login">

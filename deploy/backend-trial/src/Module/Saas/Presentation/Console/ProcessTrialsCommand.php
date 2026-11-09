@@ -12,10 +12,11 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'app:saas:process-trials', description: 'Send trial ending reminders and suspend expired trial tenants (data kept).')]
+#[AsCommand(name: 'app:saas:process-trials', description: 'Trial reminders, suspend after end, purge data 7 days later.')]
 final class ProcessTrialsCommand extends Command
 {
     private const SYSTEM_ACTOR = '00000000-0000-4000-8000-000000000099';
+    private const PURGE_AFTER_DAYS = 7;
 
     public function __construct(private ControlPlane $control, private TrialMailer $mailer)
     {
@@ -40,6 +41,7 @@ final class ProcessTrialsCommand extends Command
         $now = new \DateTimeImmutable('now');
         $this->sendReminders($now, $output);
         $this->suspendExpired($now, $output);
+        $this->purgeExpired($now, $output);
 
         return Command::SUCCESS;
     }
@@ -79,7 +81,7 @@ final class ProcessTrialsCommand extends Command
                         ],
                         ['uuid' => $row['uuid']]
                     );
-                    $output->writeln(sprintf('Reminder %s → %s (%s)', $window['label'], $row['slug'], $row['contact_email']));
+                    $output->writeln(sprintf('Reminder %s -> %s (%s)', $window['label'], $row['slug'], $row['contact_email']));
                 } catch (\Throwable $e) {
                     $output->writeln(sprintf('Reminder failed for %s: %s', $row['slug'], $e->getMessage()));
                 }
@@ -112,8 +114,8 @@ final class ProcessTrialsCommand extends Command
                     'uuid' => Uuid::uuid4()->toString(),
                     'tenant_uuid' => $tenant['uuid'],
                     'actor_uuid' => self::SYSTEM_ACTOR,
-                    'action' => 'active → suspended',
-                    'reason' => 'Automatyczne zawieszenie po zakończeniu 30-dniowego triala. Dane zachowane.',
+                    'action' => 'active -> suspended',
+                    'reason' => 'Automatyczne zawieszenie po zakończeniu 30-dniowego triala. Dane zachowane przez 7 dni.',
                     'created_at' => $now->format('Y-m-d H:i:s'),
                 ]);
             });
@@ -122,6 +124,61 @@ final class ProcessTrialsCommand extends Command
             } catch (\Throwable) {
             }
             $output->writeln('Suspended trial: '.$row['slug']);
+        }
+    }
+
+    /** Drop tenant DB and mark deleted 7 days after trial_ends_at (only unpaid trials). */
+    private function purgeExpired(\DateTimeImmutable $now, OutputInterface $output): void
+    {
+        $cutoff = $now->modify('-'.self::PURGE_AFTER_DAYS.' days')->format('Y-m-d H:i:s');
+        $rows = $this->control->db()->fetchAllAssociative(
+            "SELECT * FROM saas_tenant
+             WHERE plan='trial' AND status='suspended'
+               AND trial_ends_at IS NOT NULL AND trial_ends_at <= ?
+               AND slug<>'default'",
+            [$cutoff]
+        );
+
+        foreach ($rows as $row) {
+            $database = (string) ($row['database_name'] ?? '');
+            if (!preg_match('/^ec_tenant_[a-f0-9]{32}$/D', $database)) {
+                $output->writeln('Skip purge (invalid db): '.$row['slug']);
+                continue;
+            }
+
+            try {
+                $platform = $this->control->db()->getDatabasePlatform();
+                $this->control->db()->executeStatement(
+                    'DROP DATABASE IF EXISTS '.$platform->quoteSingleIdentifier($database)
+                );
+            } catch (\Throwable $e) {
+                $output->writeln(sprintf('DROP failed for %s: %s', $row['slug'], $e->getMessage()));
+                continue;
+            }
+
+            $freedSlug = 'deleted-'.substr(str_replace('-', '', $row['uuid']), 0, 16);
+            $this->control->db()->transactional(function () use ($row, $now, $freedSlug): void {
+                $tenant = $this->control->db()->fetchAssociative('SELECT * FROM saas_tenant WHERE uuid=? FOR UPDATE', [$row['uuid']]);
+                if (!$tenant || ($tenant['plan'] ?? '') !== 'trial' || $tenant['status'] !== 'suspended') {
+                    return;
+                }
+                $this->control->db()->update('saas_tenant', [
+                    'status' => 'deleted',
+                    'slug' => $freedSlug,
+                    'provisioning' => 'failed',
+                    'version' => (int) $tenant['version'] + 1,
+                    'updated_at' => $now->format('Y-m-d H:i:s'),
+                ], ['uuid' => $tenant['uuid']]);
+                $this->control->db()->insert('saas_audit', [
+                    'uuid' => Uuid::uuid4()->toString(),
+                    'tenant_uuid' => $tenant['uuid'],
+                    'actor_uuid' => self::SYSTEM_ACTOR,
+                    'action' => 'suspended -> deleted',
+                    'reason' => 'Automatyczne usunięcie danych triala 7 dni po zakończeniu. Baza usunięta.',
+                    'created_at' => $now->format('Y-m-d H:i:s'),
+                ]);
+            });
+            $output->writeln('Purged trial data: '.$row['slug'].' (db '.$database.')');
         }
     }
 }

@@ -85,7 +85,7 @@ final readonly class SaasService
         $email = strtolower(trim((string) ($input['ownerEmail'] ?? '')));
         $password = (string) ($input['ownerPassword'] ?? '');
         if ('' === $name || mb_strlen($name) > 200 || !preg_match('/^[a-z0-9][a-z0-9-]{1,62}$/D', $slug) || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 100 || strlen($password) < 12 || strlen($password) > 72) {
-            throw new BadRequestHttpException('Podaj nazwę, kod firmy (2–63 znaki: a-z, cyfry, myślnik), e-mail i hasło administratora (12–72 znaki).');
+            throw new BadRequestHttpException('Podaj nazwę, kod firmy (2-63 znaki: a-z, cyfry, myślnik), e-mail i hasło administratora (12-72 znaki).');
         }
         $uuid = Uuid::uuid4()->toString();
         $now = date('Y-m-d H:i:s');
@@ -122,8 +122,8 @@ final readonly class SaasService
         $password = (string) ($input['ownerPassword'] ?? '');
         $confirmation = (string) ($input['ownerPasswordConfirmation'] ?? '');
 
-        if ('' === $name || mb_strlen($name) > 200 || !preg_match('/^[a-z0-9][a-z0-9-]{1,62}$/D', $slug) || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 100) {
-            throw new BadRequestHttpException('Podaj nazwę firmy, kod firmy (2-63 znaki: a-z, cyfry, myślnik) oraz poprawny e-mail.');
+        if (mb_strlen($name) < 2 || mb_strlen($name) > 200 || !preg_match('/^[a-z0-9][a-z0-9-]{1,62}$/D', $slug) || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) < 5 || strlen($email) > 100) {
+            throw new BadRequestHttpException('Podaj nazwę firmy (2-200 znaków), kod firmy (2-63: a-z, cyfry, myślnik) oraz e-mail (max 100 znaków).');
         }
         $policyErrors = PasswordPolicy::errors($password, $confirmation);
         if ($policyErrors) {

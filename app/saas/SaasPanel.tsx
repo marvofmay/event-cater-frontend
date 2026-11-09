@@ -68,7 +68,7 @@ export default function SaasPanel() {
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
             <Typography>{selected && provisioning[selected.provisioning]}</Typography>
-            <Alert severity="info">Zawieszenie, dezaktywacja i usunięcie blokują dostęp do aplikacji (dane zostają). Po opłaceniu abonamentu ustaw status „Aktywny” — dla konta trial po zawieszeniu plan przejdzie na abonament. Usunięcie zachowuje dane; przywrócenie wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
+            <Alert severity="info">Zawieszenie, dezaktywacja i usunięcie blokują dostęp do aplikacji. Po opłaceniu abonamentu ustaw status „Aktywny” - dla konta trial po zawieszeniu plan przejdzie na abonament. Nieopłacony trial: dane są usuwane automatycznie 7 dni po zakończeniu. Usunięcie ręczne zachowuje dane; przywrócenie wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
             {selected?.plan === 'trial' && selected.trialEndsAt && <Typography color="text.secondary">Trial do: {selected.trialEndsAt}</Typography>}
             <TextField label="Status" select value={status} onChange={e=>setStatus(e.target.value)}>{Object.entries(statuses).map(([value,label])=><MenuItem key={value} value={value} disabled={value==='active'&&selected?.provisioning!=='ready' || selected?.status==='deleted'&&value!=='inactive'}>{label}</MenuItem>)}</TextField>
             <TextField label="Uzasadnienie zmiany" value={reason} multiline minRows={2} onChange={e=>setReason(e.target.value)} inputProps={{maxLength:1000}} />

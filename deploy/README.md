@@ -88,8 +88,8 @@ sudo certbot --nginx -d eventcater.pl -d www.eventcater.pl
 Publiczny formularz: `https://eventcater.pl/trial` → `POST /api/saas/trial`.
 
 - Po założeniu: login + hasło na e-mail właściciela oraz na ekranie; powiadomienie na `kontakt@eventcater.pl`.
-- Worker `worker-trials` co godzinę: przypomnienia 5 dni / 3 dni / 24 h przed końcem oraz zawieszenie po terminie (dane zostają).
-- Po opłaceniu: w panelu SaaS ustaw status zawieszonego tenanta na `active` — plan zmieni się na abonament.
+- Worker `worker-trials` co godzinę: przypomnienia 5 dni / 3 dni / 24 h przed końcem, zawieszenie po terminie, usunięcie bazy 7 dni po końcu triala.
+- Po opłaceniu (przed purge): w panelu SaaS ustaw status zawieszonego tenanta na `active` - plan zmieni się na abonament.
 - Patch backendu leży w `deploy/backend-trial/` i jest nakładany przy `deploy.sh` (oraz ręcznie: `bash frontend/deploy/scripts/apply-trial-backend.sh`).
 
 ## 5. Aktualizacje

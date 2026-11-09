@@ -36,7 +36,8 @@ final readonly class TrialMailer
             ."Koniec okresu próbnego: {$ends}\n\n"
             ."Logowanie: {$loginUrl}\n\n"
             ."Zachowaj tę wiadomość - hasło nie będzie ponownie wysłane w tej formie.\n"
-            ."Po 30 dniach dostęp zostanie zawieszony; dane firmy pozostaną zapisane.\n\n"
+            ."Po 30 dniach dostęp zostanie zawieszony. Dane zostaną usunięte 7 dni po zakończeniu triala,\n"
+            ."jeśli abonament nie zostanie opłacony.\n\n"
             ."EventCater\n";
         $this->send($to, 'EventCater - dane logowania do triala (30 dni)', $body);
     }
@@ -60,8 +61,9 @@ final readonly class TrialMailer
             ."kończy się za {$windowLabel} (deadline: {$ends}).\n\n"
             ."Kod firmy: {$slug}\n"
             ."Logowanie: {$loginUrl}\n\n"
-            ."Po zakończeniu triala konto zostanie zawieszone. Dane pozostaną zachowane - "
-            ."po opłaceniu abonamentu możemy ponownie aktywować firmę.\n\n"
+            ."Po zakończeniu triala konto zostanie zawieszone. Dane pozostaną przez 7 dni - "
+            ."potem zostaną usunięte, jeśli abonament nie zostanie opłacony.\n"
+            ."Po opłaceniu abonamentu możemy ponownie aktywować firmę.\n\n"
             ."Kontakt: {$this->notifyEmail}\n\nEventCater\n";
         $this->send($to, 'EventCater - koniec triala za '.$windowLabel, $body);
     }
@@ -69,8 +71,8 @@ final readonly class TrialMailer
     public function sendSuspendedNotice(string $to, string $companyName, string $slug): void
     {
         $body = "Witaj,\n\nOkres próbny EventCater dla firmy „{$companyName}” (kod: {$slug}) zakończył się. "
-            ."Konto zostało zawieszone. Dane firmy zostały zachowane.\n\n"
-            ."Aby wznowić dostęp, napisz na {$this->notifyEmail}.\n\nEventCater\n";
+            ."Konto zostało zawieszone. Dane firmy pozostaną przez 7 dni, potem zostaną usunięte.\n\n"
+            ."Aby wznowić dostęp przed usunięciem, napisz na {$this->notifyEmail}.\n\nEventCater\n";
         $this->send($to, 'EventCater - koniec triala, konto zawieszone', $body);
     }
 
