@@ -78,9 +78,19 @@ sudo certbot --nginx -d eventcater.pl -d www.eventcater.pl
 ## 4. Poczta i SaaS
 
 1. Uzupełnij `MAILER_DSN` w `/home/marcin/apps/eventcater/.env` (SMTP home.pl lub innego dostawcy).
-2. `cd /home/marcin/apps/eventcater && docker compose up -d`
-3. `bash frontend/deploy/scripts/init-saas.sh twoj@email.pl`
-4. Wejdź na `https://eventcater.pl/saas`, dodaj klienta, po `ready` ustaw `active`.
+2. Upewnij się, że w `.env` są: `PASSWORD_RESET_SENDER=noreply@eventcater.pl`, `TRIAL_NOTIFY_EMAIL=kontakt@eventcater.pl`, `APP_URL=https://eventcater.pl`.
+3. `cd /home/marcin/apps/eventcater && docker compose up -d`
+4. `bash frontend/deploy/scripts/init-saas.sh twoj@email.pl`
+5. Wejdź na `https://eventcater.pl/saas`, dodaj klienta, po `ready` ustaw `active`.
+
+### Trial (30 dni)
+
+Publiczny formularz: `https://eventcater.pl/trial` → `POST /api/saas/trial`.
+
+- Po założeniu: login + hasło na e-mail właściciela oraz na ekranie; powiadomienie na `kontakt@eventcater.pl`.
+- Worker `worker-trials` co godzinę: przypomnienia 5 dni / 3 dni / 24 h przed końcem oraz zawieszenie po terminie (dane zostają).
+- Po opłaceniu: w panelu SaaS ustaw status zawieszonego tenanta na `active` — plan zmieni się na abonament.
+- Patch backendu leży w `deploy/backend-trial/` i jest nakładany przy `deploy.sh` (oraz ręcznie: `bash frontend/deploy/scripts/apply-trial-backend.sh`).
 
 ## 5. Aktualizacje
 

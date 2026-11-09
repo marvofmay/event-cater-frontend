@@ -50,6 +50,9 @@ const LandingPage = () => {
             <Link className="ec-btn ec-btn-ghost" href="/login">
               Przejdź do logowania
             </Link>
+            <Link className="ec-btn ec-btn-primary" href="/trial">
+              30-dniowy trial
+            </Link>
           </div>
         </div>
       </section>
@@ -112,13 +115,20 @@ const LandingPage = () => {
           <p className="ec-kicker" style={{ color: "rgba(238, 245, 241, 0.7)" }}>
             Dostęp
           </p>
-          <h2>Masz już konto firmy?</h2>
+          <h2>Wypróbuj albo zaloguj się</h2>
           <p>
-            Klienci EventCater logują się kodem firmy na stronie logowania.
+            Nowi klienci mogą uruchomić 30-dniowy trial. Po jego zakończeniu
+            konto zostaje zawieszone, a dane firmy pozostają zachowane.
+            Istniejący klienci logują się kodem firmy.
           </p>
-          <Link className="ec-btn ec-btn-primary" href="/login">
-            Zaloguj się
-          </Link>
+          <div className="ec-cta">
+            <Link className="ec-btn ec-btn-primary" href="/trial">
+              30-dniowy trial
+            </Link>
+            <Link className="ec-btn ec-btn-ghost" href="/login">
+              Zaloguj się
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -126,6 +136,7 @@ const LandingPage = () => {
         <span>EventCater © {year}</span>
         <span className="ec-foot-links">
           <Link href="/polityka-prywatnosci">Polityka prywatności</Link>
+          <Link href="/trial">Trial</Link>
           <Link href="/login">Logowanie</Link>
         </span>
       </footer>

@@ -116,7 +116,8 @@ services:
       APP_URL: ${APP_URL}
       APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Warsaw}
       PASSWORD_RESET_URL: ${PASSWORD_RESET_URL}
-      PASSWORD_RESET_SENDER: ${PASSWORD_RESET_SENDER}
+      PASSWORD_RESET_SENDER: ${PASSWORD_RESET_SENDER:-noreply@eventcater.pl}
+      TRIAL_NOTIFY_EMAIL: ${TRIAL_NOTIFY_EMAIL:-kontakt@eventcater.pl}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-%kernel.project_dir%/config/jwt/private.pem}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-%kernel.project_dir%/config/jwt/public.pem}
       JWT_PASSPHRASE: ${JWT_PASSPHRASE}
@@ -235,6 +236,43 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN}
       REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-%kernel.project_dir%/config/jwt/private.pem}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-%kernel.project_dir%/config/jwt/public.pem}
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+      UPLOAD_PATH: /var/www/html
+      PUBLIC_UPLOAD_PATH: /var/www/html/public/upload
+      IMPORT_FILE_PATH: /var/www/html/storage/upload/import
+    volumes:
+      - backend-uploads:/var/www/html/public/upload
+      - backend-storage:/var/www/html/storage
+      - ./backend/config/jwt:/var/www/html/config/jwt:ro
+      - ./.env:/var/www/html/.env:ro
+    depends_on:
+      - service-company
+    networks:
+      - eventcater-net
+
+  worker-trials:
+    container_name: eventcater-trials
+    image: eventcater-service-company
+    pull_policy: never
+    restart: unless-stopped
+    command:
+      [
+        "sh",
+        "-c",
+        "while true; do php bin/console app:saas:process-trials; sleep 3600; done",
+      ]
+    env_file:
+      - .env
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      MAILER_DSN: ${MAILER_DSN}
+      PASSWORD_RESET_SENDER: ${PASSWORD_RESET_SENDER:-noreply@eventcater.pl}
+      TRIAL_NOTIFY_EMAIL: ${TRIAL_NOTIFY_EMAIL:-kontakt@eventcater.pl}
+      APP_URL: ${APP_URL:-https://eventcater.pl}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-%kernel.project_dir%/config/jwt/private.pem}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-%kernel.project_dir%/config/jwt/public.pem}
       JWT_PASSPHRASE: ${JWT_PASSPHRASE}

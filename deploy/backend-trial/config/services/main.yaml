@@ -1,0 +1,39 @@
+parameters:
+  password_reset_url: 'http://localhost:3000/reset-password'
+  password_reset_sender: 'noreply@eventcater.pl'
+  trial_notify_email: 'kontakt@eventcater.pl'
+  app_public_url: 'https://eventcater.pl'
+  doctrine.orm.enable_native_lazy_objects: true
+  public_upload_path: '%env(PUBLIC_UPLOAD_PATH)%'
+  upload_path: '%env(UPLOAD_PATH)%'
+
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  app.password_recovery.mailer:
+    class: Symfony\Component\Mailer\Mailer
+    arguments:
+      $transport: '@mailer.transports'
+      $bus: null
+      $dispatcher: null
+
+  App\:
+    resource: '../../src/'
+    exclude:
+      - '../../src/DependencyInjection/'
+      - '../../src/Kernel.php'
+
+  gedmo.mapping.driver.attribute:
+    class: Gedmo\Mapping\Driver\AttributeReader
+
+  gedmo.listener.softdeleteable:
+    class: Gedmo\SoftDeleteable\Filter\SoftDeleteableListener
+    tags:
+      - { name: doctrine.event_listener, event: 'onFlush' }
+      - { name: doctrine.event_listener, event: 'loadClassMetadata' }
+    calls:
+      - [ setAnnotationReader, [ "@gedmo.mapping.driver.attribute" ] ]
+
+  Symfony\Component\Validator\Validator\ValidatorInterface: '@validator'

@@ -4,9 +4,10 @@ import { RowAction } from "../components/common/RowAction";
 import { FormEvent, useEffect, useState } from 'react';
 import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
 
-type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; status: string; provisioning: string; version: number; history?: {action: string; reason: string; actor: string; createdAt: string}[] };
+type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; status: string; provisioning: string; version: number; plan?: string; trialEndsAt?: string | null; history?: {action: string; reason: string; actor: string; createdAt: string}[] };
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
 const provisioning: Record<string,string> = {pending:'Przygotowanie bazy',ready:'Baza gotowa',failed:'Błąd przygotowania - wymagana pomoc operatora'};
+const plans: Record<string,string> = {trial:'Trial',paid:'Abonament'};
 
 export default function SaasPanel() {
     const [token,setToken] = useState<string|null>(null);
@@ -53,7 +54,7 @@ export default function SaasPanel() {
             <Button href="/login">Logowanie pracownika firmy</Button>
         </Stack></Box> : <>
             <Stack direction="row" spacing={2} sx={{mb:2}}><Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button onClick={refresh}>Odśwież</Button><Button onClick={async()=>{try{await api('/logout','POST');}catch(e){setError((e as Error).message);}finally{sessionStorage.removeItem('saas_token');setToken(null);setItems([]);}}}>Wyloguj z SaaS</Button></Stack>
-            <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><RowAction action="preview" label="Zarządzaj" onClick={()=>details(item)} /></TableCell></TableRow>)}</TableBody></Table></Box>
+            <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Plan','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip size="small" label={plans[item.plan || 'paid'] || item.plan || '—'} color={item.plan==='trial'?'info':'default'} />{item.trialEndsAt ? <Typography variant="caption" display="block" color="text.secondary">do {item.trialEndsAt}</Typography> : null}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><RowAction action="preview" label="Zarządzaj" onClick={()=>details(item)} /></TableCell></TableRow>)}</TableBody></Table></Box>
         </>}
         <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth><Box component="form" onSubmit={create}><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
@@ -67,7 +68,8 @@ export default function SaasPanel() {
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
             <Typography>{selected && provisioning[selected.provisioning]}</Typography>
-            <Alert severity="info">Zawieszenie, dezaktywacja i usunięcie blokują dostęp do aplikacji. Usunięcie zachowuje dane; przywrócenie wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
+            <Alert severity="info">Zawieszenie, dezaktywacja i usunięcie blokują dostęp do aplikacji (dane zostają). Po opłaceniu abonamentu ustaw status „Aktywny” — dla konta trial po zawieszeniu plan przejdzie na abonament. Usunięcie zachowuje dane; przywrócenie wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
+            {selected?.plan === 'trial' && selected.trialEndsAt && <Typography color="text.secondary">Trial do: {selected.trialEndsAt}</Typography>}
             <TextField label="Status" select value={status} onChange={e=>setStatus(e.target.value)}>{Object.entries(statuses).map(([value,label])=><MenuItem key={value} value={value} disabled={value==='active'&&selected?.provisioning!=='ready' || selected?.status==='deleted'&&value!=='inactive'}>{label}</MenuItem>)}</TextField>
             <TextField label="Uzasadnienie zmiany" value={reason} multiline minRows={2} onChange={e=>setReason(e.target.value)} inputProps={{maxLength:1000}} />
             <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" disabled={busy || !reason.trim() || status===selected?.status} onClick={changeStatus}>Zapisz status</Button>

@@ -72,6 +72,20 @@ else
   git -C backend pull --ff-only origin "${BACKEND_REF}"
 fi
 
+# Overlay trial SaaS patch (kept in frontend deploy package until merged upstream).
+if [[ -d frontend/deploy/backend-trial ]]; then
+  echo "==> Applying trial backend patch"
+  PATCH_ROOT="${APP_ROOT}/frontend/deploy/backend-trial"
+  cp -f "${PATCH_ROOT}/migrations/Version20261109150000.php" backend/migrations/
+  cp -f "${PATCH_ROOT}/src/Module/Saas/Application/SaasService.php" backend/src/Module/Saas/Application/
+  cp -f "${PATCH_ROOT}/src/Module/Saas/Application/TrialMailer.php" backend/src/Module/Saas/Application/
+  cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" backend/src/Module/Saas/Presentation/API/Controller/
+  mkdir -p backend/src/Module/Saas/Presentation/Console
+  cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" backend/src/Module/Saas/Presentation/Console/
+  cp -f "${PATCH_ROOT}/config/packages/saas.yaml" backend/config/packages/saas.yaml
+  cp -f "${PATCH_ROOT}/config/services/main.yaml" backend/config/services/main.yaml
+fi
+
 cp -f frontend/deploy/docker-compose.prod.yml "${APP_ROOT}/docker-compose.yml"
 
 if [[ ! -f .env ]]; then
@@ -106,6 +120,8 @@ if [[ ! -f .env ]]; then
 else
   echo "==> Keeping existing ${APP_ROOT}/.env"
   chmod 644 .env || true
+  grep -q '^TRIAL_NOTIFY_EMAIL=' .env || echo 'TRIAL_NOTIFY_EMAIL=kontakt@eventcater.pl' >> .env
+  grep -q '^PASSWORD_RESET_SENDER=' .env || echo 'PASSWORD_RESET_SENDER=noreply@eventcater.pl' >> .env
   # Repair unquoted CORS regex from earlier bootstrap runs (breaks bash `source`, harmless for Compose when quoted)
   if grep -qE "^CORS_ALLOW_ORIGIN=\^" .env; then
     sed -i "s|^CORS_ALLOW_ORIGIN=.*|CORS_ALLOW_ORIGIN='^https://(www\\.)?eventcater\\.pl\$'|" .env
