@@ -8,13 +8,28 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# bootstrap lives in <frontend-repo>/deploy/scripts — use that checkout's branch when FRONTEND_REF is unset
+SOURCE_FRONTEND="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
 APP_ROOT="${APP_ROOT:-/home/marcin/apps/eventcater}"
 FRONTEND_REPO="${FRONTEND_REPO:-https://github.com/marvofmay/event-cater-frontend.git}"
 BACKEND_REPO="${BACKEND_REPO:-https://github.com/marvofmay/event-cater-backend.git}"
-FRONTEND_REF="${FRONTEND_REF:-main}"
 BACKEND_REF="${BACKEND_REF:-master}"
 
+if [[ -z "${FRONTEND_REF:-}" ]]; then
+  if [[ -d "${SOURCE_FRONTEND}/.git" ]] && [[ -f "${SOURCE_FRONTEND}/deploy/docker-compose.prod.yml" ]]; then
+    FRONTEND_REF="$(git -C "${SOURCE_FRONTEND}" rev-parse --abbrev-ref HEAD)"
+    if [[ "${FRONTEND_REF}" == "HEAD" ]]; then
+      FRONTEND_REF="$(git -C "${SOURCE_FRONTEND}" rev-parse HEAD)"
+    fi
+  else
+    FRONTEND_REF="main"
+  fi
+fi
+
 echo "==> EventCater bootstrap → ${APP_ROOT}"
+echo "==> Frontend ref: ${FRONTEND_REF}"
 
 mkdir -p "${APP_ROOT}"
 cd "${APP_ROOT}"
@@ -24,7 +39,14 @@ if [[ ! -d frontend/.git ]]; then
 else
   git -C frontend fetch --all --prune
   git -C frontend checkout "${FRONTEND_REF}"
-  git -C frontend pull --ff-only origin "${FRONTEND_REF}"
+  git -C frontend pull --ff-only origin "${FRONTEND_REF}" || \
+    git -C frontend reset --hard "origin/${FRONTEND_REF}"
+fi
+
+if [[ ! -f frontend/deploy/docker-compose.prod.yml ]]; then
+  echo "!! Brak frontend/deploy/ — zła gałąź (${FRONTEND_REF})." >&2
+  echo "   Uruchom ponownie z: FRONTEND_REF=cursor/deploy-eventcater-pl-bea3 bash ..." >&2
+  exit 1
 fi
 
 if [[ ! -d backend/.git ]]; then

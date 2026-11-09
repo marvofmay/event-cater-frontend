@@ -35,17 +35,22 @@ NS już wskazują na `dns.home.pl` / `dns2` / `dns3`. Po zapisie poczekaj na pro
 
 Zaloguj się po SSH i uruchom:
 
+Dopóki `deploy/` nie jest na `main`, klonuj gałąź z pakietem wdrożeniowym:
+
 ```bash
-mkdir -p /home/marcin/apps/eventcater
-# po pierwszym merge'u gałęzi z katalogiem deploy na main:
-git clone https://github.com/marvofmay/event-cater-frontend.git /tmp/ec-front
+git clone -b cursor/deploy-eventcater-pl-bea3 \
+  https://github.com/marvofmay/event-cater-frontend.git /tmp/ec-front
 bash /tmp/ec-front/deploy/scripts/bootstrap-droplet.sh
 ```
 
-Albo, jeśli frontend jest już sklonowany pod `APP_ROOT/frontend`:
+Skrypt sam bierze ref z katalogu, z którego go uruchamiasz (nie z `main`).
+Jeśli wcześniej sklonował `main` bez `deploy/`, po prostu uruchom ponownie powyższe — przestawi `frontend` na właściwą gałąź.
+
+Po merge na `main`:
 
 ```bash
-bash /home/marcin/apps/eventcater/frontend/deploy/scripts/bootstrap-droplet.sh
+git clone https://github.com/marvofmay/event-cater-frontend.git /tmp/ec-front
+bash /tmp/ec-front/deploy/scripts/bootstrap-droplet.sh
 ```
 
 Skrypt:
