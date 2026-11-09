@@ -40,7 +40,7 @@ const LandingPage = () => {
             System dla cateringu wydarzeń - na miejscu i w terenie
           </h1>
           <p className="ec-lede ec-reveal ec-reveal-delay-2">
-            SaaS dla firm, które obsługują przyjęcia, eventy i serwis wyjazdowy:
+            System dla firm, które obsługują przyjęcia, eventy i serwis wyjazdowy:
             od planu przez kuchnię i kompletację aż po ekipę na obiekcie.
           </p>
           <div className="ec-cta ec-reveal ec-reveal-delay-2">
@@ -68,8 +68,9 @@ const LandingPage = () => {
         <p className="ec-kicker">W systemie</p>
         <h2>Porządek od zapytania do wyjazdu</h2>
         <p>
-          Zamiast arkuszy i rozmów rozsianych po komunikatorach masz wspólny
-          przebieg pracy dla biura, kuchni i ekipy terenowej.
+          Zamiast arkuszy, wytycznych na kartkach i rozmów rozsianych po
+          komunikatorach masz wspólny przebieg pracy dla biura, kuchni i ekipy
+          terenowej.
         </p>
         <ul className="ec-points">
           <li>
@@ -91,14 +92,6 @@ const LandingPage = () => {
             <span>
               Role, uprawnienia, powiadomienia i wiadomości wewnątrz firmy -
               żeby zmiana na evencie nie ginęła w czacie.
-            </span>
-          </li>
-          <li>
-            <strong>Aplikacja mobilna</strong>
-            <span>
-              Ekipa w terenie korzysta z aplikacji na telefon: ten sam kod firmy
-              i konto co w wersji web. Linki do pobrania dostajecie po uruchomieniu
-              konta klienta.
             </span>
           </li>
         </ul>
