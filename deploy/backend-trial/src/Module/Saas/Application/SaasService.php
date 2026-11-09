@@ -162,8 +162,14 @@ final readonly class SaasService
             $this->provisioner->provision($tenant, $email, $password);
             $this->audit($uuid, self::SYSTEM_ACTOR, 'provisioned', 'Trial: baza i konto administratora gotowe.');
         } catch (\Throwable $error) {
-            $this->logger->error('Trial provisioning failed.', ['tenantUuid' => $uuid, 'errorType' => get_class($error), 'errorCode' => (string) $error->getCode()]);
-            $this->audit($uuid, self::SYSTEM_ACTOR, 'provisioning_failed', 'Trial: błąd przygotowania bazy.');
+            $this->logger->error('Trial provisioning failed.', [
+                'tenantUuid' => $uuid,
+                'errorType' => $error::class,
+                'errorCode' => (string) $error->getCode(),
+                'errorMessage' => $error->getMessage(),
+                'errorFile' => $error->getFile().':'.$error->getLine(),
+            ]);
+            $this->audit($uuid, self::SYSTEM_ACTOR, 'provisioning_failed', 'Trial: błąd przygotowania bazy: '.$error->getMessage());
             throw new BadRequestHttpException('Nie udało się przygotować konta. Spróbuj ponownie lub napisz na kontakt@eventcater.pl.');
         }
 

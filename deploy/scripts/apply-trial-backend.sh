@@ -13,6 +13,7 @@ echo "==> Kopiuję pliki triala do backendu"
 cp -f "${PATCH_ROOT}/migrations/Version20261109150000.php" "${BACKEND}/migrations/"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Application/SaasService.php" "${BACKEND}/src/Module/Saas/Application/"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Application/TrialMailer.php" "${BACKEND}/src/Module/Saas/Application/"
+cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TenantProvisioner.php" "${BACKEND}/src/Module/Saas/Infrastructure/"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" "${BACKEND}/src/Module/Saas/Presentation/API/Controller/"
 mkdir -p "${BACKEND}/src/Module/Saas/Presentation/Console"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" "${BACKEND}/src/Module/Saas/Presentation/Console/"
@@ -39,9 +40,17 @@ docker compose --env-file .env build service-company
 docker compose --env-file .env up -d service-company worker worker-deadlines worker-trials
 
 echo "==> Migracja centralnej bazy"
-docker compose exec -T service-company php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec -u www-data -T service-company php bin/console doctrine:migrations:migrate --no-interaction
+
+echo "==> Uprawnienia var/ + granty tenant DB"
+docker compose exec -u root -T service-company \
+  bash -c 'chown -R www-data:www-data /var/www/html/var && chmod -R 2775 /var/www/html/var' || true
+MYSQL_ROOT_PASSWORD="$(grep -E '^MYSQL_ROOT_PASSWORD=' .env | tail -n1 | cut -d= -f2- | tr -d \"\')"
+MYSQL_USER="$(grep -E '^MYSQL_USER=' .env | tail -n1 | cut -d= -f2- | tr -d \"\')"
+docker compose exec -T service-company-db mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e \
+  "GRANT ALL PRIVILEGES ON \`ec\\_tenant\\_%\`.* TO '${MYSQL_USER}'@'%'; GRANT CREATE, DROP ON *.* TO '${MYSQL_USER}'@'%'; FLUSH PRIVILEGES;"
 
 echo "==> Test komendy triali"
-docker compose exec -T service-company php bin/console app:saas:process-trials
+docker compose exec -u www-data -T service-company php bin/console app:saas:process-trials
 
 echo "==> OK. Publiczny endpoint: POST /api/saas/trial"

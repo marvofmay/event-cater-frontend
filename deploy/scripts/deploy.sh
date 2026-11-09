@@ -30,6 +30,7 @@ if [[ -x frontend/deploy/scripts/apply-trial-backend.sh ]]; then
   cp -f "${PATCH_ROOT}/migrations/Version20261109150000.php" "${BACKEND}/migrations/"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/SaasService.php" "${BACKEND}/src/Module/Saas/Application/"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/TrialMailer.php" "${BACKEND}/src/Module/Saas/Application/"
+  cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TenantProvisioner.php" "${BACKEND}/src/Module/Saas/Infrastructure/"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" "${BACKEND}/src/Module/Saas/Presentation/API/Controller/"
   mkdir -p "${BACKEND}/src/Module/Saas/Presentation/Console"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" "${BACKEND}/src/Module/Saas/Presentation/Console/"
@@ -55,13 +56,15 @@ docker network connect aestio_default eventcater-frontend 2>/dev/null || true
 docker network connect aestio_default eventcater-mercure 2>/dev/null || true
 
 echo "==> Migrating central DB"
-docker compose exec -T service-company php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec -u www-data -T service-company php bin/console doctrine:migrations:migrate --no-interaction
 
 echo "==> Migrating tenant DBs (dry-run list, then execute)"
-docker compose exec -T service-company php bin/console app:saas:migrate-tenants || true
-docker compose exec -T service-company php bin/console app:saas:migrate-tenants --execute || true
+docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants || true
+docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants --execute || true
 
 echo "==> Clearing Symfony cache"
-docker compose exec -T service-company php bin/console cache:clear
+docker compose exec -u www-data -T service-company php bin/console cache:clear
+docker compose exec -u root -T service-company \
+  bash -c 'chown -R www-data:www-data /var/www/html/var && chmod -R 2775 /var/www/html/var' || true
 
 echo "==> Done. Check: docker compose ps && curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/"

@@ -79,6 +79,7 @@ if [[ -d frontend/deploy/backend-trial ]]; then
   cp -f "${PATCH_ROOT}/migrations/Version20261109150000.php" backend/migrations/
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/SaasService.php" backend/src/Module/Saas/Application/
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/TrialMailer.php" backend/src/Module/Saas/Application/
+  cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TenantProvisioner.php" backend/src/Module/Saas/Infrastructure/
   cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" backend/src/Module/Saas/Presentation/API/Controller/
   mkdir -p backend/src/Module/Saas/Presentation/Console
   cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" backend/src/Module/Saas/Presentation/Console/
