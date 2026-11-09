@@ -1,5 +1,6 @@
-# EventCater — managed cert (HTTP-01). Wstawić POWYŻEJ bloku catch-all ":443".
-# Nie używać on_demand (ask aestio odrzuci tę domenę).
+# Wstawić POWYŻEJ bloku catch-all ":443" w aestio Caddyfile.
+# Wymaga: kontenery eventcater-frontend i eventcater-mercure w tej samej
+# sieci Dockera co caddy_symfony (zrób: bash deploy/scripts/fix-caddy-eventcater.sh).
 
 http://eventcater.pl, http://www.eventcater.pl {
 	redir https://{host}{uri} permanent
@@ -9,12 +10,12 @@ eventcater.pl, www.eventcater.pl {
 	encode gzip zstd
 
 	handle /.well-known/mercure* {
-		reverse_proxy 172.17.0.1:3011 {
+		reverse_proxy eventcater-mercure:80 {
 			flush_interval -1
 		}
 	}
 
 	handle {
-		reverse_proxy 172.17.0.1:3010
+		reverse_proxy eventcater-frontend:3000
 	}
 }
