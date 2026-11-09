@@ -5,7 +5,7 @@ import Link from "next/link";
 import localFont from "next/font/local";
 import "./landing.css";
 
-// Local fonts only — Google Fonts break offline / restricted Docker builds.
+// Local fonts only - Google Fonts break offline / restricted Docker builds.
 const display = localFont({
   src: "../../../public/fonts/GeistVF.woff",
   variable: "--font-ec-display",
@@ -23,10 +23,6 @@ const LandingPage = () => {
 
   return (
     <div className={`ec-landing ${display.variable} ${sans.variable}`}>
-      <header className="ec-top">
-        <Link href="/login">Logowanie</Link>
-      </header>
-
       <section className="ec-hero" aria-label="EventCater">
         <div className="ec-hero-media" aria-hidden="true">
           <Image
@@ -41,14 +37,14 @@ const LandingPage = () => {
         <div className="ec-hero-inner">
           <p className="ec-brand ec-reveal">EventCater</p>
           <h1 className="ec-reveal ec-reveal-delay">
-            System dla cateringu wydarzeń — na miejscu i w terenie
+            System dla cateringu wydarzeń - na miejscu i w terenie
           </h1>
           <p className="ec-lede ec-reveal ec-reveal-delay-2">
             SaaS dla firm, które obsługują przyjęcia, eventy i serwis wyjazdowy:
             od planu przez kuchnię i kompletację aż po ekipę na obiekcie.
           </p>
           <div className="ec-cta ec-reveal ec-reveal-delay-2">
-            <a className="ec-btn ec-btn-primary" href="#system">
+            <a className="ec-btn ec-btn-ghost" href="#system">
               Poznaj system
             </a>
             <Link className="ec-btn ec-btn-ghost" href="/login">
@@ -64,7 +60,7 @@ const LandingPage = () => {
         <p>
           EventCater jest zbudowany pod zespoły, które gotują i serwują nie tylko
           w własnej lokalizacji, ale też na salach, plenerach i wyjazdach.
-          Jedna firma — osobna przestrzeń w systemie, własne dane i uprawnienia.
+          Jedna firma - osobna przestrzeń w systemie, własne dane i uprawnienia.
         </p>
       </section>
 
@@ -80,7 +76,7 @@ const LandingPage = () => {
             <strong>Wydarzenia i miejsca</strong>
             <span>
               Terminy, adresy, baza lokalizacji i historia obsługiwanych
-              przyjęć — czy serwis jest na miejscu, czy w terenie.
+              przyjęć - czy serwis jest na miejscu, czy w terenie.
             </span>
           </li>
           <li>
@@ -93,11 +89,29 @@ const LandingPage = () => {
           <li>
             <strong>Zespół i komunikacja</strong>
             <span>
-              Role, uprawnienia, powiadomienia i wiadomości wewnątrz firmy —
+              Role, uprawnienia, powiadomienia i wiadomości wewnątrz firmy -
               żeby zmiana na evencie nie ginęła w czacie.
             </span>
           </li>
+          <li>
+            <strong>Aplikacja mobilna</strong>
+            <span>
+              Ekipa w terenie korzysta z aplikacji na telefon: ten sam kod firmy
+              i konto co w wersji web. Linki do pobrania dostajecie po uruchomieniu
+              konta klienta.
+            </span>
+          </li>
         </ul>
+      </section>
+
+      <section className="ec-section" id="mobilna">
+        <p className="ec-kicker">Mobilnie</p>
+        <h2>Aplikacja dla ekipy na evencie</h2>
+        <p>
+          EventCater ma dedykowaną aplikację mobilną. Pracownicy logują się kodem
+          firmy - tak jak na stronie. Administrator firmy otrzymuje od nas odnośniki
+          do instalacji (App Store / Google Play lub dystrybucja wewnętrzna).
+        </p>
       </section>
 
       <section className="ec-close" id="dostep">
@@ -108,7 +122,7 @@ const LandingPage = () => {
           <h2>Masz już konto firmy?</h2>
           <p>
             Klienci EventCater logują się kodem firmy na stronie logowania.
-            Panel SaaS służy do zarządzania tenantami — nie zastępuje logowania
+            Panel SaaS służy do zarządzania tenantami - nie zastępuje logowania
             pracowników.
           </p>
           <Link className="ec-btn ec-btn-primary" href="/login">

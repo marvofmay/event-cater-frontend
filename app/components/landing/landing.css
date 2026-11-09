@@ -65,29 +65,7 @@
   }
 }
 
-/* —— Top bar (minimal, no brand theft from hero) —— */
-.ec-top {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 5;
-  display: flex;
-  justify-content: flex-end;
-  padding: 1.25rem 1.5rem;
-}
-
-.ec-top a {
-  font-size: 0.9rem;
-  letter-spacing: 0.04em;
-  color: rgba(247, 250, 248, 0.92);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease, opacity 0.2s ease;
-}
-
-.ec-top a:hover {
-  border-bottom-color: rgba(247, 250, 248, 0.7);
-}
-
-/* —— Hero —— */
+/* Hero */
 .ec-hero {
   position: relative;
   min-height: 100svh;
@@ -199,7 +177,7 @@
   box-shadow: inset 0 0 0 1px rgba(247, 250, 248, 0.85);
 }
 
-/* —— Sections —— */
+/* Sections */
 .ec-section {
   width: min(1120px, calc(100% - 2.5rem));
   margin: 0 auto;
@@ -307,10 +285,6 @@
 }
 
 @media (max-width: 640px) {
-  .ec-top {
-    padding: 1rem;
-  }
-
   .ec-hero-inner {
     padding-bottom: 3.25rem;
   }
