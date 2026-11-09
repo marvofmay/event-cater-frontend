@@ -15,6 +15,10 @@ name: eventcater
 networks:
   eventcater-net:
     name: eventcater-net
+  # Shared with caddy_symfony so HTTPS reverse_proxy eventcater-frontend:3000 keeps working
+  # after compose recreate (manual `docker network connect` is lost on recreate).
+  aestio_default:
+    external: true
 
 volumes:
   mysql-data:
@@ -88,6 +92,7 @@ services:
       - "127.0.0.1:3011:80"
     networks:
       - eventcater-net
+      - aestio_default
 
   service-company:
     container_name: eventcater-api
@@ -156,6 +161,7 @@ services:
       - service-company
     networks:
       - eventcater-net
+      - aestio_default
 
   worker:
     container_name: eventcater-worker

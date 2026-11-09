@@ -26,6 +26,10 @@ cp -f frontend/deploy/docker-compose.prod.yml "${APP_ROOT}/docker-compose.yml"
 echo "==> Rebuilding and restarting"
 docker compose --env-file .env up -d --build --force-recreate
 
+# Safety net if external network was missing from an older compose file
+docker network connect aestio_default eventcater-frontend 2>/dev/null || true
+docker network connect aestio_default eventcater-mercure 2>/dev/null || true
+
 echo "==> Migrating central DB"
 docker compose exec -T service-company php bin/console doctrine:migrations:migrate --no-interaction
 
