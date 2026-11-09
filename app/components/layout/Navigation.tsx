@@ -101,6 +101,11 @@ const Navigation: React.FC = () => {
     return null;
   }
 
+  // Public marketing homepage has its own composition; hide the app chrome.
+  if (!isAuthenticated && pathname === "/") {
+    return null;
+  }
+
   return (
     <AppBar position="static" sx={{ backgroundColor: "#34495e" }}>
       <Toolbar

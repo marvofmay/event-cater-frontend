@@ -9,6 +9,7 @@ import { Card, CardContent, Paper, Box } from "@mui/material";
 import { colors } from "@mui/material";
 import { APP_NAME } from "../../utils/constans";
 import { useTranslation } from "react-i18next";
+import { useUser } from "@/app/context/userContext";
 
 interface ContentProps {
   children: ReactNode;
@@ -17,7 +18,17 @@ interface ContentProps {
 const Content: React.FC<ContentProps> = ({ children }) => {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const { isAuthenticated, loading } = useUser();
   const pathParts = pathname ? pathname.split("/").filter(Boolean) : [];
+  const isMarketingHome = pathname === "/" && !isAuthenticated;
+
+  if (loading && pathname === "/") {
+    return <>{children}</>;
+  }
+
+  if (isMarketingHome) {
+    return <>{children}</>;
+  }
 
   return (
     <main className="ml-6 mr-6 mt-3">
