@@ -1,7 +1,11 @@
-# EventCater — managed cert (HTTP-01), NIE on-demand / catch-all :443.
-# Na start tylko apex; www dodaj po rekordzie A w DNS.
+# EventCater — managed cert (HTTP-01). Wstawić POWYŻEJ bloku catch-all ":443".
+# Nie używać on_demand (ask aestio odrzuci tę domenę).
 
-eventcater.pl {
+http://eventcater.pl, http://www.eventcater.pl {
+	redir https://{host}{uri} permanent
+}
+
+eventcater.pl, www.eventcater.pl {
 	encode gzip zstd
 
 	handle /.well-known/mercure* {
