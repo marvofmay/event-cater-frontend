@@ -1,8 +1,7 @@
-# Dopisz do /home/marcin/apps/aestio/docker/caddy/Caddyfile (kontener caddy_symfony).
-# Bez osobnego bloku http://… — Caddy sam robi HTTP→HTTPS i ACME HTTP-01.
-# Jeśli www.eventcater.pl nie ma jeszcze rekordu A, zostaw tylko eventcater.pl.
+# EventCater — managed cert (HTTP-01), NIE on-demand / catch-all :443.
+# Na start tylko apex; www dodaj po rekordzie A w DNS.
 
-eventcater.pl, www.eventcater.pl {
+eventcater.pl {
 	encode gzip zstd
 
 	handle /.well-known/mercure* {
