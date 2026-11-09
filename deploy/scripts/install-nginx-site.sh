@@ -42,6 +42,18 @@ fi
 echo "==> Co zajmuje porty 80/443:"
 sudo ss -tlnp | grep -E ':80 |:443 ' || echo "(nic nie nasłuchuje — OK)"
 
+if sudo ss -tlnp | grep -qE 'docker-proxy.*:80'; then
+  echo
+  echo "!! Port 80/443 trzyma już Docker (edge proxy innej aplikacji)."
+  echo "   Hostowego nginx NIE uruchamiamy — kolizja jest pewna."
+  echo "   Wyłącz: sudo systemctl disable --now nginx"
+  echo "   Potem podepnij eventcater.pl w istniejącym proxy:"
+  echo "     bash ${APP_ROOT}/frontend/deploy/scripts/detect-edge-proxy.sh"
+  echo "     cat ${APP_ROOT}/frontend/deploy/PROXY.md"
+  sudo systemctl disable --now nginx 2>/dev/null || true
+  exit 0
+fi
+
 if ! sudo nginx -t; then
   echo "!! nginx -t failed" >&2
   exit 1
@@ -59,6 +71,5 @@ echo "!! Nie udało się uruchomić nginx — log:" >&2
 sudo journalctl -xeu nginx.service --no-pager -n 40 || true
 echo >&2
 echo "Częsta przyczyna: port 80 zajęty przez apache2 / inny reverse proxy / kontener." >&2
-echo "Sprawdź: sudo ss -tlnp | grep -E ':80|:443'" >&2
-echo "Jeśli apache2: sudo systemctl stop apache2 && sudo systemctl disable apache2 && sudo systemctl restart nginx" >&2
+echo "Sprawdź: bash ${APP_ROOT}/frontend/deploy/scripts/detect-edge-proxy.sh" >&2
 exit 1

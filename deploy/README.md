@@ -5,11 +5,14 @@ Cel: katalog `/home/marcin/apps/eventcater` na droplecie, domena `eventcater.pl`
 ## Architektura
 
 ```
-Internet → nginx (80/443) → Next.js 127.0.0.1:3010  →  Symfony API (sieć Dockera)
-                         ↘ Mercure 127.0.0.1:3011
+Internet → istniejący edge proxy na droplecie (:80/:443 w Dockerze)
+        → Next.js 127.0.0.1:3010  →  Symfony API (sieć Dockera)
+        ↘ Mercure 127.0.0.1:3011
 ```
 
-Porty hosta `3010`/`3011` są celowo inne niż typowe `3000`/`3001`, żeby nie kolidować z `aestio` / innymi appkami na tym samym droplecie.
+Na wspólnym droplecie (obok `aestio` itd.) **80/443 zwykle już zajmuje kontener** (Nginx Proxy Manager / Traefik). Nie uruchamiaj hostowego `nginx.service` — podepnij domenę pod ten edge proxy. Instrukcja: [PROXY.md](PROXY.md).
+
+Porty hosta `3010`/`3011` są celowo inne niż typowe `3000`/`3001`.
 
 Przeglądarka woła `/api` na tym samym originie; Next.js proxy’uje do kontenera `service-company`. Mercure jest pod `https://eventcater.pl/.well-known/mercure`.
 
