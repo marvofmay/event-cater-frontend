@@ -100,10 +100,12 @@ if [[ ! -f .env ]]; then
     -e "s|MESSENGER_TRANSPORT_DSN=.*|MESSENGER_TRANSPORT_DSN=\"amqp://eventcater:${RABBIT_PASS}@rabbitmq:5672/%2f\"|" \
     .env
 
-  chmod 600 .env
+  # 644: Apache in the API container runs as www-data and must read the bind-mounted .env
+  chmod 644 .env
   echo "==> Generated ${APP_ROOT}/.env (secrets filled). Review MAILER_DSN before go-live."
 else
   echo "==> Keeping existing ${APP_ROOT}/.env"
+  chmod 644 .env || true
   # Repair unquoted CORS regex from earlier bootstrap runs (breaks bash `source`, harmless for Compose when quoted)
   if grep -qE "^CORS_ALLOW_ORIGIN=\^" .env; then
     sed -i "s|^CORS_ALLOW_ORIGIN=.*|CORS_ALLOW_ORIGIN='^https://(www\\.)?eventcater\\.pl\$'|" .env
@@ -133,7 +135,7 @@ if [[ -f backend/.env ]] && [[ ! -f backend/.env.dev-backup ]]; then
   cp backend/.env "backend/.env.dev-backup-$(date +%Y%m%d%H%M%S)" || true
 fi
 cp -f .env backend/.env
-chmod 600 backend/.env
+chmod 644 backend/.env
 
 echo "==> Building and starting containers (this may take several minutes)"
 # Build API image first so workers (same image, pull_policy: never) do not hit Docker Hub.
