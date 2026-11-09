@@ -63,13 +63,34 @@ echo "==> Pozycje eventcater / :443:"
 sudo grep -n -E 'eventcater|^:443' "${CADDYFILE}" | head -30
 
 echo "==> Czy adapt widzi eventcater?"
-docker exec "${CADDY_NAME}" caddy adapt --config /etc/caddy/Caddyfile 2>/dev/null | grep -o 'eventcater[^"]*' | sort -u | head
+set +e
+docker exec "${CADDY_NAME}" caddy adapt --config /etc/caddy/Caddyfile 2>/tmp/caddy-adapt.err | tee /tmp/caddy-adapt.json | grep -o 'eventcater[^"]*' | sort -u | head
+adapt_rc=${PIPESTATUS[0]}
+set -e
+if [[ "${adapt_rc}" -ne 0 ]]; then
+  echo "!! caddy adapt failed:" >&2
+  cat /tmp/caddy-adapt.err >&2 || true
+  exit 1
+fi
+if ! grep -q eventcater /tmp/caddy-adapt.json 2>/dev/null; then
+  echo "!! Brak 'eventcater' w adapted JSON — sprawdź Caddyfile" >&2
+  sudo sed -n '1,80p' "${CADDYFILE}" >&2
+  exit 1
+fi
 
 docker exec "${CADDY_NAME}" caddy validate --config /etc/caddy/Caddyfile
 
 echo "==> Restart Caddy (reload bywa za słaby przy TLS)"
 docker restart "${CADDY_NAME}"
-sleep 4
+# wait until caddy accepts connections again
+for i in $(seq 1 30); do
+  if docker exec "${CADDY_NAME}" wget -qO- --timeout=2 http://127.0.0.1:80/ >/dev/null 2>&1 \
+    || curl -sS --max-time 2 -o /dev/null http://127.0.0.1/; then
+    break
+  fi
+  sleep 1
+done
+sleep 2
 
 echo "==> openssl SNI:"
 openssl s_client -connect 127.0.0.1:443 -servername eventcater.pl </dev/null 2>&1 | head -35 || true
