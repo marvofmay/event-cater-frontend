@@ -5,9 +5,11 @@ Cel: katalog `/home/marcin/apps/eventcater` na droplecie, domena `eventcater.pl`
 ## Architektura
 
 ```
-Internet → nginx (80/443) → Next.js :3000  →  Symfony API (sieć Dockera)
-                         ↘ Mercure :3001
+Internet → nginx (80/443) → Next.js 127.0.0.1:3010  →  Symfony API (sieć Dockera)
+                         ↘ Mercure 127.0.0.1:3011
 ```
+
+Porty hosta `3010`/`3011` są celowo inne niż typowe `3000`/`3001`, żeby nie kolidować z `aestio` / innymi appkami na tym samym droplecie.
 
 Przeglądarka woła `/api` na tym samym originie; Next.js proxy’uje do kontenera `service-company`. Mercure jest pod `https://eventcater.pl/.well-known/mercure`.
 

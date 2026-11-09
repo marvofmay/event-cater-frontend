@@ -36,4 +36,4 @@ docker compose exec -T service-company php bin/console app:saas:migrate-tenants 
 echo "==> Clearing Symfony cache"
 docker compose exec -T service-company php bin/console cache:clear
 
-echo "==> Done. Check: docker compose ps && curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/"
+echo "==> Done. Check: docker compose ps && curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/"

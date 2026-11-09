@@ -84,7 +84,8 @@ services:
         cors_origins https://${DOMAIN:-eventcater.pl} https://www.${DOMAIN:-eventcater.pl}
         anonymous
     ports:
-      - "127.0.0.1:3001:80"
+      # Host 3011 — unikamy kolizji z innymi appkami na :3001
+      - "127.0.0.1:3011:80"
     networks:
       - eventcater-net
 
@@ -147,7 +148,8 @@ services:
       PORT: 3000
       HOSTNAME: 0.0.0.0
     ports:
-      - "127.0.0.1:3000:3000"
+      # Host 3010 — unikamy kolizji z innymi appkami na :3000
+      - "127.0.0.1:3010:3000"
     depends_on:
       - service-company
     networks:
