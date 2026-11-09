@@ -157,20 +157,11 @@ docker compose exec -T service-company-db mysql -uroot -p"${MYSQL_ROOT_PASSWORD}
   "GRANT ALL PRIVILEGES ON \`ec\\_tenant\\_%\`.* TO '${MYSQL_USER}'@'%'; FLUSH PRIVILEGES;"
 
 echo "==> Installing nginx site (requires sudo)"
-if command -v sudo >/dev/null && [[ -d /etc/nginx/sites-available ]]; then
-  sudo mkdir -p /var/www/certbot
-  sudo cp frontend/deploy/nginx/eventcater.pl.conf /etc/nginx/sites-available/eventcater.pl
-  sudo ln -sf /etc/nginx/sites-available/eventcater.pl /etc/nginx/sites-enabled/eventcater.pl
-  # Avoid duplicate map if already defined globally
-  if sudo nginx -t 2>/dev/null; then
-    sudo systemctl reload nginx
-    echo "==> nginx reloaded"
-  else
-    echo "!! nginx -t failed — check if map \$connection_upgrade already exists in nginx.conf"
-    echo "   Edit /etc/nginx/sites-available/eventcater.pl if needed, then: sudo nginx -t && sudo systemctl reload nginx"
-  fi
+if [[ -x frontend/deploy/scripts/install-nginx-site.sh ]]; then
+  bash frontend/deploy/scripts/install-nginx-site.sh || \
+    echo "!! nginx site install failed — run: bash ${APP_ROOT}/frontend/deploy/scripts/install-nginx-site.sh"
 else
-  echo "!! nginx not found or no sudo — install site manually from frontend/deploy/nginx/eventcater.pl.conf"
+  echo "!! Brak install-nginx-site.sh — zaktualizuj frontend i uruchom skrypt ręcznie"
 fi
 
 cat <<EOF
