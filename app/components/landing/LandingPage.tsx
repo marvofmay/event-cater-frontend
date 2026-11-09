@@ -63,6 +63,8 @@ const LandingPage = () => {
         <p>
           EventCater jest zbudowany pod zespoły, które gotują i serwują nie tylko
           w własnej lokalizacji, ale też na salach, plenerach i wyjazdach.
+        </p>
+        <p>
           Jedna firma - osobna przestrzeń w systemie, własne dane i uprawnienia.
         </p>
       </section>

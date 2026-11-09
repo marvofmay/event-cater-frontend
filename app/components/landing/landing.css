@@ -252,6 +252,10 @@
   color: var(--ec-muted);
 }
 
+.ec-section p + p {
+  margin-top: 0.85rem;
+}
+
 .ec-points {
   margin: 1.5rem 0 0;
   padding: 0;
