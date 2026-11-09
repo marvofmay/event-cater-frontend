@@ -29,12 +29,9 @@ else
   echo "==> Tworzę /etc/nginx/conf.d"
   sudo mkdir -p /etc/nginx/conf.d
   sudo cp "${SRC}" /etc/nginx/conf.d/eventcater.pl.conf
-  if [[ -f /etc/nginx/nginx.conf ]] && ! grep -q 'conf.d/\*\.conf' /etc/nginx/nginx.conf; then
-    echo "!! Dopisz w http { }: include /etc/nginx/conf.d/*.conf;" >&2
-  fi
 fi
 
-# Drop default site if it steals server_name _ on :80
+# Drop default site if it steals :80
 if [[ -L /etc/nginx/sites-enabled/default ]]; then
   sudo rm -f /etc/nginx/sites-enabled/default
 fi
@@ -42,11 +39,26 @@ if [[ -f /etc/nginx/conf.d/default.conf ]]; then
   sudo mv /etc/nginx/conf.d/default.conf "/etc/nginx/conf.d/default.conf.bak.$(date +%Y%m%d%H%M%S)" || true
 fi
 
-if sudo nginx -t; then
-  sudo systemctl enable nginx
-  sudo systemctl reload nginx || sudo systemctl restart nginx
-  echo "==> nginx OK — vhost eventcater.pl aktywny"
-else
-  echo "!! nginx -t failed — sprawdź map \$connection_upgrade (może być już w nginx.conf)." >&2
+echo "==> Co zajmuje porty 80/443:"
+sudo ss -tlnp | grep -E ':80 |:443 ' || echo "(nic nie nasłuchuje — OK)"
+
+if ! sudo nginx -t; then
+  echo "!! nginx -t failed" >&2
   exit 1
 fi
+
+sudo systemctl enable nginx
+
+if sudo systemctl restart nginx; then
+  echo "==> nginx OK — vhost eventcater.pl aktywny"
+  sudo systemctl --no-pager --full status nginx | head -20
+  exit 0
+fi
+
+echo "!! Nie udało się uruchomić nginx — log:" >&2
+sudo journalctl -xeu nginx.service --no-pager -n 40 || true
+echo >&2
+echo "Częsta przyczyna: port 80 zajęty przez apache2 / inny reverse proxy / kontener." >&2
+echo "Sprawdź: sudo ss -tlnp | grep -E ':80|:443'" >&2
+echo "Jeśli apache2: sudo systemctl stop apache2 && sudo systemctl disable apache2 && sudo systemctl restart nginx" >&2
+exit 1
