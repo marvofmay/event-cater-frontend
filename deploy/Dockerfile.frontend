@@ -1,0 +1,34 @@
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# Rewrites + public env are baked at build time for the browser bundle.
+ARG API_INTERNAL_URL=http://service-company:80
+ARG NEXT_PUBLIC_MERCURE_URL=https://eventcater.pl/.well-known/mercure
+ENV API_INTERNAL_URL=$API_INTERNAL_URL
+ENV NEXT_PUBLIC_MERCURE_URL=$NEXT_PUBLIC_MERCURE_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build -- --webpack
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ARG API_INTERNAL_URL=http://service-company:80
+ARG NEXT_PUBLIC_MERCURE_URL=https://eventcater.pl/.well-known/mercure
+ENV API_INTERNAL_URL=$API_INTERNAL_URL
+ENV NEXT_PUBLIC_MERCURE_URL=$NEXT_PUBLIC_MERCURE_URL
+COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
+EXPOSE 3000
+CMD ["npm", "run", "start"]

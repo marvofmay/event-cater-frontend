@@ -38,6 +38,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 Obsługa cateringu, baza miejsc i ekrany Kuchni: [dokumentacja](docs/catering.md).
 
+## Produkcja (`eventcater.pl`)
+
+Wdrożenie na droplecie DigitalOcean w `/home/marcin/apps/eventcater`: [deploy/README.md](deploy/README.md).
+
 ## Logowanie nowego pracownika
 
 Po utworzeniu konta pracownika (formularz lub import):

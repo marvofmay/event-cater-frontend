@@ -1,0 +1,237 @@
+# Production stack for /home/marcin/apps/eventcater
+#
+# Layout on the droplet:
+#   /home/marcin/apps/eventcater/
+#     .env
+#     docker-compose.yml   (copy of this file)
+#     frontend/            (clone of event-cater-frontend)
+#     backend/             (clone of event-cater-backend)
+#
+# Usage from APP_ROOT:
+#   docker compose --env-file .env up -d --build
+
+name: eventcater
+
+networks:
+  eventcater-net:
+    name: eventcater-net
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  backend-uploads:
+  backend-storage:
+
+services:
+  service-company-db:
+    image: mysql:9.3.0
+    container_name: eventcater-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-service_company}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_HOST: "%"
+    command:
+      - --innodb-buffer-pool-size=256M
+      - --max-connections=80
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - eventcater-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: eventcater-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - eventcater-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: eventcater-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - eventcater-net
+
+  mercure:
+    image: dunglas/mercure:v0.16
+    container_name: eventcater-mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ":80"
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET}
+      MERCURE_JWT_ALG: HS256
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins https://${DOMAIN:-eventcater.pl} https://www.${DOMAIN:-eventcater.pl}
+        anonymous
+    ports:
+      - "127.0.0.1:3001:80"
+    networks:
+      - eventcater-net
+
+  service-company:
+    container_name: eventcater-api
+    build:
+      context: ./backend
+      dockerfile: ../frontend/deploy/Dockerfile.backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN}
+      MAILER_DSN: ${MAILER_DSN}
+      REDIS_URL: ${REDIS_URL}
+      MERCURE_URL: ${MERCURE_URL}
+      MERCURE_PUBLIC_URL: ${MERCURE_PUBLIC_URL}
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET}
+      APP_URL: ${APP_URL}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Warsaw}
+      PASSWORD_RESET_URL: ${PASSWORD_RESET_URL}
+      PASSWORD_RESET_SENDER: ${PASSWORD_RESET_SENDER}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-%kernel.project_dir%/config/jwt/private.pem}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-%kernel.project_dir%/config/jwt/public.pem}
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+      UPLOAD_PATH: /var/www/html
+      PUBLIC_UPLOAD_PATH: /var/www/html/public/upload
+      IMPORT_FILE_PATH: /var/www/html/storage/upload/import
+    volumes:
+      - backend-uploads:/var/www/html/public/upload
+      - backend-storage:/var/www/html/storage
+      - ./backend/config/jwt:/var/www/html/config/jwt:ro
+    depends_on:
+      service-company-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - eventcater-net
+
+  frontend:
+    container_name: eventcater-frontend
+    build:
+      context: ./frontend
+      dockerfile: deploy/Dockerfile.frontend
+      args:
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://service-company:80}
+        NEXT_PUBLIC_MERCURE_URL: ${NEXT_PUBLIC_MERCURE_URL:-https://eventcater.pl/.well-known/mercure}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://service-company:80}
+      NEXT_PUBLIC_MERCURE_URL: ${NEXT_PUBLIC_MERCURE_URL:-https://eventcater.pl/.well-known/mercure}
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - service-company
+    networks:
+      - eventcater-net
+
+  worker:
+    container_name: eventcater-worker
+    image: eventcater-service-company
+    restart: unless-stopped
+    command:
+      [
+        "php",
+        "bin/console",
+        "messenger:consume",
+        "company_xlsx_import",
+        "department_xlsx_import",
+        "employee_xlsx_import",
+        "send_email",
+        "send_sms",
+        "password_reset",
+        "push_notification",
+        "--time-limit=3600",
+        "--memory-limit=256M",
+        "--no-interaction",
+      ]
+    env_file:
+      - .env
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN}
+      MAILER_DSN: ${MAILER_DSN}
+      REDIS_URL: ${REDIS_URL}
+      MERCURE_URL: ${MERCURE_URL}
+      MERCURE_PUBLIC_URL: ${MERCURE_PUBLIC_URL}
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET}
+      APP_URL: ${APP_URL}
+      PASSWORD_RESET_URL: ${PASSWORD_RESET_URL}
+      PASSWORD_RESET_SENDER: ${PASSWORD_RESET_SENDER}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-%kernel.project_dir%/config/jwt/private.pem}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-%kernel.project_dir%/config/jwt/public.pem}
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+      UPLOAD_PATH: /var/www/html
+      PUBLIC_UPLOAD_PATH: /var/www/html/public/upload
+      IMPORT_FILE_PATH: /var/www/html/storage/upload/import
+    volumes:
+      - backend-uploads:/var/www/html/public/upload
+      - backend-storage:/var/www/html/storage
+      - ./backend/config/jwt:/var/www/html/config/jwt:ro
+    depends_on:
+      - service-company
+      - rabbitmq
+    networks:
+      - eventcater-net
+
+  worker-deadlines:
+    container_name: eventcater-deadlines
+    image: eventcater-service-company
+    restart: unless-stopped
+    command:
+      [
+        "sh",
+        "-c",
+        "while true; do php bin/console app:notify-event-deadlines --within-hours=24; sleep 3600; done",
+      ]
+    env_file:
+      - .env
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-%kernel.project_dir%/config/jwt/private.pem}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-%kernel.project_dir%/config/jwt/public.pem}
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+      UPLOAD_PATH: /var/www/html
+      PUBLIC_UPLOAD_PATH: /var/www/html/public/upload
+      IMPORT_FILE_PATH: /var/www/html/storage/upload/import
+    volumes:
+      - backend-uploads:/var/www/html/public/upload
+      - backend-storage:/var/www/html/storage
+      - ./backend/config/jwt:/var/www/html/config/jwt:ro
+    depends_on:
+      - service-company
+    networks:
+      - eventcater-net
