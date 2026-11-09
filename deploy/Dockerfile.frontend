@@ -13,6 +13,8 @@ ARG NEXT_PUBLIC_MERCURE_URL=https://eventcater.pl/.well-known/mercure
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
 ENV NEXT_PUBLIC_MERCURE_URL=$NEXT_PUBLIC_MERCURE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
+# Keep Node heap modest on a 2 GB droplet during next build.
+ENV NODE_OPTIONS=--max-old-space-size=768
 RUN npm run build -- --webpack
 
 FROM node:20-alpine AS runner

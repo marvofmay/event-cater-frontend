@@ -2,19 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Syne, Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import "./landing.css";
 
-const display = Syne({
-  subsets: ["latin", "latin-ext"],
+// Local fonts only — Google Fonts break offline / restricted Docker builds.
+const display = localFont({
+  src: "../../../public/fonts/GeistVF.woff",
   variable: "--font-ec-display",
-  weight: ["400", "500", "600", "700"],
+  weight: "100 900",
 });
 
-const sans = Manrope({
-  subsets: ["latin", "latin-ext"],
+const sans = localFont({
+  src: "../../../public/fonts/GeistVF.woff",
   variable: "--font-ec-sans",
-  weight: ["400", "500", "600", "700"],
+  weight: "100 900",
 });
 
 const LandingPage = () => {

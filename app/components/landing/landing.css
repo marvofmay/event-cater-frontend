@@ -6,8 +6,8 @@
   --ec-mist: #e7efea;
   --ec-fog: #f3f6f4;
   --ec-line: rgba(21, 32, 27, 0.12);
-  --ec-display: var(--font-ec-display), "Syne", "Helvetica Neue", sans-serif;
-  --ec-sans: var(--font-ec-sans), "Manrope", "Helvetica Neue", sans-serif;
+  --ec-display: var(--font-ec-display), "Geist", "Helvetica Neue", sans-serif;
+  --ec-sans: var(--font-ec-sans), "Geist", "Helvetica Neue", sans-serif;
   color: var(--ec-ink);
   background: var(--ec-fog);
   font-family: var(--ec-sans);
