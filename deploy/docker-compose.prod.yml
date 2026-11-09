@@ -90,6 +90,7 @@ services:
 
   service-company:
     container_name: eventcater-api
+    image: eventcater-service-company
     build:
       context: ./backend
       dockerfile: ../frontend/deploy/Dockerfile.backend
@@ -155,6 +156,7 @@ services:
   worker:
     container_name: eventcater-worker
     image: eventcater-service-company
+    pull_policy: never
     restart: unless-stopped
     command:
       [
@@ -206,6 +208,7 @@ services:
   worker-deadlines:
     container_name: eventcater-deadlines
     image: eventcater-service-company
+    pull_policy: never
     restart: unless-stopped
     command:
       [

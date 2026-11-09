@@ -134,6 +134,8 @@ if [[ -f backend/.env ]]; then
 fi
 
 echo "==> Building and starting containers (this may take several minutes)"
+# Build API image first so workers (same image, pull_policy: never) do not hit Docker Hub.
+docker compose --env-file .env build service-company frontend
 docker compose --env-file .env up -d --build
 
 echo "==> Waiting for API container"
