@@ -109,7 +109,7 @@ const Navigation: React.FC = () => {
           justifyContent: "space-between",
           alignItems: "center",
           gap: 1,
-          minHeight: { xs: 76, sm: 88 },
+          minHeight: { xs: 80, sm: 92 },
           px: { xs: 1.5, sm: 2.5 },
         }}
       >
@@ -125,11 +125,11 @@ const Navigation: React.FC = () => {
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              height: { xs: 64, sm: 76 },
-              width: { xs: 112, sm: 132 },
-              borderRadius: "0.5rem",
+              width: { xs: 68, sm: 80 },
+              height: { xs: 68, sm: 80 },
+              borderRadius: "0.55rem",
               overflow: "hidden",
-              bgcolor: "#2d394a",
+              bgcolor: "#2f3a49",
               border: "1px solid rgba(255,255,255,0.1)",
               flexShrink: 0,
             }}
@@ -137,15 +137,15 @@ const Navigation: React.FC = () => {
             <Image
               src="/icons/event-cater-logo.png"
               alt="EventCater"
-              width={264}
-              height={152}
+              width={160}
+              height={160}
               priority
               className="logo"
               style={{
                 width: "100%",
                 height: "100%",
                 marginRight: 0,
-                objectFit: "contain",
+                objectFit: "cover",
                 display: "block",
               }}
             />

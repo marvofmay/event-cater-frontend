@@ -25,10 +25,9 @@ body {
 }
 
 .logo {
-    width: auto;
-    height: auto;
-    max-height: 76px;
-    object-fit: contain;
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
     margin-right: 0;
     vertical-align: middle;
 }
