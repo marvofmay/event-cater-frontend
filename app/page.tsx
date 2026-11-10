@@ -39,35 +39,51 @@ const Home: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Box
-        component="main"
-        sx={{
-          minHeight: "80vh",
-          px: 2,
-          py: 4,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <Box width="100%" maxWidth="900px">
-          <Typography variant="h6" mb={3}>
-            {t("common.welcome")}, {fullName}.
+      <Box sx={{ width: "100%", maxWidth: 960, mx: "auto" }}>
+        <Typography
+          component="h1"
+          sx={{
+            m: 0,
+            mb: 0.75,
+            fontSize: { xs: "1.35rem", sm: "1.6rem" },
+            fontWeight: 620,
+            letterSpacing: "-0.025em",
+            color: "#10261f",
+          }}
+        >
+          {t("common.welcome")}, {fullName}
+        </Typography>
+        {tenant && (
+          <Typography sx={{ mb: 2, color: "#4d5c55", lineHeight: 1.5 }}>
+            Firma: <strong style={{ color: "#1c3d32" }}>{tenant.name}</strong>{" "}
+            ({tenant.slug})
           </Typography>
-          {tenant && (
-            <Typography variant="body1" mb={3}>
-              Zalogowano do firmy: <strong>{tenant.name}</strong> ({tenant.slug}).
-            </Typography>
-          )}
-          {roles.length > 0 && (
-            <Stack direction="row" spacing={1} sx={{ mb: 3 }} aria-label="Twoje role">
-              {roles.map((role) => (
-                <Chip key={role} label={role} size="small" />
-              ))}
-            </Stack>
-          )}
-
-          <Items />
-        </Box>
+        )}
+        {roles.length > 0 && (
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ mb: 2.5 }}
+            aria-label="Twoje role"
+          >
+            {roles.map((role) => (
+              <Chip
+                key={role}
+                label={role.replace(/\bHRApp\b/g, "EventCater")}
+                size="small"
+                sx={{
+                  bgcolor: "rgba(28, 61, 50, 0.08)",
+                  color: "#1c3d32",
+                  fontWeight: 520,
+                  borderRadius: "0.35rem",
+                }}
+              />
+            ))}
+          </Stack>
+        )}
+        <Items />
       </Box>
     </QueryClientProvider>
   );

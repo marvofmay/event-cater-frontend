@@ -1,5 +1,5 @@
 {
-    "technicalAccountMessage": "To konto należy do pracownika technicznego systemu. Email: {{email}}",
+    "technicalAccountMessage": "Pracownik techniczny systemu EventCater - nie powiązany z pracownikiem firmy. Email: {{email}}",
     "data": {
         "main": "podstawowe",
         "title": "dane użytkownika",

@@ -1,292 +1,312 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import { Autocomplete, CssBaseline, Divider, Card as MuiCard } from '@mui/material';
-import ForgotPassword from './ForgotPassword';
-import getSignUpTheme from '../register/theme/getSignUpTheme';
-import {
-    createTheme,
-    ThemeProvider,
-    styled,
-    PaletteMode,
-} from '@mui/material/styles';
+"use client";
+
+import * as React from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import FormLabel from "@mui/material/FormLabel";
+import FormControl from "@mui/material/FormControl";
+import Link from "@mui/material/Link";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { Alert, Autocomplete } from "@mui/material";
+import ForgotPassword from "./ForgotPassword";
 import { useUser } from "@/app/context/userContext";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
-const Card = styled(MuiCard)(({ theme }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignSelf: 'center',
-    width: '100%',
-    padding: theme.spacing(4),
-    gap: theme.spacing(2),
-    margin: 'auto',
-    [theme.breakpoints.up('sm')]: {
-        maxWidth: '450px',
-    },
-    boxShadow:
-        'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-    ...theme.applyStyles('dark', {
-        boxShadow:
-            'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
-    }),
-}));
-
-const SignInContainer = styled(Stack)(({ theme }) => ({
-    minHeight: '100%',
-    padding: theme.spacing(2),
-    [theme.breakpoints.up('sm')]: {
-        padding: theme.spacing(4),
-    },
-    '&::before': {
-        content: '""',
-        display: 'block',
-        position: 'absolute',
-        zIndex: -1,
-        inset: 0,
-        backgroundImage:
-            'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-        backgroundRepeat: 'no-repeat',
-        ...theme.applyStyles('dark', {
-            backgroundImage:
-                'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
-        }),
-    },
-}));
+const fieldSx = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "0.45rem",
+    backgroundColor: "#fbfcfb",
+    "& fieldset": { borderColor: "rgba(21, 32, 27, 0.14)" },
+    "&:hover fieldset": { borderColor: "rgba(28, 61, 50, 0.45)" },
+    "&.Mui-focused fieldset": { borderColor: "#1c3d32" },
+  },
+};
 
 export default function SignIn() {
-    const { t } = useTranslation();
-    const [emailError, setEmailError] = React.useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-    const [passwordError, setPasswordError] = React.useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-    const [backendErrorMessage, setBackendErrorMessage] = React.useState('');
-    const [open, setOpen] = React.useState(false);
-    const [resetLogin, setResetLogin] = React.useState('');
-    const [mode] = React.useState<PaletteMode>('light');
-    const SignUpTheme = createTheme(getSignUpTheme(mode));
-    const { login } = useUser();
-    const [tenantSlug, setTenantSlug] = React.useState('');
-    const [tenantOptions, setTenantOptions] = React.useState<{ slug: string; name: string }[]>([]);
+  const { t } = useTranslation();
+  const [emailError, setEmailError] = React.useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
+  const [backendErrorMessage, setBackendErrorMessage] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const [resetLogin, setResetLogin] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const { login } = useUser();
+  const [tenantSlug, setTenantSlug] = React.useState("");
+  const [tenantOptions, setTenantOptions] = React.useState<
+    { slug: string; name: string }[]
+  >([]);
 
-    React.useEffect(() => {
-        let current = true;
-        const preferred = new URLSearchParams(window.location.search).get('tenant') || localStorage.getItem('selected_tenant') || '';
-        setTenantSlug(preferred === 'default' ? '' : preferred);
-        fetch('/api/saas/tenant-options')
-            .then(response => {
-                if (!response.ok) throw new Error('Nie udało się wczytać listy firm. Wpisz kod firmy.');
-                return response.json();
-            })
-            .then(data => {
-                if (!current) return;
-                setTenantOptions(data.items);
-                if ((!preferred || preferred === 'default') && data.items.length === 1) setTenantSlug(data.items[0].slug);
-            })
-            .catch(error => { if (current) setBackendErrorMessage(error.message); });
-        return () => { current = false; };
-    }, []);
-
-    const handleClickOpen = () => {
-        setResetLogin((document.getElementById('email') as HTMLInputElement)?.value ?? '');
-        setOpen(true);
+  React.useEffect(() => {
+    let current = true;
+    const preferred =
+      new URLSearchParams(window.location.search).get("tenant") ||
+      localStorage.getItem("selected_tenant") ||
+      "";
+    setTenantSlug(preferred === "default" ? "" : preferred);
+    fetch("/api/saas/tenant-options")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            "Nie udało się wczytać listy firm. Wpisz kod firmy.",
+          );
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (!current) return;
+        setTenantOptions(data.items);
+        if (
+          (!preferred || preferred === "default") &&
+          data.items.length === 1
+        ) {
+          setTenantSlug(data.items[0].slug);
+        }
+      })
+      .catch((error) => {
+        if (current) setBackendErrorMessage(error.message);
+      });
+    return () => {
+      current = false;
     };
+  }, []);
 
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setBackendErrorMessage('');
-        if (!validateInputs()) {
-            return false;
-        }
-        if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(tenantSlug.trim())) {
-            setBackendErrorMessage('Wybierz firmę lub wpisz jej kod.');
-            return;
-        }
-
-        const data = new FormData(event.currentTarget);
-        const emailData = String(data.get('email') ?? '');
-        const passwordData = String(data.get('password') ?? '');
-
-        try {
-            await login(emailData, passwordData, tenantSlug.trim());
-        } catch (err: unknown) {
-            if (
-                typeof err === 'object' &&
-                err !== null &&
-                'message' in err &&
-                typeof (err as { message?: unknown }).message === 'string'
-            ) {
-                setBackendErrorMessage((err as { message: string }).message);
-            } else {
-                setBackendErrorMessage(t('common.message.somethingWentWrong'));
-            }
-        }
-    };
-
-    const validateInputs = () => {
-        const email = document.getElementById('email') as HTMLInputElement;
-        const password = document.getElementById('password') as HTMLInputElement;
-
-        let isValid = true;
-
-        if (!email.value.trim()) {
-            setEmailError(true);
-            setEmailErrorMessage('Podaj numer telefonu lub e-mail konta technicznego.');
-            isValid = false;
-        } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
-        }
-
-        if (!password.value || password.value.length < 7) {
-            setPasswordError(true);
-            setPasswordErrorMessage(t('validation.passwordMustBeAtLeast7CharactersLong'));
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage('');
-        }
-
-        return isValid;
-    };
-
-    return (
-        <>
-            <ThemeProvider theme={SignUpTheme} >
-                <CssBaseline enableColorScheme />
-                <SignInContainer direction="column" justifyContent="space-between">
-                    <Card variant="outlined">
-                        <Typography
-                            component="h1"
-                            variant="h4"
-                            sx={{
-                                width: '100%',
-                                fontSize: 'clamp(1.5rem, 8vw, 1.8rem)',
-                                color: '#34495e',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {t('loginForm.title.login')}
-                        </Typography>
-                        <Box>
-                            <Typography sx={{ color: 'red' }}>
-                                {backendErrorMessage}
-                            </Typography>
-                        </Box>
-                        <Box
-                            component="form"
-                            method="POST"
-                            onSubmit={handleSubmit}
-                            noValidate
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                width: '100%',
-                                gap: 2,
-                            }}
-                        >
-                            <FormControl>
-                                <FormLabel htmlFor="tenantSlug">Kod firmy</FormLabel>
-                                <Autocomplete
-                                    id="tenantSlug"
-                                    freeSolo
-                                    options={tenantOptions}
-                                    getOptionLabel={option => typeof option === 'string' ? option : option.slug}
-                                    inputValue={tenantSlug}
-                                    onInputChange={(_, value) => setTenantSlug(value)}
-                                    renderOption={(props, option) => {
-                                        const { key, ...attributes } = props;
-                                        return <li key={key} {...attributes}>{option.name} ({option.slug})</li>;
-                                    }}
-                                    renderInput={params => <TextField {...params} id="tenantSlug" name="tenantSlug" required helperText={tenantOptions.find(option => option.slug === tenantSlug)?.name || 'Wybierz firmę z listy lub wpisz jej kod'} inputProps={{ ...params.inputProps, maxLength: 63 }} />}
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel htmlFor="email">Login</FormLabel>
-                                <TextField
-                                    error={emailError}
-                                    helperText={emailErrorMessage}
-                                    id="email"
-                                    type="text"
-                                    name="email"
-                                    placeholder="Numer telefonu"
-                                    autoComplete="username"
-                                    autoFocus
-                                    required
-                                    fullWidth
-                                    variant="outlined"
-                                    color={emailError ? 'error' : 'primary'}
-                                    sx={{ ariaLabel: 'email', paddingTop: '5px' }}
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <FormLabel htmlFor="password">{t('loginForm.label.password')}</FormLabel>
-                                    <Link
-                                        component="button"
-                                        type="button"
-                                        onClick={handleClickOpen}
-                                        variant="body2"
-                                        sx={{ alignSelf: 'baseline' }}
-                                    >
-                                        {t('loginForm.question.forgotYourPassword')}
-                                    </Link>
-                                </Box>
-                                <TextField
-                                    error={passwordError}
-                                    helperText={passwordErrorMessage}
-                                    name="password"
-                                    placeholder="••••••"
-                                    type="password"
-                                    id="password"
-                                    autoComplete="current-password"
-                                    autoFocus
-                                    required
-                                    fullWidth
-                                    variant="outlined"
-                                    color={passwordError ? 'error' : 'primary'}
-                                />
-                            </FormControl>
-                            {/* <FormControlLabel
-                                control={<Checkbox value="remember" color="primary" />}
-                                label={t('loginForm.button.rememberMe')}
-                            /> */}
-                            <ForgotPassword open={open} handleClose={handleClose} tenantSlug={tenantSlug.trim()} initialLogin={resetLogin} />
-                            <Button
-                                type="submit"
-                                fullWidth
-                                variant="contained"
-                                onClick={validateInputs}
-                            >
-                                {t('loginForm.button.singIn')}
-                            </Button>
-                            {/* <Typography sx={{ textAlign: 'center' }}>
-                                {t('loginForm.question.dontHaveAccount')}
-                                <span>
-                                    <Link
-                                        href="/register"
-                                        variant="body2"
-                                        sx={{ alignSelf: 'center' }}
-                                    >
-                                        {t('loginForm.button.singUp')}
-                                    </Link>
-                                </span>
-                            </Typography> */}
-                        </Box>
-                        <Divider />
-                    </Card>
-                </SignInContainer>
-            </ThemeProvider >
-        </>
+  const handleClickOpen = () => {
+    setResetLogin(
+      (document.getElementById("email") as HTMLInputElement)?.value ?? "",
     );
+    setOpen(true);
+  };
+
+  const handleClose = () => setOpen(false);
+
+  const validateInputs = () => {
+    const email = document.getElementById("email") as HTMLInputElement;
+    const password = document.getElementById("password") as HTMLInputElement;
+    let isValid = true;
+
+    if (!email.value.trim()) {
+      setEmailError(true);
+      setEmailErrorMessage(
+        "Podaj numer telefonu lub e-mail konta technicznego.",
+      );
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage("");
+    }
+
+    if (!password.value || password.value.length < 7) {
+      setPasswordError(true);
+      setPasswordErrorMessage(
+        t("validation.passwordMustBeAtLeast7CharactersLong"),
+      );
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+
+    return isValid;
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBackendErrorMessage("");
+    if (!validateInputs()) return;
+    if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(tenantSlug.trim())) {
+      setBackendErrorMessage("Wybierz firmę lub wpisz jej kod.");
+      return;
+    }
+
+    const data = new FormData(event.currentTarget);
+    const emailData = String(data.get("email") ?? "");
+    const passwordData = String(data.get("password") ?? "");
+    setBusy(true);
+    try {
+      await login(emailData, passwordData, tenantSlug.trim());
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "message" in err &&
+        typeof (err as { message?: unknown }).message === "string"
+      ) {
+        setBackendErrorMessage((err as { message: string }).message);
+      } else {
+        setBackendErrorMessage(t("common.message.somethingWentWrong"));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const selectedName =
+    tenantOptions.find((option) => option.slug === tenantSlug)?.name || "";
+
+  return (
+    <Box component="form" method="POST" onSubmit={handleSubmit} noValidate>
+      <Typography
+        component="h1"
+        sx={{
+          m: 0,
+          mb: 2.25,
+          fontSize: "1.35rem",
+          fontWeight: 620,
+          letterSpacing: "-0.02em",
+          color: "#10261f",
+        }}
+      >
+        Logowanie
+      </Typography>
+
+      {backendErrorMessage ? (
+        <Alert
+          severity="error"
+          sx={{ mb: 2, borderRadius: "0.45rem" }}
+          onClose={() => setBackendErrorMessage("")}
+        >
+          {backendErrorMessage}
+        </Alert>
+      ) : null}
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <FormControl fullWidth>
+          <FormLabel
+            htmlFor="tenantSlug"
+            sx={{ mb: 0.6, color: "#1c3d32", fontWeight: 560, fontSize: "0.9rem" }}
+          >
+            Kod firmy
+          </FormLabel>
+          <Autocomplete
+            id="tenantSlug"
+            freeSolo
+            options={tenantOptions}
+            getOptionLabel={(option) =>
+              typeof option === "string" ? option : option.slug
+            }
+            inputValue={tenantSlug}
+            onInputChange={(_, value) => setTenantSlug(value)}
+            renderOption={(props, option) => {
+              const { key, ...attributes } = props;
+              return (
+                <li key={key} {...attributes}>
+                  {option.name} ({option.slug})
+                </li>
+              );
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                id="tenantSlug"
+                name="tenantSlug"
+                required
+                placeholder="np. mapa-smakow"
+                helperText={
+                  selectedName ||
+                  "Wybierz firmę z listy lub wpisz jej kod"
+                }
+                inputProps={{ ...params.inputProps, maxLength: 63 }}
+                sx={fieldSx}
+              />
+            )}
+          />
+        </FormControl>
+
+        <FormControl fullWidth>
+          <FormLabel
+            htmlFor="email"
+            sx={{ mb: 0.6, color: "#1c3d32", fontWeight: 560, fontSize: "0.9rem" }}
+          >
+            Login
+          </FormLabel>
+          <TextField
+            error={emailError}
+            helperText={emailErrorMessage}
+            id="email"
+            type="text"
+            name="email"
+            placeholder="Telefon lub e-mail"
+            autoComplete="username"
+            autoFocus
+            required
+            fullWidth
+            variant="outlined"
+            color={emailError ? "error" : "primary"}
+            sx={fieldSx}
+          />
+        </FormControl>
+
+        <FormControl fullWidth>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              mb: 0.6,
+            }}
+          >
+            <FormLabel
+              htmlFor="password"
+              sx={{ color: "#1c3d32", fontWeight: 560, fontSize: "0.9rem" }}
+            >
+              {t("loginForm.label.password")}
+            </FormLabel>
+            <Link
+              component="button"
+              type="button"
+              onClick={handleClickOpen}
+              variant="body2"
+              sx={{ color: "#1c3d32", fontWeight: 500 }}
+            >
+              {t("loginForm.question.forgotYourPassword")}
+            </Link>
+          </Box>
+          <TextField
+            error={passwordError}
+            helperText={passwordErrorMessage}
+            name="password"
+            placeholder="••••••••"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            required
+            fullWidth
+            variant="outlined"
+            color={passwordError ? "error" : "primary"}
+            sx={fieldSx}
+          />
+        </FormControl>
+
+        <ForgotPassword
+          open={open}
+          handleClose={handleClose}
+          tenantSlug={tenantSlug.trim()}
+          initialLogin={resetLogin}
+        />
+
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          disabled={busy}
+          sx={{
+            mt: 0.5,
+            minHeight: 48,
+            borderRadius: "0.45rem",
+            textTransform: "none",
+            fontWeight: 620,
+            fontSize: "1rem",
+            bgcolor: "#1c3d32",
+            boxShadow: "none",
+            "&:hover": { bgcolor: "#10261f", boxShadow: "none" },
+          }}
+        >
+          {busy ? "Logowanie..." : "Zaloguj się"}
+        </Button>
+      </Box>
+    </Box>
+  );
 }

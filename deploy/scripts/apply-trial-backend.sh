@@ -17,8 +17,17 @@ cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TenantProvisioner.php" "${BA
 cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" "${BACKEND}/src/Module/Saas/Presentation/API/Controller/"
 mkdir -p "${BACKEND}/src/Module/Saas/Presentation/Console"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" "${BACKEND}/src/Module/Saas/Presentation/Console/"
+mkdir -p "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence"
+cp -f "${PATCH_ROOT}/src/Module/Facebook/Infrastructure/Persistence/DoctrineFacebookPageConnectionRepository.php" \
+  "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence/"
 cp -f "${PATCH_ROOT}/config/packages/saas.yaml" "${BACKEND}/config/packages/saas.yaml"
 cp -f "${PATCH_ROOT}/config/services/main.yaml" "${BACKEND}/config/services/main.yaml"
+
+# Branding leftovers from HRApp
+sed -i 's/Pracownik techniczny systemu HRApp/Pracownik techniczny systemu EventCater/g' \
+  "${BACKEND}/src/Module/Company/Domain/Entity/User.php" || true
+sed -i "s/noreply@hrapp.com/noreply@eventcater.pl/g; s/System HRApp/EventCater/g" \
+  "${BACKEND}/src/Module/System/Infrastructure/Email/SymfonyEmailSender.php" 2>/dev/null || true
 
 # Ensure .env has trial notify defaults
 cd "${APP_ROOT}"

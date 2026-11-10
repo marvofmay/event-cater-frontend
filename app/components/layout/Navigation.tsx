@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { AppBar, Toolbar, Button, Link, Badge } from "@mui/material";
+import { AppBar, Toolbar, Button, Link, Badge, Box } from "@mui/material";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
-import LoginIcon from "@mui/icons-material/Login";
 import CircleNotificationsIcon from "@mui/icons-material/CircleNotifications";
 import EmailIcon from "@mui/icons-material/Email";
 import { useTranslation } from "react-i18next";
@@ -15,16 +14,17 @@ import ManageListNavigation from "../manage/navigation/List";
 import SettingsListNavigation from "../settings/navigation/List";
 import UserProfileNavigation from "../user/UserProfileNavigation";
 import { SERVICE_COMPANY_URL, SERVICE_MERCURE_URL } from "@/app/utils/constans";
-import { useUnreadMessagesCount } from '@/app/hooks/messages/useUnreadMessagesCount';
+import { useUnreadMessagesCount } from "@/app/hooks/messages/useUnreadMessagesCount";
 import { isPublicMarketingPath } from "@/app/lib/publicMarketing";
+import { isBareAuthPath } from "@/app/lib/shellPaths";
 
 const navLinks = [
-  { href: "/", label: "home", activePath: "/", icon: <HomeIcon /> },
+  { href: "/", label: "home", activePath: "/", icon: <HomeIcon fontSize="small" /> },
   {
     href: "/info",
     label: "info",
     activePath: "/info",
-    icon: <InfoIcon />,
+    icon: <InfoIcon fontSize="small" />,
     name: "info",
   },
 ];
@@ -32,7 +32,7 @@ const navLinks = [
 const Navigation: React.FC = () => {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const { isAuthenticated, hasModule, hasAccess, hasPermission, user } = useUser();
+  const { isAuthenticated, hasAccess, hasPermission, user } = useUser();
   const messageCount = useUnreadMessagesCount();
   const [notificationCount, setNotificationCount] = useState(0);
   const [hydrated, setHydrated] = useState(false);
@@ -50,103 +50,129 @@ const Navigation: React.FC = () => {
         `${SERVICE_COMPANY_URL}/api/notification-messages/unread-count`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-
-      if (!response.ok) {
-        return;
-      }
-
+      if (!response.ok) return;
       const body = await response.json();
       setNotificationCount(body?.data?.unreadCount ?? 0);
     } catch {
-      // badge stays at last known value
+      // keep last known value
     }
   }, []);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.uuid || !hydrated) return;
-
     loadUnreadCount();
   }, [isAuthenticated, user, hydrated, pathname, loadUnreadCount]);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.uuid || !hydrated) return;
-
     if (typeof window === "undefined") return;
 
     const url = new URL(SERVICE_MERCURE_URL);
     url.searchParams.append("topic", `user.${user.uuid}`);
-
     const es = new EventSource(url.toString());
-
-    es.onopen = () => {
-      loadUnreadCount();
-    };
-
+    es.onopen = () => loadUnreadCount();
     es.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (data.payload?.subscriberType === "internal") {
-        loadUnreadCount();
-      }
+      if (data.payload?.subscriberType === "internal") loadUnreadCount();
     };
-
-    es.onerror = () => {
-      if (es.readyState === EventSource.CLOSED) {
-        console.warn("Połączenie z powiadomieniami Mercure zostało zamknięte.");
-      }
-    };
-
     return () => es.close();
   }, [isAuthenticated, user, hydrated, loadUnreadCount]);
 
-  if (!hydrated) {
+  if (!hydrated) return null;
+
+  // Marketing + bare auth pages have their own composition.
+  if (!isAuthenticated && (isPublicMarketingPath(pathname) || isBareAuthPath(pathname))) {
     return null;
   }
 
-  // Public marketing pages have their own composition; hide the app chrome.
-  if (!isAuthenticated && isPublicMarketingPath(pathname)) {
-    return null;
-  }
+  const itemSx = (active: boolean) => ({
+    color: "inherit",
+    textDecoration: "none",
+    borderRadius: "0.4rem",
+    backgroundColor: active ? "rgba(255,255,255,0.14)" : "transparent",
+    transition: "background-color 0.15s ease",
+    "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+  });
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#34495e" }}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        backgroundColor: "#10261f",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
       <Toolbar
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: 1,
+          minHeight: { xs: 64, sm: 68 },
+          px: { xs: 1.5, sm: 2.5 },
         }}
       >
-        <Link href="/" color="inherit" underline="none">
+        <Link
+          href="/"
+          color="inherit"
+          underline="none"
+          sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
+        >
           <Image
             src="/icons/event-cater-logo.png"
-            alt="Logo"
-            width={100}
-            height={100}
+            alt="EventCater"
+            width={44}
+            height={44}
+            className="logo"
+            style={{ width: 44, height: 44, marginRight: 0 }}
           />
+          <Box
+            component="span"
+            sx={{
+              display: { xs: "none", sm: "inline" },
+              fontWeight: 620,
+              letterSpacing: "-0.02em",
+              fontSize: "1.05rem",
+            }}
+          >
+            EventCater
+          </Box>
         </Link>
 
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          {navLinks.map((link) =>
-            isAuthenticated ? (
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            alignItems: "center",
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+          }}
+        >
+          {isAuthenticated &&
+            navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                color="inherit"
                 underline="none"
-                sx={{
-                  backgroundColor:
-                    pathname === link.activePath
-                      ? "rgba(255, 255, 255, 0.3)"
-                      : "transparent",
-                  borderRadius: "4px",
-                }}
+                sx={itemSx(pathname === link.activePath)}
               >
-                <Button color="inherit">
-                  {link.icon} {t(`navigation.${link.label.toLowerCase()}`)}
+                <Button
+                  color="inherit"
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 520,
+                    minWidth: 0,
+                    px: { xs: 1, sm: 1.5 },
+                  }}
+                >
+                  {link.icon}
+                  <Box component="span" sx={{ ml: 0.75, display: { xs: "none", md: "inline" } }}>
+                    {t(`navigation.${link.label.toLowerCase()}`)}
+                  </Box>
                 </Button>
               </Link>
-            ) : null,
-          )}
+            ))}
 
           {isAuthenticated && (
             <>
@@ -158,17 +184,10 @@ const Navigation: React.FC = () => {
           {isAuthenticated && hasAccess("notifications") && (
             <Link
               href="/notifications"
-              color="inherit"
               underline="none"
-              sx={{
-                backgroundColor:
-                  pathname === "/notifications"
-                    ? "rgba(255,255,255,0.3)"
-                    : "transparent",
-                borderRadius: "4px",
-              }}
+              sx={itemSx(pathname === "/notifications")}
             >
-              <Button color="inherit">
+              <Button color="inherit" sx={{ minWidth: 44 }}>
                 <Badge badgeContent={notificationCount} color="error">
                   <CircleNotificationsIcon />
                 </Badge>
@@ -176,46 +195,32 @@ const Navigation: React.FC = () => {
             </Link>
           )}
 
-          {isAuthenticated && hasAccess("messages") && (hasPermission('messages.list') || hasPermission('messages.create')) && (
-            <Link
-              href="/messages"
-              color="inherit"
-              underline="none"
-              sx={{
-                backgroundColor:
-                  pathname === "/messages"
-                    ? "rgba(255,255,255,0.3)"
-                    : "transparent",
-                borderRadius: "4px",
-              }}
-            >
-              <Button color="inherit" aria-label={messageCount ? `Wiadomości: ${messageCount} nieprzeczytanych` : 'Wiadomości'} sx={{ minWidth: { xs: 40, sm: 64 }, px: { xs: 1, sm: 2 } }}>
-                <Badge badgeContent={messageCount} color="error" max={99}><EmailIcon /></Badge>
-              </Button>
-            </Link>
-          )}
+          {isAuthenticated &&
+            hasAccess("messages") &&
+            (hasPermission("messages.list") || hasPermission("messages.create")) && (
+              <Link
+                href="/messages"
+                underline="none"
+                sx={itemSx(pathname === "/messages")}
+              >
+                <Button
+                  color="inherit"
+                  aria-label={
+                    messageCount
+                      ? `Wiadomości: ${messageCount} nieprzeczytanych`
+                      : "Wiadomości"
+                  }
+                  sx={{ minWidth: 44 }}
+                >
+                  <Badge badgeContent={messageCount} color="error" max={99}>
+                    <EmailIcon />
+                  </Badge>
+                </Button>
+              </Link>
+            )}
 
-          {isAuthenticated ? (
-            <UserProfileNavigation />
-          ) : (
-            <Link
-              href="/login"
-              color="inherit"
-              underline="none"
-              sx={{
-                backgroundColor:
-                  pathname === "/login"
-                    ? "rgba(255,255,255,0.3)"
-                    : "transparent",
-                borderRadius: "4px",
-              }}
-            >
-              <Button color="inherit">
-                <LoginIcon /> {t("login")}
-              </Button>
-            </Link>
-          )}
-        </div>
+          {isAuthenticated ? <UserProfileNavigation /> : null}
+        </Box>
       </Toolbar>
     </AppBar>
   );

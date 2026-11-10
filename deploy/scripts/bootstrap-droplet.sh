@@ -83,8 +83,15 @@ if [[ -d frontend/deploy/backend-trial ]]; then
   cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" backend/src/Module/Saas/Presentation/API/Controller/
   mkdir -p backend/src/Module/Saas/Presentation/Console
   cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" backend/src/Module/Saas/Presentation/Console/
+  mkdir -p backend/src/Module/Facebook/Infrastructure/Persistence
+  cp -f "${PATCH_ROOT}/src/Module/Facebook/Infrastructure/Persistence/DoctrineFacebookPageConnectionRepository.php" \
+    backend/src/Module/Facebook/Infrastructure/Persistence/
   cp -f "${PATCH_ROOT}/config/packages/saas.yaml" backend/config/packages/saas.yaml
   cp -f "${PATCH_ROOT}/config/services/main.yaml" backend/config/services/main.yaml
+  sed -i 's/Pracownik techniczny systemu HRApp/Pracownik techniczny systemu EventCater/g' \
+    backend/src/Module/Company/Domain/Entity/User.php || true
+  sed -i "s/noreply@hrapp.com/noreply@eventcater.pl/g; s/System HRApp/EventCater/g" \
+    backend/src/Module/System/Infrastructure/Email/SymfonyEmailSender.php 2>/dev/null || true
 fi
 
 cp -f frontend/deploy/docker-compose.prod.yml "${APP_ROOT}/docker-compose.yml"
