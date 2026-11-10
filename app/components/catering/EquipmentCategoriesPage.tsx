@@ -120,7 +120,7 @@ export function EquipmentCategoriesPage({ kind = "equipment" }: { kind?: "equipm
               remote.reload();
             });
           }}>
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{edit?.uuid ? "Edytuj kategorię " + subject : "Dodaj kategorię " + subject}</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{edit?.uuid ? "Edytuj kategorię " + subject : "Dodaj kategorię " + subject}</DialogTitle>
             <DialogContent>
               <TextField
                 autoFocus required fullWidth label="Nazwa kategorii" sx={{ mt: 1 }}
@@ -136,7 +136,7 @@ export function EquipmentCategoriesPage({ kind = "equipment" }: { kind?: "equipm
           </form>
         </Dialog>
         <Dialog open={remove !== null} onClose={() => !action.busy && setRemove(null)} fullWidth maxWidth="sm">
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć kategorię {subject}?</DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć kategorię {subject}?</DialogTitle>
           <DialogContent>
             <Typography mb={2}>
               {remove?.name}. Jeśli do kategorii należą pozycje katalogowe, wybierz kategorię docelową.

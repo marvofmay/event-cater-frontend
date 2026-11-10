@@ -135,7 +135,7 @@ export default function CompanyNoticesBoard() {
 
       {selected && (
         <Dialog open onClose={() => setSelected(null)} fullWidth maxWidth="md">
-          <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
             {selected.title}
           </DialogTitle>
           <DialogContent>

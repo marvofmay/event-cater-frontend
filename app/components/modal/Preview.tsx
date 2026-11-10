@@ -14,7 +14,7 @@ const Preview: React.FC<PreviewProps> = ({ open, title, details, onClose }) => {
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {title}
             </DialogTitle>
 

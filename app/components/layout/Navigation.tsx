@@ -117,23 +117,38 @@ const Navigation: React.FC = () => {
           href="/"
           color="inherit"
           underline="none"
-          sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
+          sx={{ display: "inline-flex", alignItems: "center", gap: 1.25 }}
         >
-          <Image
-            src="/icons/event-cater-logo.png"
-            alt="EventCater"
-            width={44}
-            height={44}
-            className="logo"
-            style={{ width: 44, height: 44, marginRight: 0 }}
-          />
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: { xs: 56, sm: 64 },
+              height: { xs: 56, sm: 64 },
+              borderRadius: "0.55rem",
+              bgcolor: "#e7efea",
+              border: "1px solid rgba(231, 239, 234, 0.9)",
+              overflow: "hidden",
+              flexShrink: 0,
+            }}
+          >
+            <Image
+              src="/icons/event-cater-logo.png"
+              alt="EventCater"
+              width={56}
+              height={56}
+              className="logo"
+              style={{ width: "86%", height: "86%", marginRight: 0, objectFit: "contain" }}
+            />
+          </Box>
           <Box
             component="span"
             sx={{
               display: { xs: "none", sm: "inline" },
-              fontWeight: 620,
-              letterSpacing: "-0.02em",
-              fontSize: "1.05rem",
+              fontWeight: 640,
+              letterSpacing: "-0.025em",
+              fontSize: "1.2rem",
             }}
           >
             EventCater

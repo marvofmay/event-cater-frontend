@@ -55,7 +55,7 @@ const EditRoleModal: React.FC<EditRoleModalProps> = ({ open, role, onSave, onClo
             fullWidth
             maxWidth="sm"
         >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t('role.modal.edit.title')}
             </DialogTitle>
 

@@ -248,7 +248,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ open, onClose, onAd
             fullWidth
             maxWidth="xl"
         >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t(employee ? 'employee.modal.edit.title' : 'employee.modal.add.title')}
             </DialogTitle>
             <Formik<EmployeePayload>

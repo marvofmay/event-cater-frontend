@@ -19,7 +19,7 @@ export default function EmployeeContactPreview({ employee, onClose }: { employee
         staleTime: 0, gcTime: 60000, retry: false,
     });
     return <Dialog open onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="employee-contact-title">
-        <DialogTitle id="employee-contact-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Dane kontaktowe pracownika</DialogTitle>
+        <DialogTitle id="employee-contact-title" sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Dane kontaktowe pracownika</DialogTitle>
         <DialogContent>
             {query.isPending && <CircularProgress aria-label="Ładowanie kontaktu" />}
             {query.isError && <Alert severity="error" action={<Button onClick={() => query.refetch()}>Ponów</Button>}>{query.error.message}</Alert>}

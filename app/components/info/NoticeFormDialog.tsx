@@ -65,7 +65,7 @@ export default function NoticeFormDialog({ open, notice, onClose, onSaved }: Pro
   return (
     <>
       <Dialog open={open} onClose={() => !action.busy && onClose()} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
+        <DialogTitle sx={{ backgroundColor: '#171717', color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
           {notice ? t("info.edit") : t("info.add")}
         </DialogTitle>
         <DialogContent>

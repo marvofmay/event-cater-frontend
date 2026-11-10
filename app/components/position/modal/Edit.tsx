@@ -70,7 +70,7 @@ const EditPositionModal: React.FC<EditPositionModalProps> = ({ open, onClose, po
             fullWidth
             maxWidth="sm"
         >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t('position.modal.edit.title')}
             </DialogTitle>
 

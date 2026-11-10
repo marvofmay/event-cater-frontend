@@ -55,7 +55,7 @@ const EditContractTypeModal: React.FC<EditContractTypeModalProps> = ({ open, con
             fullWidth
             maxWidth="sm"
         >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t('contractType.modal.edit.title')}
             </DialogTitle>
 

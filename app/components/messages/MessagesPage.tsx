@@ -119,7 +119,7 @@ function MessagesWorkspace() {
         </>}
         {compose && <MessageComposer reply={reply} onClose={() => { setCompose(false); setReply(null); }} onSent={() => { setFolder('sent'); setUnread(false); setPage(1); setSearch(''); remote.reload(); }} />}
         <Dialog open={Boolean(selectedUuid)} onClose={() => setSelectedUuid(null)} fullWidth maxWidth="md">
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold', overflowWrap: 'anywhere' }}>{message?.title ?? 'Wiadomość'}</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold', overflowWrap: 'anywhere' }}>{message?.title ?? 'Wiadomość'}</DialogTitle>
             <DialogContent dividers>
                 {detail.loading && <CircularProgress aria-label="Wczytywanie treści wiadomości" />}
                 {detail.error && <Alert severity="error">{detail.error}</Alert>}
@@ -129,7 +129,7 @@ function MessagesWorkspace() {
             <DialogActions>{message && canSend && message.isRecipient && !message.isSender && <Button color="primary" variant="contained" startIcon={<Reply />} onClick={() => openReply(message)}>Odpowiedz</Button>}<Button color="primary" variant="contained" onClick={() => setSelectedUuid(null)}>Zamknij</Button></DialogActions>
         </Dialog>
         <Dialog open={Boolean(deleteTargets)} onClose={() => { if (!deletion.busy) setDeleteTargets(null); }} fullWidth maxWidth="xs">
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{deleteTargets?.length === 1 ? 'Usunąć wiadomość?' : 'Usunąć zaznaczone wiadomości?'}</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{deleteTargets?.length === 1 ? 'Usunąć wiadomość?' : 'Usunąć zaznaczone wiadomości?'}</DialogTitle>
             <DialogContent><Typography>Wiadomości do usunięcia: {deleteTargets?.length ?? 0}. Znikną tylko z Twojej skrzynki. Kopie u pozostałych osób nie zostaną usunięte. Tej operacji nie można cofnąć w interfejsie.</Typography></DialogContent>
             <DialogActions><Button color="primary" variant="contained" disabled={deletion.busy} onClick={() => setDeleteTargets(null)}>Anuluj</Button><Button variant="contained" color="error" disabled={deletion.busy} onClick={() => deletion.run(async () => {
                 if (!deleteTargets) return;

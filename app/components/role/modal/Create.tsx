@@ -64,7 +64,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ open, onClose, onAddRole })
             fullWidth
             maxWidth="sm"
         >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t('role.modal.add.title')}
                 <IconButton
                     aria-label="close"

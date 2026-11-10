@@ -13,11 +13,10 @@ import {
     Button,
     Box,
     CircularProgress,
-    TextField,
     Checkbox
 } from '@mui/material';
 import Tooltip from "@mui/material/Tooltip";
-import { Preview, Edit, Delete, Add, Key, Search } from '@mui/icons-material';
+import { Preview, Edit, Delete, Add, Key } from '@mui/icons-material';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import Industry from '@/app/types/Industry';
 import CreateIndustryModal from '@/app/components/industry/modal/Create';
@@ -36,6 +35,9 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import { useUser } from "@/app/context/userContext";
+import ListToolbar from '@/app/components/common/ListToolbar';
+import { RowActionsCell } from '@/app/components/common/RowActionsCell';
+
 import { SortDirection } from '@/app/types/SortDirection';
 
 const IndustriesTable = () => {
@@ -184,26 +186,12 @@ const IndustriesTable = () => {
 
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <TextField
-                        variant="outlined"
-                        placeholder={t('common.enterPhraseToSearch')}
-                        size="small"
-                        sx={{ width: '500px' }}
-                        onChange={(e) => setSearchPhrase(e.target.value)}
-                    />
-                    <Button
-                        startIcon={<Search />}
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSearch}
-                    >
-                        {t('common.button.search')}
-                    </Button>
-                </Box>
-
-                <Box display="flex" alignItems="center" gap={1} ml="auto">
+            <ListToolbar
+                searchPhrase={searchPhrase}
+                onSearchPhraseChange={setSearchPhrase}
+                onSearch={handleSearch}
+                actions={
+                    <>
                     {hasPermission("industries.create") && (
                         <>
                             <Button
@@ -234,8 +222,9 @@ const IndustriesTable = () => {
                             {t('industry.button.deleteChecked')} ({selected.length})
                         </Button>
                     )}
-                </Box>
-            </Box>
+                    </>
+                }
+            />
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
@@ -331,7 +320,7 @@ const IndustriesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}>{industry.description || '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(industry.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{industry.updatedAt ? moment(industry.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                    <RowActionsCell>
                                         {hasPermission("industries.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', industry)}><Preview /></IconButton>
@@ -349,7 +338,7 @@ const IndustriesTable = () => {
                                                 <IconButton onClick={() => openModal('delete', industry)}><Delete /></IconButton>
                                             </Tooltip>
                                         )}
-                                    </TableCell>
+                                    </RowActionsCell>
                                 </TableRow>
                             ))}
                         </TableBody>

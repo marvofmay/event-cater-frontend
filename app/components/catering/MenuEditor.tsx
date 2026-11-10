@@ -85,7 +85,7 @@ function DishDialog({ item, adding, disabled, onClose, onConfirm }: { item: Menu
       if (!draft.name.trim()) { setNameError(true); return; }
       onConfirm({ ...draft, name: draft.name.trim() });
     }}>
-      <DialogTitle id="menu-dish-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{adding ? 'Dodaj potrawę do menu' : 'Edytuj potrawę'}</DialogTitle>
+      <DialogTitle id="menu-dish-title" sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{adding ? 'Dodaj potrawę do menu' : 'Edytuj potrawę'}</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ pt: 2 }}>
           <Stack direction={{ xs: "column", md: "row" }} gap={2}>

@@ -213,14 +213,14 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
               <TableRow>
                 {(kind === "equipment"
                   ? [
-                      ["Zdjęcie", "48px"],
-                      ["Kod", "9%"],
-                      ["Nazwa", "16%"],
-                      ["Nazwa slangowa", "12%"],
-                      ["Ilość posiadana", "8%"],
-                      ["Miejsce przechowywania", "18%"],
-                      ["Kategoria", "12%"],
-                      ["Jednostka", "7%"],
+                      ["Zdjęcie", "52px"],
+                      ["Kod", "8%"],
+                      ["Nazwa", "14%"],
+                      ["Nazwa slangowa", "11%"],
+                      ["Ilość posiadana", "10%"],
+                      ["Miejsce przechowywania", "16%"],
+                      ["Kategoria", "11%"],
+                      ["Jednostka", "8%"],
                       ["Status", "8%"],
                       ["Działania", "120px"],
                     ]
@@ -233,7 +233,20 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                       ["Działania", "120px"],
                     ]
                 ).map(([label, width]) => (
-                  <TableCell key={label} sx={{ width, whiteSpace: "nowrap" }}>{label}</TableCell>
+                  <TableCell
+                    key={label}
+                    sx={{
+                      width,
+                      minWidth: label === "Ilość posiadana" || label === "Miejsce przechowywania" ? 96 : undefined,
+                      whiteSpace: "normal",
+                      lineHeight: 1.25,
+                      fontWeight: 600,
+                      verticalAlign: "bottom",
+                      hyphens: "auto",
+                    }}
+                  >
+                    {label}
+                  </TableCell>
                 ))}
               </TableRow>
             </TableHead>
@@ -349,7 +362,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
               });
             }}
           >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
               {edit?.uuid ? "Edycja pozycji" : "Nowa pozycja"}
             </DialogTitle>
             <DialogContent>
@@ -481,7 +494,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
           </form>
         </Dialog>
         <Dialog open={gallery !== null} onClose={() => setGallery(null)} fullWidth maxWidth="md">
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
             Zdjęcia sprzętu - {gallery?.name}
           </DialogTitle>
           <DialogContent sx={{ pt: 2 }}>
@@ -492,7 +505,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
           </DialogActions>
         </Dialog>
         <Dialog open={deleting !== null} onClose={() => !action.busy && setDeleting(null)}>
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Trwale usunąć sprzęt?</DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Trwale usunąć sprzęt?</DialogTitle>
           <DialogContent>
             {deleting?.name}. Tej operacji nie można cofnąć. Usunięcie jest możliwe,
             jeśli sprzęt nie jest przypisany do żadnego wydarzenia ani szablonu.
@@ -515,7 +528,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
           </DialogActions>
         </Dialog>
         <Dialog open={archive !== null} onClose={() => setArchive(null)}>
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
             {archive?.active ? "Archiwizować pozycję?" : "Przywrócić pozycję?"}
           </DialogTitle>
           <DialogContent>

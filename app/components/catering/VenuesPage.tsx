@@ -182,7 +182,7 @@ export function VenuesPage() {
               });
             }}
           >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
               {edit?.uuid ? "Miejsce obsługi" : "Nowe miejsce obsługi"}
             </DialogTitle>
             <DialogContent>
@@ -239,7 +239,7 @@ export function VenuesPage() {
           </form>
         </Dialog>
         <Dialog open={archive !== null} onClose={() => setArchive(null)}>
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
             {archive?.active ? "Archiwizować miejsce?" : "Przywrócić miejsce?"}
           </DialogTitle>
           <DialogContent>

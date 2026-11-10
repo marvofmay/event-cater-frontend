@@ -13,13 +13,12 @@ import {
     Button,
     Box,
     CircularProgress,
-    TextField,
     Checkbox
 } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Person2Icon from '@mui/icons-material/Person2';
 import Tooltip from "@mui/material/Tooltip";
-import { Preview, Edit, Delete, Add, Key, Search } from '@mui/icons-material';
+import { Preview, Edit, Delete, Add, Key } from '@mui/icons-material';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import CancelIcon from '@mui/icons-material/CancelOutlined';
@@ -40,6 +39,9 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import { useUser } from "@/app/context/userContext";
+import ListToolbar from '@/app/components/common/ListToolbar';
+import { RowActionsCell } from '@/app/components/common/RowActionsCell';
+
 import { SortDirection } from '@/app/types/SortDirection';
 import EmployeePayload from '@/app/types/EmployeePayload';
 import { userAvatarUrl } from '@/app/utils/userAvatar';
@@ -188,26 +190,12 @@ const EmployeesTable = () => {
 
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <TextField
-                        variant="outlined"
-                        placeholder={t('common.enterPhraseToSearch')}
-                        size="small"
-                        sx={{ width: '500px' }}
-                        onChange={(e) => setSearchPhrase(e.target.value)}
-                    />
-                    <Button
-                        startIcon={<Search />}
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSearch}
-                    >
-                        {t('common.button.search')}
-                    </Button>
-                </Box>
-
-                <Box display="flex" alignItems="center" gap={1} ml="auto">
+            <ListToolbar
+                searchPhrase={searchPhrase}
+                onSearchPhraseChange={setSearchPhrase}
+                onSearch={handleSearch}
+                actions={
+                    <>
                     {hasPermission("employees.create") && (
                         <>
                             <Button
@@ -238,8 +226,9 @@ const EmployeesTable = () => {
                             {t('employee.button.deleteChecked')} ({selected.length})
                         </Button>
                     )}
-                </Box>
-            </Box>
+                    </>
+                }
+            />
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
@@ -339,7 +328,7 @@ const EmployeesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}> {employee.active ? (<CheckCircleIcon color="success" fontSize="small" />) : (<CancelIcon color="error" fontSize="small" />)}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(employee.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{employee.updatedAt ? moment(employee.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                    <RowActionsCell>
                                         {hasPermission("employees.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', employee)}><Preview /></IconButton>
@@ -357,7 +346,7 @@ const EmployeesTable = () => {
                                                 <IconButton onClick={() => openModal('delete', employee)}><Delete /></IconButton>
                                             </Tooltip>
                                         )}
-                                    </TableCell>
+                                    </RowActionsCell>
                                 </TableRow>
                             ))}
                         </TableBody>

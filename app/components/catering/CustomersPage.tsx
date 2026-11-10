@@ -55,7 +55,7 @@ function CustomerWorkspace() {
     <TablePagination component="div" count={remote.data?.total ?? 0} page={page} rowsPerPage={limit} rowsPerPageOptions={[20, 50, 100]} onPageChange={(_, value) => setPage(value)} onRowsPerPageChange={event => { setLimit(Number(event.target.value)); setPage(0); }} labelRowsPerPage="Rekordów na stronę" labelDisplayedRows={({ from, to, count }) => `${from}-${to} z ${count}`} getItemAriaLabel={type => type === "next" ? "Następna strona" : "Poprzednia strona"} />
     {canWrite && <CustomerCreateDialog open={create} onClose={() => setCreate(false)} onCreated={() => { setPage(0); remote.reload(); }} />}
     <Dialog open={selected !== null} onClose={() => setSelected(null)} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name}</DialogTitle>
+      <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name}</DialogTitle>
       <DialogContent dividers>
         <Box component="dl" sx={{ m: 0, display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: 1.5, "& dd": { m: 0, overflowWrap: "anywhere" }, "& dt": { color: "text.secondary" } }}>
           {([['NIP', selected?.nip], ['REGON', selected?.regon], ['KRS', selected?.krs], ['Adres', selected?.address], ['Telefon', selected?.phone], ['E-mail', selected?.email]] as const).map(([label, value]) => <Box key={label} sx={{ display: "contents" }}><Typography component="dt" variant="body2">{label}</Typography><Typography component="dd" variant="body2">{value || "-"}</Typography></Box>)}

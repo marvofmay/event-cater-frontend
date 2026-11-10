@@ -166,11 +166,11 @@ function PreparationLinePhoto({
           }
         }}
       >
-        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-          <Typography component="span" fontWeight={700}>
+        <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold', display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Typography component="span" fontWeight={700} color="inherit">
             {line.name}
           </Typography>
-          <Button onClick={() => setOpen(false)}>Zamknij</Button>
+          <Button onClick={() => setOpen(false)} sx={{ color: 'white' }}>Zamknij</Button>
         </DialogTitle>
         <DialogContent>
           <Stack alignItems="center" gap={2}>
@@ -677,7 +677,7 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
           setEditing(false);
         }, 'Zapisano pozycję w planie.');
       }}>
-        <DialogTitle id={`preparation-line-${line.uuid}`} sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Edycja planu - {line.name}</DialogTitle>
+        <DialogTitle id={`preparation-line-${line.uuid}`} sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Edycja planu - {line.name}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 2 }}>
             <TextField required type="number" label={`Ilość do zabrania (${unitLabels[line.unit]})`} value={quantity} onChange={event => setQuantity(event.target.value)} disabled={action.busy || !canQuantity} slotProps={{ htmlInput: { min: ['kg', 'l'].includes(line.unit) ? 0.001 : 1, max: 1000000, step: ['kg', 'l'].includes(line.unit) ? 0.001 : 1 } }} />
@@ -693,7 +693,7 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
       </Box>
     </Dialog>
     <Dialog open={removing} onClose={() => !action.busy && setRemoving(false)} fullWidth maxWidth="xs" aria-labelledby={`remove-preparation-${line.uuid}`}>
-      <DialogTitle id={`remove-preparation-${line.uuid}`} sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć pozycję z planu?</DialogTitle>
+      <DialogTitle id={`remove-preparation-${line.uuid}`} sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć pozycję z planu?</DialogTitle>
       <DialogContent>{line.name}</DialogContent>
       <DialogActions>
         <Button color="primary" variant="contained" disabled={action.busy} onClick={() => setRemoving(false)}>Anuluj</Button>

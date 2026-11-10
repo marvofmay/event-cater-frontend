@@ -62,7 +62,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({ open, onClose, onAddNote })
             fullWidth
             maxWidth="sm"
         >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {t('note.modal.add.title')}
                 <IconButton
                     aria-label="close"

@@ -163,7 +163,7 @@ export function TemplatesPage() {
               });
             }}
           >
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Szablon kompletacji</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Szablon kompletacji</DialogTitle>
             <DialogContent>
               <fieldset
                 disabled={
@@ -290,7 +290,7 @@ export function TemplatesPage() {
           </form>
         </Dialog>
         <Dialog open={deleting !== null} onClose={() => !action.busy && setDeleting(null)} fullWidth maxWidth="xs" aria-labelledby="delete-template-title">
-          <DialogTitle id="delete-template-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć trwale szablon?</DialogTitle>
+          <DialogTitle id="delete-template-title" sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć trwale szablon?</DialogTitle>
           <DialogContent>
             <Typography fontWeight={600} sx={{ mt: 2, mb: 2 }}>{deleting?.name}</Typography>
             <Alert severity="warning">Tej operacji nie można cofnąć. Listy rzeczy w istniejących wydarzeniach pozostaną bez zmian.</Alert>
@@ -306,7 +306,7 @@ export function TemplatesPage() {
           </DialogActions>
         </Dialog>
         <Dialog open={archive !== null} onClose={() => setArchive(null)}>
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
             {archive?.active ? "Archiwizować szablon?" : "Przywrócić szablon?"}
           </DialogTitle>
           <DialogContent>

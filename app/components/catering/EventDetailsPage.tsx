@@ -275,7 +275,7 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
             <HistoryPanel path={"/events/" + uuid + "/history"} />
           )}
           <Dialog open={!!nextStatus} onClose={() => setNextStatus("")}>
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Zmiana etapu wydarzenia</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Zmiana etapu wydarzenia</DialogTitle>
             <DialogContent>
               Czy zmienić etap z „{stateLabels[event.status] || event.status}” na „{stateLabels[nextStatus] || nextStatus}”?
               {nextStatus === "cancelled"
@@ -722,7 +722,7 @@ function StaffSection({
         </form>
       )}
       <Dialog open={!!remove} onClose={() => setRemove(null)}>
-        <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć przydział pracownika?</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć przydział pracownika?</DialogTitle>
         <DialogActions>
           <Button color="primary" variant="contained" onClick={() => setRemove(null)}>Anuluj</Button>
           <Button color="error" variant="contained"
@@ -967,7 +967,7 @@ function MediaSection({
         </form>
       )}
       <Dialog open={!!remove} onClose={() => setRemove(null)}>
-        <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć załącznik z wydarzenia?</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Usunąć załącznik z wydarzenia?</DialogTitle>
         <DialogActions>
           <Button color="primary" variant="contained" onClick={() => setRemove(null)}>Anuluj</Button>
           <Button color="error" variant="contained"

@@ -39,7 +39,7 @@ export default function ForgotPassword({ open, handleClose, tenantSlug, initialL
     };
     return <Dialog open={open} onClose={saving ? undefined : handleClose} fullWidth maxWidth="xs" aria-labelledby="forgot-password-title">
         <form onSubmit={submit}>
-            <DialogTitle id="forgot-password-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Odzyskaj dostęp do konta</DialogTitle>
+            <DialogTitle id="forgot-password-title" sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Odzyskaj dostęp do konta</DialogTitle>
             <DialogContent>
                 <DialogContentText sx={{ mb: 2 }}>Podaj login lub przypisany do konta e-mail. Wyślemy link do ustawienia nowego hasła. Działa to również dla hasła startowego.</DialogContentText>
                 {!validTenant && <Alert severity="warning" sx={{ mb: 2 }}>Najpierw wybierz firmę w formularzu logowania.</Alert>}

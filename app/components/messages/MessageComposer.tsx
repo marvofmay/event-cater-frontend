@@ -28,7 +28,7 @@ export default function MessageComposer({ onClose, onSent, reply }: { onClose: (
                 notifyMessagesChanged(); onSent(); onClose();
             }, 'Wysłano wiadomość.');
         }}>
-            <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{reply ? 'Odpowiedź na wiadomość' : 'Nowa wiadomość'}</DialogTitle>
+            <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{reply ? 'Odpowiedź na wiadomość' : 'Nowa wiadomość'}</DialogTitle>
             <DialogContent dividers>
                 <Stack gap={2}>
                     <Typography variant="body2" color="text.secondary">Wiadomość trafi do skrzynek wskazanych osób w tej firmie. Nie jest wysyłana jako SMS ani e-mail.</Typography>

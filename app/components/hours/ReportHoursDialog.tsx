@@ -33,7 +33,7 @@ export default function ReportHoursDialog({ open, onClose, onSaved, date = "", p
 
   return (
     <Dialog open={open} onClose={() => !action.busy && onClose()} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
+      <DialogTitle sx={{ backgroundColor: '#171717', color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
         {plannedMinutes > 0 ? "Dodaj dodatkowy czas w tym wydarzeniu" : "Dodaj godziny poza wydarzeniem"}
       </DialogTitle>
       <DialogContent>

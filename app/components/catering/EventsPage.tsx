@@ -199,7 +199,7 @@ export function EventsPage() {
           fullWidth
           maxWidth="lg"
         >
-          <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Planowanie wydarzenia</DialogTitle>
+          <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Planowanie wydarzenia</DialogTitle>
           <DialogContent>
             <EventForm
               onSaved={(event) => router.push("/catering/events/" + event.uuid)}

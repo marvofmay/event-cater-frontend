@@ -13,11 +13,10 @@ import {
     Button,
     Box,
     CircularProgress,
-    TextField,
     Checkbox
 } from '@mui/material';
 import Tooltip from "@mui/material/Tooltip";
-import { Preview, Edit, Delete, Add, Key, Search } from '@mui/icons-material';
+import { Preview, Edit, Delete, Add, Key } from '@mui/icons-material';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import Position from '@/app/types/Position';
 import CreatePositionModal from '@/app/components/position/modal/Create';
@@ -36,6 +35,8 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import { useUser } from "@/app/context/userContext";
+import ListToolbar from '@/app/components/common/ListToolbar';
+import { RowActionsCell } from '@/app/components/common/RowActionsCell';
 import PositionPayload from '@/app/types/PositionPayload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import CancelIcon from '@mui/icons-material/CancelOutlined';
@@ -232,26 +233,12 @@ const PositionsTable = () => {
 
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1} sx={{ flex: '1 1 320px', maxWidth: 560, minWidth: 0 }}>
-                    <TextField
-                        variant="outlined"
-                        placeholder={t('common.enterPhraseToSearch')}
-                        size="small"
-                        sx={{ flex: 1, minWidth: 0 }}
-                        onChange={(e) => setSearchPhrase(e.target.value)}
-                    />
-                    <Button
-                        startIcon={<Search />}
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSearch}
-                    >
-                        {t('common.button.search')}
-                    </Button>
-                </Box>
-
-                <Box display="flex" alignItems="center" flexWrap="wrap" gap={1} ml="auto" sx={{ width: { xs: '100%', sm: 'auto' }, '& .MuiButton-root': { whiteSpace: { xs: 'normal', sm: 'nowrap' }, maxWidth: '100%' } }}>
+            <ListToolbar
+                searchPhrase={searchPhrase}
+                onSearchPhraseChange={setSearchPhrase}
+                onSearch={handleSearch}
+                actions={
+                    <>
                     {hasPermission("positions.create") && (
                         <>
                             <Button
@@ -282,8 +269,9 @@ const PositionsTable = () => {
                             {t('position.button.deleteChecked')} ({selected.length})
                         </Button>
                     )}
-                </Box>
-            </Box>
+                    </>
+                }
+            />
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
@@ -432,7 +420,7 @@ const PositionsTable = () => {
                                             <Box sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>{moment(position.updatedAt).format('HH:mm:ss')}</Box>
                                         </> : '-'}
                                     </TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                    <RowActionsCell>
                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, '& .MuiIconButton-root': { p: 0.75 }, '& .MuiSvgIcon-root': { fontSize: 20 } }}>
                                         {hasPermission("positions.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
@@ -452,7 +440,7 @@ const PositionsTable = () => {
                                             </Tooltip>
                                         )}
                                         </Box>
-                                    </TableCell>
+                                    </RowActionsCell>
                                 </TableRow>
                             ))}
                         </TableBody>

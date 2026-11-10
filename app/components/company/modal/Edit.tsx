@@ -159,7 +159,7 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({ open, onClose, comp
                 fullWidth
                 maxWidth="xl"
             >
-                <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
                     {t('company.modal.edit.title')}
                 </DialogTitle>
                 <Formik<Company>

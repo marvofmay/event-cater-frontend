@@ -109,7 +109,7 @@ export function CustomerCreateDialog({ open, onClose, onCreated, initialName = "
           onClose();
         }, "Dodano kontrahenta.");
       }}>
-        <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient / organizator / kontrahent</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient / organizator / kontrahent</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" mb={2}>Wymagana jest tylko nazwa. Pozostałe dane możesz pozostawić puste.</Typography>
           <Stack gap={2}>

@@ -35,7 +35,7 @@ export default function ChangePasswordDialog({ required = false, onClose }: { re
     };
     return <Dialog open fullWidth maxWidth="sm" disableEscapeKeyDown={required || saving} onClose={required || saving ? undefined : onClose} aria-labelledby="change-password-title">
         <form onSubmit={submit}>
-            <DialogTitle id="change-password-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{required ? 'Ustaw własne hasło' : 'Zmień hasło'}</DialogTitle>
+            <DialogTitle id="change-password-title" sx={{ backgroundColor: '#171717', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{required ? 'Ustaw własne hasło' : 'Zmień hasło'}</DialogTitle>
             <DialogContent>
                 {required && <Alert severity="info" sx={{ mb: 2 }}>Przy pierwszym logowaniu musisz zmienić hasło startowe (PESEL). Dopiero wtedy uzyskasz dostęp do aplikacji.</Alert>}
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

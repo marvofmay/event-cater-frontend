@@ -150,7 +150,7 @@ export default function CoverCropDialog({ open, file, onCancel, onConfirm }: Pro
 
   return (
     <Dialog open={open} onClose={() => !busy && onCancel()} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
+      <DialogTitle sx={{ backgroundColor: '#171717', color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>
         Kadrowanie zdjęcia wiodącego
       </DialogTitle>
       <DialogContent>
