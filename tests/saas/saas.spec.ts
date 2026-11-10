@@ -32,6 +32,7 @@ test('SaaS administrator creates a company, activates it, suspends access and pr
             await page.getByRole('option',{name:label,exact:true}).click();
             await dialog.getByLabel('Uzasadnienie zmiany').fill(reason);
             await dialog.getByRole('button',{name:'Zapisz status'}).click();
+            await dialog.getByRole('tab',{name:/Historia/}).click();
             await expect(dialog).toContainText(reason);
             await dialog.getByRole('button',{name:'Zamknij'}).click();
             await expect(row).toContainText(label);

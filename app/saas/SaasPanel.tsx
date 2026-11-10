@@ -2,7 +2,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import { RowAction } from "../components/common/RowAction";
 import { FormEvent, useEffect, useState } from 'react';
-import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
+import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tab, Tabs, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
 
 type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; status: string; provisioning: string; version: number; plan?: string; trialEndsAt?: string | null; history?: {action: string; reason: string; actor: string; createdAt: string}[] };
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
@@ -19,6 +19,7 @@ export default function SaasPanel() {
     const [status,setStatus] = useState('inactive');
     const [reason,setReason] = useState('');
     const [confirmSlug,setConfirmSlug] = useState('');
+    const [manageTab,setManageTab] = useState(0);
     const [notice,setNotice] = useState('');
     useEffect(()=>{ setToken(sessionStorage.getItem('saas_token')); },[]);
     async function api(path:string,method='GET',body?:unknown,auth=token) {
@@ -45,7 +46,7 @@ export default function SaasPanel() {
         if(!selected || confirmSlug !== selected.slug) return; setBusy(true); setError('');
         try { await api('/tenants/'+selected.uuid,'DELETE',{confirmSlug}); setNotice('Firma '+selected.name+' została trwale usunięta. Kod '+selected.slug+' można nadać ponownie.'); setSelected(null); setConfirmSlug(''); await refresh(); } catch(e) { setError((e as Error).message); } finally { setBusy(false); }
     }
-    async function details(tenant:Tenant) { setError(''); setConfirmSlug(''); try { const detail=await api('/tenants/'+tenant.uuid); setSelected(detail); setStatus(detail.status); setReason(''); } catch(e) { setError((e as Error).message); } }
+    async function details(tenant:Tenant) { setError(''); setConfirmSlug(''); setManageTab(0); try { const detail=await api('/tenants/'+tenant.uuid); setSelected(detail); setStatus(detail.status); setReason(''); } catch(e) { setError((e as Error).message); } }
     return <Box sx={{p:3}}>
         <Typography variant="h4" gutterBottom>Administracja SaaS</Typography>
         <Typography color="text.secondary" sx={{mb:2}}>Klienci systemu cateringowego</Typography>
@@ -69,7 +70,8 @@ export default function SaasPanel() {
             <TextField name="ownerEmail" label="E-mail administratora firmy" type="email" required inputProps={{maxLength:100}} />
             <TextField name="ownerPassword" label="Początkowe hasło administratora" type="password" autoComplete="new-password" required inputProps={{minLength:12,maxLength:72}} />
         </Stack></DialogContent><DialogActions>{busy&&<CircularProgress size={22}/>}<Button color="primary" variant="contained" disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
-        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} - zarządzanie</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
+        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} - zarządzanie</DialogTitle><Tabs value={manageTab} onChange={(_,value)=>setManageTab(value)} aria-label="Szczegóły firmy" sx={{px:3, borderBottom:1, borderColor:'divider'}}><Tab label="Zarządzanie" /><Tab label={selected?.history?.length ? `Historia (${selected.history.length})` : 'Historia'} /></Tabs><DialogContent><Stack spacing={2} sx={{pt:1}}>
+            {manageTab === 0 && <>
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
             <Typography>{selected && provisioning[selected.provisioning]}</Typography>
@@ -84,8 +86,12 @@ export default function SaasPanel() {
                 <TextField label="Wpisz kod firmy, aby potwierdzić" value={confirmSlug} onChange={e=>setConfirmSlug(e.target.value)} autoComplete="off" />
                 <Button color="error" variant="contained" disabled={busy || confirmSlug !== selected.slug} onClick={purgeTenant}>Usuń trwale z bazy</Button>
             </Stack>}
-            <Typography variant="h6">Historia</Typography>
-            {selected?.history?.map((entry,index)=><Box key={index}><Typography>{entry.createdAt} - {entry.actor} - {entry.action}</Typography><Typography color="text.secondary">{entry.reason}</Typography></Box>)}
+            </>}
+            {manageTab === 1 && <>
+            {error && <Alert severity="error">{error}</Alert>}
+            {(selected?.history?.length ?? 0) === 0 && <Typography color="text.secondary">Brak wpisów.</Typography>}
+            {selected?.history?.map((entry,index)=>{ const line=[entry.createdAt, entry.actor?.trim(), entry.action].filter(Boolean).join(' - '); return <Box key={index}><Typography>{line}</Typography>{entry.reason ? <Typography color="text.secondary">{entry.reason}</Typography> : null}</Box>; })}
+            </>}
         </Stack></DialogContent><DialogActions><Button variant="contained" color="primary" disabled={busy} onClick={()=>setSelected(null)}>Zamknij</Button></DialogActions></Dialog>
     </Box>;
 }
