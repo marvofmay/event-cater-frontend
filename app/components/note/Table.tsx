@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 import {
     Table,
     TableBody,
@@ -11,7 +12,6 @@ import {
     IconButton,
     Button,
     Box,
-    CircularProgress,
     TextField,
     Checkbox,
     MenuItem,
@@ -249,9 +249,7 @@ const NotesTable = () => {
             </Box>}
 
             {isLoading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" height="300px">
-                    <CircularProgress />
-                </Box>
+                <CenteredSpinner minHeight={300} />
             ) : error ? (
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
                     <div>{t('common.message.somethingWentWrong')} :(</div>

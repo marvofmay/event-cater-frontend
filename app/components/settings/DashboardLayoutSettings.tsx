@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, IconButton, Paper, Stack, Typography } from '@mui/material';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 import { ArrowDownward, ArrowUpward, DragIndicator } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useUser } from '@/app/context/userContext';
@@ -78,7 +79,7 @@ export default function DashboardLayoutSettings() {
         <Typography variant="h6" gutterBottom>Kolejność kafelków na pulpicie</Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>Przeciągnij kafelki lub użyj strzałek, a następnie zapisz. Układ dotyczy tylko Ciebie w firmie {tenant?.name}.</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => setReload(value => value + 1)} disabled={saving}>Odśwież</Button>}>{error}</Alert>}
-        {!layout ? !error && <CircularProgress aria-label="Ładowanie układu pulpitu" /> : <>
+        {!layout ? !error && <CenteredSpinner minHeight={160} label="Ładowanie układu pulpitu" /> : <>
             {tiles.length === 0 && <Alert severity="info">Nie masz jeszcze dostępnych kafelków na pulpicie.</Alert>}
             <Stack component="ol" aria-label="Kolejność kafelków" spacing={1} sx={{ m: 0, p: 0, listStyle: 'none' }}>
                 {tiles.map((tile, index) => <Paper

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { BrandSpinner } from "@/app/components/common/BrandSpinner";
 import axios from "axios";
 import {
   Box,
@@ -6,7 +7,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
   Collapse,
   Dialog,
   DialogActions,
@@ -732,7 +732,7 @@ const AssignRoleAccessesModal: React.FC<AssignRoleAccessesModalProps> = ({
           </Box>
         ) : isLoading || !initialized ? (
           <Box display="flex" justifyContent="center" alignItems="center" flex={1} minHeight={220}>
-            <CircularProgress />
+            <BrandSpinner />
           </Box>
         ) : visibleModuleNames.length === 0 ? (
           <Box sx={{ p: 3 }}>

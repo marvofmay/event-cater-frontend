@@ -1,4 +1,5 @@
 import { useTablePageSize } from '@/app/context/preferencesContext';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 import React, { useState } from "react";
 import {
   Table,
@@ -12,7 +13,6 @@ import {
   IconButton,
   Button,
   Box,
-  CircularProgress,
   TextField,
   Checkbox,
   ToggleButton,
@@ -304,14 +304,7 @@ const NotificationsTable = () => {
       </Box>
 
       {isLoading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="300px"
-        >
-          <CircularProgress />
-        </Box>
+        <CenteredSpinner minHeight={300} />
       ) : error ? (
         <Box
           display="flex"

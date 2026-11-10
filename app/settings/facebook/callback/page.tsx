@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import CenteredSpinner, { BrandSpinner } from "@/app/components/common/BrandSpinner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useApi } from "@/app/components/catering/api";
@@ -71,7 +72,7 @@ export default function FacebookCallbackPage() {
   }, [loading, isAuthenticated, allowed, started, action, api, router]);
 
   if (loading || !isAuthenticated || !allowed) {
-    return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress /></Box>;
+    return <CenteredSpinner minHeight={160} />;
   }
 
   return (
@@ -80,7 +81,7 @@ export default function FacebookCallbackPage() {
         <Stack spacing={2}>
           {action.busy && !done && !pages && !error && (
             <Stack alignItems="center" gap={1} py={3}>
-              <CircularProgress />
+              <BrandSpinner />
               <Typography>Kończenie połączenia ze stroną Facebook…</Typography>
             </Stack>
           )}

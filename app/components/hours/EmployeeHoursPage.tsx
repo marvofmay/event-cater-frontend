@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Chip, CircularProgress, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Button, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { ExpandMore, Refresh } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/app/context/userContext";
@@ -28,7 +29,7 @@ export default function EmployeeHoursPage() {
   }, [loading, isAuthenticated, allowed, router]);
 
   if (loading || !isAuthenticated || !allowed) {
-    return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress aria-label="Ładowanie" /></Box>;
+    return <CenteredSpinner minHeight={160} />;
   }
 
   return (
@@ -45,7 +46,7 @@ export default function EmployeeHoursPage() {
         <Chip color="primary" label={`Zgłoszone: ${formatMinutes(remote.data?.totals.reportedMinutes ?? 0)}`} />
         <Chip color="success" label={`Do rozliczenia: ${formatMinutes(remote.data?.totals.effectiveMinutes ?? 0)}`} />
       </Stack>
-      {remote.loading && !remote.data ? <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box> : (
+      {remote.loading && !remote.data ? <CenteredSpinner minHeight={120} /> : (
         !(remote.data?.items.length) ? <Alert severity="info">Brak godzin pracowników w wybranym okresie.</Alert> : (
           <Stack spacing={1}>
             {remote.data?.items.map((item) => (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { useRouter } from "next/navigation";
 import FacebookConnectionCard from "@/app/components/facebook/FacebookConnectionCard";
 import { useUser } from "@/app/context/userContext";
@@ -19,9 +20,7 @@ export default function FacebookSettingsPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-        <CircularProgress aria-label="Ładowanie" />
-      </Box>
+      <CenteredSpinner minHeight={160} />
     );
   }
   if (!isAuthenticated || !allowed) return null;

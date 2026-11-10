@@ -2,7 +2,8 @@
 import AddIcon from "@mui/icons-material/Add";
 import { RowAction } from "../components/common/RowAction";
 import { FormEvent, useEffect, useState } from 'react';
-import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
+import { Alert, Box, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
+import { BrandSpinner } from '@/app/components/common/BrandSpinner';
 
 type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; status: string; provisioning: string; version: number; history?: {action: string; reason: string; actor: string; createdAt: string}[] };
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
@@ -62,7 +63,7 @@ export default function SaasPanel() {
             <TextField name="slug" label="Kod firmy" helperText="2-63 znaki: małe litery, cyfry, myślniki. Kod służy do logowania." required inputProps={{pattern:'[a-z0-9][a-z0-9-]{1,62}',maxLength:63}} />
             <TextField name="ownerEmail" label="E-mail administratora firmy" type="email" required inputProps={{maxLength:100}} />
             <TextField name="ownerPassword" label="Początkowe hasło administratora" type="password" autoComplete="new-password" required inputProps={{minLength:12,maxLength:72}} />
-        </Stack></DialogContent><DialogActions>{busy&&<CircularProgress size={22}/>}<Button color="primary" variant="contained" disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
+        </Stack></DialogContent><DialogActions>{busy&&<BrandSpinner size={22} label="Tworzenie klienta" />}<Button color="primary" variant="contained" disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
         <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} - zarządzanie</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>

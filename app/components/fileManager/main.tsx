@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Stack, Typography } from "@mui/material";
+import CenteredSpinner, { BrandSpinner } from "@/app/components/common/BrandSpinner";
 import { Refresh } from "@mui/icons-material";
 import { Locale } from "@svar-ui/react-core";
 import { Filemanager, Willow, getMenuOptions, type IApi, type IEntity } from "@svar-ui/react-filemanager";
@@ -128,12 +129,12 @@ function FileWorkspace() {
       <Button startIcon={<Refresh />} disabled={busy} onClick={() => reload().catch(failure => { setError(failure.message); toast.error(failure.message); })}>Odśwież</Button>
     </Stack>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-    {!snapshot && !error && <CircularProgress aria-label="Wczytywanie plików" />}
+    {!snapshot && !error && <CenteredSpinner minHeight={240} label="Wczytywanie plików" />}
     {snapshot && parsed && <>
       <Typography variant="caption" color="text.secondary">Wykorzystano {(snapshot.usedBytes / 1024 / 1024).toFixed(1)} MiB z {snapshot.maxBytes / 1024 / 1024 / 1024} GiB - {snapshot.items.length} z {snapshot.maxEntries} plików i folderów</Typography>
       <Locale words={plSvar}><Willow>
         <Box aria-busy={busy} sx={{ height: "70vh", minHeight: 500, position: "relative", pointerEvents: busy ? "none" : "auto", opacity: busy ? 0.65 : 1 }}>
-          {busy && <CircularProgress size={28} aria-label="Zapisywanie plików" sx={{ position: "absolute", top: 12, right: 12, zIndex: 2 }} />}
+          {busy && <Box sx={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}><BrandSpinner size={22} label="Zapisywanie plików" /></Box>}
           <Filemanager key={[snapshot.version, canCreate, canUpdate, canDelete, canView].join('-')} data={parsed.data} drive={{ used: snapshot.usedBytes, total: snapshot.maxBytes }} panels={panelPaths.current.map(path => ({ path: path === "/" || parsed.byPath.get(path)?.type === "folder" ? path : "/" }))} init={init} readonly={!canCreate && !canUpdate && !canDelete} menuOptions={mode => getMenuOptions(mode).filter(option => {
             if (option.id === "add-file") return false;
             if (["add-folder", "upload"].includes(String(option.id))) return canCreate;

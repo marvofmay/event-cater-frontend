@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Alert, Button, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { Add, Refresh } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -29,7 +30,7 @@ export default function MyHoursPage() {
   }, [loading, isAuthenticated, allowed, router]);
 
   if (loading || !isAuthenticated || !allowed) {
-    return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress aria-label="Ładowanie" /></Box>;
+    return <CenteredSpinner minHeight={160} />;
   }
 
   if (!employee) {
@@ -52,7 +53,7 @@ export default function MyHoursPage() {
         {canCreate && <Button color="success" startIcon={<Add />} variant="contained" onClick={() => setDialog({ date: "", plannedMinutes: 0 })}>Dodaj godziny</Button>}
       </Stack>
       {remote.error && <Alert severity="error" sx={{ mb: 2 }}>{remote.error}</Alert>}
-      {remote.loading && !remote.data ? <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box> : (
+      {remote.loading && !remote.data ? <CenteredSpinner minHeight={120} /> : (
         <>
           <Stack direction="row" gap={1} flexWrap="wrap" mb={2}>
             <Chip label={`Zaplanowane: ${formatMinutes(remote.data?.totals.plannedMinutes ?? 0)}`} />

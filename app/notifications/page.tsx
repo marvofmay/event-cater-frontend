@@ -2,7 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NotificationsTable from "@/app/components/notification/Table";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/context/userContext";
 import { useRouter } from "next/navigation";
@@ -21,16 +22,7 @@ const NotificationsList: React.FC = () => {
   }, [hasAccess, hasPermission, isAuthenticated, loading, router]);
 
   if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="300px"
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <CenteredSpinner minHeight={300} />;
   }
 
   return (

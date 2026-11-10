@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/context/userContext";
@@ -19,9 +19,7 @@ export default function DocumentsModulePage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-        <CircularProgress aria-label="Ładowanie" />
-      </Box>
+      <CenteredSpinner minHeight={160} />
     );
   }
 

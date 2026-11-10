@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useState } from "react";
-import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import Note from "../../../types/Note";
 import Preview from "../../modal/Preview";
 import { useTranslation } from "react-i18next";
@@ -82,7 +83,7 @@ const PreviewNoteModal: React.FC<PreviewNoteModalProps> = ({
         <Typography component="span" sx={{ display: 'block', fontSize: 24, lineHeight: 1.35, fontWeight: 700, overflowWrap: 'anywhere' }}>{displayedNote?.title || t('note.view.untitled')}</Typography>
       </DialogTitle>
       <DialogContent id={contentId} sx={{ px: { xs: 2.5, sm: 4 }, py: 1, minHeight: 160, maxHeight: '55vh', overflowY: 'auto' }}>
-        {loading ? <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={28} aria-label={t('common.loading')} /></Box>
+        {loading ? <CenteredSpinner minHeight={120} size={24} label={t('common.loading')} />
           : error ? <Alert severity="error">{t('common.message.somethingWentWrong')}</Alert>
           : <Typography component="div" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: 16, lineHeight: 1.8 }}>{note?.content ?? ''}</Typography>}
       </DialogContent>

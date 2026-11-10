@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Box, Chip, CircularProgress, Stack, Typography } from "@mui/material";
+import { Box, Chip, Stack, Typography } from "@mui/material";
+import CenteredSpinner from "./components/common/BrandSpinner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -19,16 +20,7 @@ const Home: React.FC = () => {
     : "pracowniku techniczny systemu";
 
   if (loading) {
-    return (
-      <Box
-        minHeight="100vh"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <CenteredSpinner minHeight="100vh" />;
   }
 
   return (

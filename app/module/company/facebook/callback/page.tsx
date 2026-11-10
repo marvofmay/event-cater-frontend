@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { useRouter } from "next/navigation";
 
 /** Legacy OAuth redirect - keeps old Meta App redirect URI working. */
@@ -14,8 +14,6 @@ export default function LegacyFacebookCallbackRedirect() {
   }, [router]);
 
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-      <CircularProgress aria-label="Przekierowanie" />
-    </Box>
+    <CenteredSpinner minHeight={160} label="Przekierowanie" />
   );
 }

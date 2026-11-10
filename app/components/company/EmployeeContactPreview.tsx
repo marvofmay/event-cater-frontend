@@ -1,6 +1,7 @@
 "use client";
 
-import { Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Link, Stack, Typography } from '@mui/material';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from '@/app/context/userContext';
 import type { StructureNode } from './CompanyStructure';
@@ -21,7 +22,7 @@ export default function EmployeeContactPreview({ employee, onClose }: { employee
     return <Dialog open onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="employee-contact-title">
         <DialogTitle id="employee-contact-title" sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Dane kontaktowe pracownika</DialogTitle>
         <DialogContent>
-            {query.isPending && <CircularProgress aria-label="Ładowanie kontaktu" />}
+            {query.isPending && <CenteredSpinner minHeight={120} size={24} label="Ładowanie kontaktu" />}
             {query.isError && <Alert severity="error" action={<Button onClick={() => query.refetch()}>Ponów</Button>}>{query.error.message}</Alert>}
             {query.data && <Stack spacing={1.5}>
                 <Typography><strong>Imię:</strong> {query.data.firstName}</Typography>

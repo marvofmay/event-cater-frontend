@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect } from "react";
 import { useUser } from "@/app/context/userContext";
-import { Box, CircularProgress } from '@mui/material';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 
 const Home: React.FC = () => {
     const { loading } = useUser();
@@ -12,9 +12,7 @@ const Home: React.FC = () => {
     }, [loading]);
 
     if (loading) {
-        return (<Box display="flex" justifyContent="center" alignItems="center" height="700px">
-            <CircularProgress />
-        </Box>);
+        return <CenteredSpinner minHeight="700px" />;
     }
 
     return (

@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/context/userContext";
 import CenteredMessage from "@/app/components/shared/CenterdeMessage";
@@ -12,9 +13,7 @@ export default function InfoPage() {
 
   if (loading) {
     return (
-      <Box minHeight="60vh" display="flex" justifyContent="center" alignItems="center">
-        <CircularProgress aria-label="Ładowanie" />
-      </Box>
+      <CenteredSpinner minHeight="60vh" />
     );
   }
 

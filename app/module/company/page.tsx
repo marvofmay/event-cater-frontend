@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/app/context/userContext";
@@ -18,7 +19,7 @@ export default function CompanyPage() {
         else if (!loading && !allowed) router.replace("/forbidden");
     }, [loading, isAuthenticated, allowed, router]);
 
-    if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress aria-label="Ładowanie" /></Box>;
+    if (loading) return <CenteredSpinner minHeight={160} />;
     if (!isAuthenticated || !allowed) return null;
 
     return <Box component="main" sx={{ maxWidth: 1200, mx: "auto", p: { xs: 1.5, sm: 3 }, width: "100%" }}>

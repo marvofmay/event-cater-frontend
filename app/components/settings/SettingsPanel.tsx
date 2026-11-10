@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Alert, Box, Button, Checkbox, CircularProgress, FormControlLabel, MenuItem, Paper, Stack, Switch, Tab, Tabs, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, Paper, Stack, Switch, Tab, Tabs, TextField, Typography } from '@mui/material';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 import { toast } from 'react-toastify';
 import { useUser } from '@/app/context/userContext';
 import { usePreferences, type PreferenceResource } from '@/app/context/preferencesContext';
@@ -103,7 +104,7 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
             <Typography color="text.secondary" sx={{ mb: 2 }}>{tenant?.name} - Ustawienia globalne dla tej firmy.</Typography>
         )}
         {error && <Alert severity="error" action={<Button onClick={() => setReload(value => value + 1)} color="inherit">Odśwież</Button>} sx={{ mb: 2 }}>{error}</Alert>}
-        {!data ? !error && <CircularProgress aria-label="Ładowanie ustawień" /> : <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
+        {!data ? !error && <CenteredSpinner minHeight={160} label="Ładowanie ustawień" /> : <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
             {notificationSettings && <Tabs value={notificationTab} onChange={(_, value) => { setNotificationTab(value); if (value === 'templates') setTemplatesVisited(true); }} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label="Ustawienia powiadomień" sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
                 <Tab value="channels" label="Kanały" id="notification-tab-channels" aria-controls="notification-panel-channels" />
                 <Tab value="templates" label="Tytuły i treści" id="notification-tab-templates" aria-controls="notification-panel-templates" />

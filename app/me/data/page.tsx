@@ -3,7 +3,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { useUser } from "@/app/context/userContext";
 import { useRouter } from "next/navigation";
 
@@ -45,16 +46,7 @@ const InnerDataContent: React.FC = () => {
   } = useUserProfileDataQuery(!loading && isAuthenticated);
 
   if (loading || isLoading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="300px"
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <CenteredSpinner minHeight={300} />;
   }
 
   if (isError) {

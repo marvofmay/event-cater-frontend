@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@/app/context/userContext";
@@ -25,16 +26,7 @@ const PositionsList: React.FC = () => {
   }, [hasAccess, hasPermission, isAuthenticated, loading, router]);
 
   if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="300px"
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <CenteredSpinner minHeight={300} />;
   }
 
   return (

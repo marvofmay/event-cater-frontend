@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, Paper, Stack, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, Paper, Stack, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Tooltip, Typography } from '@mui/material';
+import CenteredSpinner, { BrandSpinner } from '@/app/components/common/BrandSpinner';
 import { Add, DeleteOutline, PreviewOutlined, Refresh, Reply } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/userContext';
@@ -66,7 +67,7 @@ function MessagesWorkspace() {
     const openReply = (row: ReplyContext) => { setSelectedUuid(null); setReply(row); setCompose(true); };
     const sort = (field: string) => { setSortDirection(sortBy === field && sortDirection === 'asc' ? 'desc' : 'asc'); setSortBy(field); setPage(1); };
     const header = (field: string, label: string) => <TableSortLabel active={sortBy === field} direction={sortBy === field ? sortDirection : 'asc'} onClick={() => sort(field)}>{label}</TableSortLabel>;
-    if (loading) return <CircularProgress aria-label="Wczytywanie wiadomości" />;
+    if (loading) return <CenteredSpinner label="Wczytywanie wiadomości" />;
     if (!isAuthenticated) return null;
     if (!canList && !canSend) return <Alert severity="warning">Nie masz dostępu do wiadomości.</Alert>;
     return <Box sx={{ maxWidth: 1300, mx: 'auto', p: { xs: 1, sm: 3 }, minWidth: 0 }}>
@@ -85,7 +86,7 @@ function MessagesWorkspace() {
             </Stack>
             {canDelete && <Stack direction="row" gap={2} alignItems="center" mb={2}><Button color="error" variant="outlined" startIcon={<DeleteOutline />} disabled={!selected.length || deletion.busy} onClick={() => setDeleteTargets([...selected])}>Usuń zaznaczone ({selected.length})</Button><Typography variant="caption" color="text.secondary">Zaznaczanie dotyczy bieżącej strony.</Typography></Stack>}
             {remote.error && <Alert severity="error" sx={{ mb: 2 }}>{remote.error}</Alert>}
-            {remote.loading && <CircularProgress size={24} aria-label="Wczytywanie skrzynki" />}
+            {remote.loading && <CenteredSpinner minHeight={48} size={22} label="Wczytywanie skrzynki" />}
             <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2, minWidth: 0 }}>
                 <TableContainer>
                     <Table size="small" aria-label="Lista wiadomości" sx={{ minWidth: 850, tableLayout: 'fixed', '& th': { bgcolor: 'action.hover', fontWeight: 600 }, '& td, & th': { py: 1, verticalAlign: 'middle' } }}>
@@ -121,7 +122,7 @@ function MessagesWorkspace() {
         <Dialog open={Boolean(selectedUuid)} onClose={() => setSelectedUuid(null)} fullWidth maxWidth="md">
             <DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold', overflowWrap: 'anywhere' }}>{message?.title ?? 'Wiadomość'}</DialogTitle>
             <DialogContent dividers>
-                {detail.loading && <CircularProgress aria-label="Wczytywanie treści wiadomości" />}
+                {detail.loading && <CenteredSpinner minHeight={80} size={24} label="Wczytywanie treści wiadomości" />}
                 {detail.error && <Alert severity="error">{detail.error}</Alert>}
                 {readError && <Alert severity="warning" action={<Button color="inherit" onClick={detail.reload}>Ponów</Button>}>{readError}</Alert>}
                 {message && <Stack gap={2}><Typography variant="body2" color="text.secondary">Od: {message.senderName} - {dateText(message.createdAt)}</Typography>{message.replyToUuid && <Alert severity="info">Ta wiadomość jest odpowiedzią na wcześniejszą korespondencję.</Alert>}<Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{message.content}</Typography>{message.isSender && <Box sx={{ pt: 2, borderTop: 1, borderColor: 'divider' }}><Typography variant="subtitle2" mb={1}>Odbiorcy i odczyty</Typography><Stack gap={1}>{message.recipients.map(recipient => <Stack key={recipient.uuid} direction="row" justifyContent="space-between" gap={1} flexWrap="wrap"><Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{recipient.name}</Typography><Typography variant="caption" color="text.secondary">{recipient.readAt ? 'Przeczytano: ' + dateText(recipient.readAt) : 'Nieprzeczytana'}</Typography></Stack>)}</Stack></Box>}</Stack>}

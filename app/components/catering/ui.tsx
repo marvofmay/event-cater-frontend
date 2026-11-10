@@ -2,9 +2,7 @@
 import { ReactNode } from "react";
 import {
   Alert,
-  Box,
   Button,
-  CircularProgress,
   Paper,
   Stack,
   Typography,
@@ -13,6 +11,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useUser } from "@/app/context/userContext";
+import CenteredSpinner from "@/app/components/common/BrandSpinner";
 export const stateLabels: Record<string, string> = {
   draft: "Szkic",
   planned: "Zaplanowane",
@@ -93,11 +92,7 @@ export function Feedback({
   );
 }
 export function Loading() {
-  return (
-    <Box sx={{ p: 3 }} role="status">
-      <CircularProgress size={24} /> Wczytywanie…
-    </Box>
-  );
+  return <CenteredSpinner minHeight={160} size={24} label="Wczytywanie" />;
 }
 export function Permission({
   name,
