@@ -9,6 +9,7 @@ type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; 
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
 const provisioning: Record<string,string> = {pending:'Przygotowanie bazy',ready:'Baza gotowa',failed:'Błąd przygotowania - wymagana pomoc operatora'};
 const plans: Record<string,string> = {trial:'Trial',paid:'Abonament'};
+const dialogTitleSx = { backgroundColor: '#10261f', color: '#fff', fontSize: '1.2rem', fontWeight: 'bold' };
 
 export default function SaasPanel() {
     const [token,setToken] = useState<string|null>(null);
@@ -68,7 +69,7 @@ export default function SaasPanel() {
             <Stack direction="row" spacing={2} useFlexGap sx={{mb:2, flexWrap:'wrap'}}><Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button variant="contained" sx={{ backgroundColor: '#34495e', color: '#fff', fontWeight: 'bold' }} onClick={refresh}>Odśwież</Button></Stack>
             <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Plan','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip size="small" label={plans[item.plan || 'paid'] || item.plan || '—'} color={item.plan==='trial'?'info':'default'} />{item.trialEndsAt ? <Typography variant="caption" display="block" color="text.secondary">do {item.trialEndsAt}</Typography> : null}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><RowAction action="preview" label="Zarządzaj" onClick={()=>details(item)} /></TableCell></TableRow>)}</TableBody></Table></Box>
         </>}
-        <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth><Box component="form" onSubmit={create}><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
+        <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth PaperProps={{ sx: { overflow: 'hidden' } }}><Box component="form" onSubmit={create}><DialogTitle sx={dialogTitleSx}>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
             <Alert severity="info">Klient powstanie jako nieaktywny. Otrzyma osobną bazę i własne konto administratora firmy.</Alert>
             <TextField name="name" label="Nazwa firmy" required inputProps={{maxLength:200}} />
@@ -76,7 +77,7 @@ export default function SaasPanel() {
             <TextField name="ownerEmail" label="E-mail administratora firmy" type="email" required inputProps={{maxLength:100}} />
             <TextField name="ownerPassword" label="Początkowe hasło administratora" type="password" autoComplete="new-password" required inputProps={{minLength:12,maxLength:72}} />
         </Stack></DialogContent><DialogActions>{busy&&<CircularProgress size={22}/>}<Button color="primary" variant="contained" disabled={busy} onClick={()=>setCreating(false)}>Anuluj</Button><Button type="submit" variant="contained" disabled={busy}>Utwórz klienta</Button></DialogActions></Box></Dialog>
-        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md"><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>{selected?.name} - zarządzanie</DialogTitle><Tabs value={manageTab} onChange={(_,value)=>setManageTab(value)} aria-label="Szczegóły firmy" sx={{px:3, borderBottom:1, borderColor:'divider'}}><Tab label="Zarządzanie" /><Tab label={selected?.history?.length ? `Historia (${selected.history.length})` : 'Historia'} /></Tabs><DialogContent><Stack spacing={2} sx={{pt:1}}>
+        <Dialog open={!!selected} onClose={()=>{if(!busy)setSelected(null);}} fullWidth maxWidth="md" PaperProps={{ sx: { overflow: 'hidden' } }}><DialogTitle sx={dialogTitleSx}>{selected?.name} - zarządzanie</DialogTitle><Tabs value={manageTab} onChange={(_,value)=>setManageTab(value)} aria-label="Szczegóły firmy" sx={{px:3, borderBottom:1, borderColor:'divider', '& .MuiTab-root.Mui-selected': { color: '#10261f' }, '& .MuiTabs-indicator': { backgroundColor: '#10261f' } }}><Tab label="Zarządzanie" /><Tab label={selected?.history?.length ? `Historia (${selected.history.length})` : 'Historia'} /></Tabs><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {manageTab === 0 && <>
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
