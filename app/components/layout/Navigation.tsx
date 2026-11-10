@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { AppBar, Toolbar, Button, Link, Badge, Box } from "@mui/material";
+import { AppBar, Toolbar, Button, Link, Badge, Box, IconButton, Tooltip } from "@mui/material";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import CircleNotificationsIcon from "@mui/icons-material/CircleNotifications";
@@ -17,6 +18,7 @@ import { SERVICE_COMPANY_URL, SERVICE_MERCURE_URL } from "@/app/utils/constans";
 import { useUnreadMessagesCount } from "@/app/hooks/messages/useUnreadMessagesCount";
 import { isPublicMarketingPath } from "@/app/lib/publicMarketing";
 import { isBareAuthPath } from "@/app/lib/shellPaths";
+import { notifySaasSession, readSaasToken, SAAS_SESSION_EVENT } from "@/app/saas/session";
 
 const navLinks = [
   { href: "/", label: "home", activePath: "/", icon: <HomeIcon fontSize="small" /> },
@@ -36,9 +38,30 @@ const Navigation: React.FC = () => {
   const messageCount = useUnreadMessagesCount();
   const [notificationCount, setNotificationCount] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  const [saasToken, setSaasToken] = useState<string | null>(null);
 
   useEffect(() => {
     setHydrated(true);
+    const syncSaas = () => setSaasToken(readSaasToken());
+    syncSaas();
+    window.addEventListener(SAAS_SESSION_EVENT, syncSaas);
+    return () => window.removeEventListener(SAAS_SESSION_EVENT, syncSaas);
+  }, []);
+
+  const logoutSaas = useCallback(async () => {
+    const token = readSaasToken();
+    try {
+      if (token) {
+        await fetch("/api/saas/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        });
+      }
+    } catch {
+      // Local session still ends, same as the panel logout.
+    }
+    sessionStorage.removeItem("saas_token");
+    notifySaasSession();
   }, []);
 
   const loadUnreadCount = useCallback(async () => {
@@ -220,6 +243,18 @@ const Navigation: React.FC = () => {
             )}
 
           {isAuthenticated ? <UserProfileNavigation /> : null}
+          {pathname === "/saas" && saasToken ? (
+            <Tooltip title="Wyloguj z SaaS">
+              <IconButton
+                color="inherit"
+                aria-label="Wyloguj z SaaS"
+                onClick={() => void logoutSaas()}
+                sx={{ borderRadius: "0.4rem", "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+              >
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
+          ) : null}
         </Box>
       </Toolbar>
     </AppBar>

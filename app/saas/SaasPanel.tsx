@@ -1,6 +1,7 @@
 "use client";
 import AddIcon from "@mui/icons-material/Add";
 import { RowAction } from "../components/common/RowAction";
+import { notifySaasSession, SAAS_SESSION_EVENT } from "./session";
 import { FormEvent, useEffect, useState } from 'react';
 import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tab, Tabs, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
 
@@ -21,18 +22,23 @@ export default function SaasPanel() {
     const [confirmSlug,setConfirmSlug] = useState('');
     const [manageTab,setManageTab] = useState(0);
     const [notice,setNotice] = useState('');
-    useEffect(()=>{ setToken(sessionStorage.getItem('saas_token')); },[]);
+    useEffect(()=>{
+        const sync=()=>{ const next=sessionStorage.getItem('saas_token'); setToken(next); if(!next){ setItems([]); setSelected(null); setCreating(false); } };
+        sync();
+        window.addEventListener(SAAS_SESSION_EVENT, sync);
+        return ()=>window.removeEventListener(SAAS_SESSION_EVENT, sync);
+    },[]);
     async function api(path:string,method='GET',body?:unknown,auth=token) {
         const response=await fetch('/api/saas'+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+auth}:{})},...(body?{body:JSON.stringify(body)}:{})});
         const data=response.status===204?null:await response.json();
-        if(!response.ok) { if(response.status===403 && path!=='/login') { sessionStorage.removeItem('saas_token'); setToken(null); } throw new Error(data?.message || 'Operacja nie powiodła się.'); }
+        if(!response.ok) { if(response.status===403 && path!=='/login') { sessionStorage.removeItem('saas_token'); notifySaasSession(); setToken(null); } throw new Error(data?.message || 'Operacja nie powiodła się.'); }
         return data;
     }
     async function refresh() { try { setItems((await api('/tenants')).items); } catch(e) { setError((e as Error).message); } }
     useEffect(()=>{ if(token) void refresh(); },[token]); // eslint-disable-line react-hooks/exhaustive-deps
     async function login(event:FormEvent<HTMLFormElement>) {
         event.preventDefault(); const form=new FormData(event.currentTarget); setBusy(true); setError('');
-        try { const data=await api('/login','POST',{email:form.get('email'),password:form.get('password')}); sessionStorage.setItem('saas_token',data.token); setToken(data.token); } catch(e) { setError((e as Error).message); } finally { setBusy(false); }
+        try { const data=await api('/login','POST',{email:form.get('email'),password:form.get('password')}); sessionStorage.setItem('saas_token',data.token); setToken(data.token); notifySaasSession(); } catch(e) { setError((e as Error).message); } finally { setBusy(false); }
     }
     async function create(event:FormEvent<HTMLFormElement>) {
         event.preventDefault(); const form=new FormData(event.currentTarget); setBusy(true); setError('');
@@ -59,7 +65,7 @@ export default function SaasPanel() {
             <Button type="submit" variant="contained" disabled={busy}>Zaloguj do SaaS</Button>
             <Button href="/login">Logowanie pracownika firmy</Button>
         </Stack></Box> : <>
-            <Stack direction="row" spacing={2} useFlexGap sx={{mb:2, flexWrap:'wrap'}}><Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button variant="contained" sx={{ backgroundColor: '#34495e', color: '#fff', fontWeight: 'bold' }} onClick={refresh}>Odśwież</Button><Button variant="contained" sx={{ backgroundColor: '#34495e', color: '#fff', fontWeight: 'bold' }} onClick={async()=>{try{await api('/logout','POST');}catch(e){setError((e as Error).message);}finally{sessionStorage.removeItem('saas_token');setToken(null);setItems([]);}}}>Wyloguj z SaaS</Button></Stack>
+            <Stack direction="row" spacing={2} useFlexGap sx={{mb:2, flexWrap:'wrap'}}><Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button variant="contained" sx={{ backgroundColor: '#34495e', color: '#fff', fontWeight: 'bold' }} onClick={refresh}>Odśwież</Button></Stack>
             <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Plan','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip size="small" label={plans[item.plan || 'paid'] || item.plan || '—'} color={item.plan==='trial'?'info':'default'} />{item.trialEndsAt ? <Typography variant="caption" display="block" color="text.secondary">do {item.trialEndsAt}</Typography> : null}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><RowAction action="preview" label="Zarządzaj" onClick={()=>details(item)} /></TableCell></TableRow>)}</TableBody></Table></Box>
         </>}
         <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth><Box component="form" onSubmit={create}><DialogTitle sx={{ backgroundColor: '#34495e', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
