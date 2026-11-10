@@ -178,10 +178,12 @@ final readonly class SaasService
             throw new BadRequestHttpException('Konto nie jest gotowe. Skontaktuj się z kontakt@eventcater.pl.');
         }
 
+        $mailSent = true;
         try {
             $this->trialMailer->sendOwnerCredentials($email, $name, $slug, $password, $trialEnds);
             $this->trialMailer->sendOperatorNotice($name, $slug, $email, $trialEnds);
         } catch (\Throwable $error) {
+            $mailSent = false;
             $this->logger->error('Trial created but mail failed.', ['tenantUuid' => $uuid, 'errorMessage' => $error->getMessage()]);
         }
 
@@ -196,6 +198,7 @@ final readonly class SaasService
             'status' => 'active',
             'provisioning' => 'ready',
             'plan' => 'trial',
+            'mailSent' => $mailSent,
         ];
     }
 

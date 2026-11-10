@@ -23,6 +23,16 @@
   text-decoration: none;
 }
 
+.ec-landing a.ec-btn-pine,
+.ec-landing a.ec-btn-ghost {
+  color: #f7faf8;
+}
+
+.ec-landing a.ec-btn-primary,
+.ec-landing a.ec-btn-outline {
+  color: var(--ec-pine-deep);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .ec-landing {
     scroll-behavior: smooth;
@@ -425,6 +435,12 @@
   border-color: var(--ec-pine);
 }
 
+.ec-trial-form input:disabled {
+  background: var(--ec-mist);
+  color: var(--ec-muted);
+  cursor: not-allowed;
+}
+
 .ec-field-hint {
   font-size: 0.82rem;
   font-weight: 450;
@@ -459,6 +475,10 @@
 .ec-trial-legal a {
   color: var(--ec-pine);
   text-decoration: underline;
+}
+
+.ec-trial-success + .ec-trial-form {
+  margin-top: 1.75rem;
 }
 
 .ec-trial-success h2 {

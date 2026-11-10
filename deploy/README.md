@@ -77,8 +77,13 @@ sudo certbot --nginx -d eventcater.pl -d www.eventcater.pl
 
 ## 4. Poczta i SaaS
 
-1. Uzupełnij `MAILER_DSN` w `/home/marcin/apps/eventcater/.env` (SMTP home.pl lub innego dostawcy).
-2. Upewnij się, że w `.env` są: `PASSWORD_RESET_SENDER=noreply@eventcater.pl`, `TRIAL_NOTIFY_EMAIL=kontakt@eventcater.pl`, `APP_URL=https://eventcater.pl`.
+1. Uzupełnij `MAILER_DSN` w `/home/marcin/apps/eventcater/.env`. Poczta domeny jest na home.pl (`MX` → `poczta….home.pl`). `smtp://127.0.0.1:25` nic nie dostarcza: na Droplecie nie ma lokalnego serwera poczty, a DigitalOcean blokuje wyjście na port 25. Brevo w tej aplikacji służy tylko do SMS, nie do tych maili.
+   ```bash
+   MAILER_DSN=smtp://kontakt%40eventcater.pl:HASLO_SKRZYNKI@smtp.home.pl:587
+   PASSWORD_RESET_SENDER=kontakt@eventcater.pl
+   ```
+   Nadawca musi być istniejącą skrzynką home.pl. Znak `@` w loginie koduj jako `%40`. Hasła nie wklejaj do czatu.
+2. Upewnij się, że w `.env` są też: `TRIAL_NOTIFY_EMAIL=kontakt@eventcater.pl`, `APP_URL=https://eventcater.pl`.
 3. `cd /home/marcin/apps/eventcater && docker compose up -d`
 4. `bash frontend/deploy/scripts/init-saas.sh twoj@email.pl`
 5. Wejdź na `https://eventcater.pl/saas`, dodaj klienta, po `ready` ustaw `active`.

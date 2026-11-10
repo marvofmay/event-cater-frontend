@@ -21,6 +21,8 @@ final readonly class TrialMailer
         private string $notifyEmail,
         #[Autowire('%env(default:app_public_url:APP_URL)%')]
         private string $appUrl,
+        #[Autowire('%env(MAILER_DSN)%')]
+        private string $mailerDsn,
     ) {
     }
 
@@ -78,6 +80,7 @@ final readonly class TrialMailer
 
     private function send(string $to, string $subject, string $body): void
     {
+        $this->assertDeliverableTransport();
         try {
             $this->mailer->send((new Email())->from($this->sender)->to($to)->subject($subject)->text($body));
         } catch (\Throwable $error) {
@@ -88,6 +91,14 @@ final readonly class TrialMailer
                 'errorMessage' => $error->getMessage(),
             ]);
             throw $error;
+        }
+    }
+
+    private function assertDeliverableTransport(): void
+    {
+        $host = parse_url($this->mailerDsn, PHP_URL_HOST);
+        if (!is_string($host) || in_array(strtolower($host), ['127.0.0.1', 'localhost', 'mailpit', ''], true)) {
+            throw new \RuntimeException('MAILER_DSN nie wysyła poczty na zewnątrz (host: '.($host ?: 'brak').'). Skrzynka domeny jest na home.pl. Ustaw w .env MAILER_DSN=smtp://LOGIN:HASLO@smtp.home.pl:587 i PASSWORD_RESET_SENDER na istniejący adres tej skrzynki, potem zrestartuj API.');
         }
     }
 }

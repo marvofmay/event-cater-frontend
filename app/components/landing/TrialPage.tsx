@@ -29,6 +29,7 @@ type TrialResult = {
   password: string;
   trialEndsAt: string;
   loginUrl: string;
+  mailSent: boolean;
 };
 
 const slugify = (value: string) =>
@@ -52,6 +53,7 @@ const TrialPage = () => {
   const [error, setError] = useState("");
   const [result, setResult] = useState<TrialResult | null>(null);
 
+  const locked = busy || result !== null;
   const livePasswordErrors = useMemo(
     () =>
       password || confirmation
@@ -116,6 +118,7 @@ const TrialPage = () => {
         trialEndsAt: data.trialEndsAt,
         loginUrl:
           data.loginUrl || `/login?tenant=${encodeURIComponent(data.slug)}`,
+        mailSent: data.mailSent !== false,
       });
     } catch (e) {
       setError((e as Error).message);
@@ -138,134 +141,28 @@ const TrialPage = () => {
           dane usuwamy 7 dni po zakończeniu triala.
         </p>
 
-        {!result ? (
-          <>
-            <ul className="ec-trial-points">
-              <li>Osobna przestrzeń firmy (kod firmy do logowania)</li>
-              <li>Konto administratora z hasłem zgodnym z polityką hasła</li>
-              <li>
-                Przypomnienia e-mail 5 dni, 3 dni i 24 h przed końcem triala
-              </li>
-              <li>
-                Po wygaśnięciu: zawieszenie bez usuwania danych - dane zostaną
-                usunięte po 7 dniach od zakończenia triala
-              </li>
-            </ul>
+        {!result && (
+          <ul className="ec-trial-points">
+            <li>Osobna przestrzeń firmy (kod firmy do logowania)</li>
+            <li>Konto administratora z hasłem zgodnym z polityką hasła</li>
+            <li>
+              Przypomnienia e-mail 5 dni, 3 dni i 24 h przed końcem triala
+            </li>
+            <li>
+              Po wygaśnięciu: zawieszenie bez usuwania danych - dane zostaną
+              usunięte po 7 dniach od zakończenia triala
+            </li>
+          </ul>
+        )}
 
-            <form className="ec-trial-form" onSubmit={onSubmit} noValidate>
-              {error && (
-                <p className="ec-trial-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <label>
-                Nazwa firmy
-                <input
-                  name="name"
-                  required
-                  minLength={NAME_MIN}
-                  maxLength={NAME_MAX}
-                  value={name}
-                  onChange={(e) => {
-                    const next = e.target.value.slice(0, NAME_MAX);
-                    setName(next);
-                    if (!slugTouched) setSlug(slugify(next));
-                  }}
-                  autoComplete="organization"
-                />
-                <span className="ec-field-hint">
-                  {NAME_MIN}-{NAME_MAX} znaków ({name.trim().length}/{NAME_MAX})
-                </span>
-              </label>
-              <label>
-                Kod firmy (do logowania)
-                <input
-                  name="slug"
-                  required
-                  maxLength={63}
-                  pattern="[a-z0-9][a-z0-9-]{1,62}"
-                  value={slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    setSlug(e.target.value.toLowerCase().slice(0, 63));
-                  }}
-                  autoComplete="off"
-                />
-                <span className="ec-field-hint">
-                  2-63 znaki: a-z, cyfry, myślnik. Przykład: mapa-smakow
-                </span>
-              </label>
-              <label>
-                E-mail administratora
-                <input
-                  name="ownerEmail"
-                  type="email"
-                  required
-                  maxLength={EMAIL_MAX}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value.slice(0, EMAIL_MAX))}
-                  autoComplete="email"
-                />
-                <span className="ec-field-hint">
-                  Max {EMAIL_MAX} znaków ({email.trim().length}/{EMAIL_MAX}). Na
-                  ten adres wyślemy login, hasło i przypomnienia o końcu triala.
-                </span>
-              </label>
-              <label>
-                Hasło
-                <input
-                  name="ownerPassword"
-                  type="password"
-                  required
-                  minLength={8}
-                  maxLength={64}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                />
-              </label>
-              <label>
-                Powtórz hasło
-                <input
-                  name="ownerPasswordConfirmation"
-                  type="password"
-                  required
-                  minLength={8}
-                  maxLength={64}
-                  value={confirmation}
-                  onChange={(e) => setConfirmation(e.target.value)}
-                  autoComplete="new-password"
-                />
-                <span className="ec-field-hint">
-                  8-64 znaków, duża i mała litera, cyfra oraz znak specjalny.
-                </span>
-              </label>
-              {livePasswordErrors.length > 0 && (
-                <ul className="ec-trial-policy">
-                  {livePasswordErrors.map((msg) => (
-                    <li key={msg}>{msg}</li>
-                  ))}
-                </ul>
-              )}
-              <button
-                className="ec-btn ec-btn-pine"
-                type="submit"
-                disabled={busy || livePasswordErrors.length > 0}
-              >
-                {busy ? "Zakładam konto..." : "Załóż 30-dniowy trial"}
-              </button>
-              <p className="ec-trial-legal">
-                Zakładając trial akceptujesz{" "}
-                <Link href="/polityka-prywatnosci">politykę prywatności</Link>.
-              </p>
-            </form>
-          </>
-        ) : (
+        {result && (
           <div className="ec-trial-success" role="status">
             <h2>Konto gotowe</h2>
             <p>
-              Trial dla <strong>{result.name}</strong> jest aktywny. Te same
-              dane wysłaliśmy na <strong>{result.email}</strong>.
+              Trial dla <strong>{result.name}</strong> jest aktywny.
+              {result.mailSent
+                ? <> Te same dane wysłaliśmy na <strong>{result.email}</strong>.</>
+                : <> Nie udało się wysłać e-maila z danymi logowania. Zapisz je z tego ekranu.</>}
             </p>
             <dl className="ec-creds">
               <div>
@@ -297,15 +194,130 @@ const TrialPage = () => {
               w panelu.
             </p>
             <div className="ec-cta" style={{ marginTop: "1.5rem" }}>
-              <Link className="ec-btn ec-btn-pine" href={result.loginUrl}>
+              <Link className="ec-btn ec-btn-pine" href={result.loginUrl} style={{ color: "#f7faf8" }}>
                 Przejdź do logowania
               </Link>
-              <Link className="ec-btn ec-btn-outline" href="/">
+              <Link className="ec-btn ec-btn-outline" href="/" style={{ color: "#10261f" }}>
                 Strona główna
               </Link>
             </div>
           </div>
         )}
+
+        <form className="ec-trial-form" onSubmit={onSubmit} noValidate>
+          {error && (
+            <p className="ec-trial-error" role="alert">
+              {error}
+            </p>
+          )}
+          <label>
+            Nazwa firmy
+            <input
+              name="name"
+              required
+              disabled={locked}
+              minLength={NAME_MIN}
+              maxLength={NAME_MAX}
+              value={name}
+              onChange={(e) => {
+                const next = e.target.value.slice(0, NAME_MAX);
+                setName(next);
+                if (!slugTouched) setSlug(slugify(next));
+              }}
+              autoComplete="organization"
+            />
+            <span className="ec-field-hint">
+              {NAME_MIN}-{NAME_MAX} znaków ({name.trim().length}/{NAME_MAX})
+            </span>
+          </label>
+          <label>
+            Kod firmy (do logowania)
+            <input
+              name="slug"
+              required
+              disabled={locked}
+              maxLength={63}
+              pattern="[a-z0-9][a-z0-9-]{1,62}"
+              value={slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                setSlug(e.target.value.toLowerCase().slice(0, 63));
+              }}
+              autoComplete="off"
+            />
+            <span className="ec-field-hint">
+              2-63 znaki: a-z, cyfry, myślnik. Przykład: mapa-smakow
+            </span>
+          </label>
+          <label>
+            E-mail administratora
+            <input
+              name="ownerEmail"
+              type="email"
+              required
+              disabled={locked}
+              maxLength={EMAIL_MAX}
+              value={email}
+              onChange={(e) => setEmail(e.target.value.slice(0, EMAIL_MAX))}
+              autoComplete="email"
+            />
+            <span className="ec-field-hint">
+              Max {EMAIL_MAX} znaków ({email.trim().length}/{EMAIL_MAX}). Na
+              ten adres wyślemy login, hasło i przypomnienia o końcu triala.
+            </span>
+          </label>
+          <label>
+            Hasło
+            <input
+              name="ownerPassword"
+              type="password"
+              required
+              disabled={locked}
+              minLength={8}
+              maxLength={64}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+          </label>
+          <label>
+            Powtórz hasło
+            <input
+              name="ownerPasswordConfirmation"
+              type="password"
+              required
+              disabled={locked}
+              minLength={8}
+              maxLength={64}
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              autoComplete="new-password"
+            />
+            <span className="ec-field-hint">
+              8-64 znaków, duża i mała litera, cyfra oraz znak specjalny.
+            </span>
+          </label>
+          {livePasswordErrors.length > 0 && !result && (
+            <ul className="ec-trial-policy">
+              {livePasswordErrors.map((msg) => (
+                <li key={msg}>{msg}</li>
+              ))}
+            </ul>
+          )}
+          <button
+            className="ec-btn ec-btn-pine"
+            type="submit"
+            disabled={locked || livePasswordErrors.length > 0}
+          >
+            {result ? "Konto utworzone" : busy ? "Zakładam konto..." : "Załóż 30-dniowy trial"}
+          </button>
+          {!result && (
+            <p className="ec-trial-legal">
+              Zakładając trial akceptujesz{" "}
+              <Link href="/polityka-prywatnosci">politykę prywatności</Link>.
+            </p>
+          )}
+        </form>
       </main>
 
       <footer className="ec-foot">
