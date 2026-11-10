@@ -109,7 +109,7 @@ const Navigation: React.FC = () => {
           justifyContent: "space-between",
           alignItems: "center",
           gap: 1,
-          minHeight: { xs: 64, sm: 68 },
+          minHeight: { xs: 76, sm: 88 },
           px: { xs: 1.5, sm: 2.5 },
         }}
       >
@@ -117,41 +117,38 @@ const Navigation: React.FC = () => {
           href="/"
           color="inherit"
           underline="none"
-          sx={{ display: "inline-flex", alignItems: "center", gap: 1.25 }}
+          sx={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}
+          aria-label="EventCater"
         >
           <Box
             sx={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              width: { xs: 56, sm: 64 },
-              height: { xs: 56, sm: 64 },
-              borderRadius: "0.55rem",
-              bgcolor: "#e7efea",
-              border: "1px solid rgba(231, 239, 234, 0.9)",
+              height: { xs: 64, sm: 76 },
+              width: { xs: 112, sm: 132 },
+              borderRadius: "0.5rem",
               overflow: "hidden",
+              bgcolor: "#2d394a",
+              border: "1px solid rgba(255,255,255,0.1)",
               flexShrink: 0,
             }}
           >
             <Image
               src="/icons/event-cater-logo.png"
               alt="EventCater"
-              width={56}
-              height={56}
+              width={264}
+              height={152}
+              priority
               className="logo"
-              style={{ width: "86%", height: "86%", marginRight: 0, objectFit: "contain" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                marginRight: 0,
+                objectFit: "contain",
+                display: "block",
+              }}
             />
-          </Box>
-          <Box
-            component="span"
-            sx={{
-              display: { xs: "none", sm: "inline" },
-              fontWeight: 640,
-              letterSpacing: "-0.025em",
-              fontSize: "1.2rem",
-            }}
-          >
-            EventCater
           </Box>
         </Link>
 

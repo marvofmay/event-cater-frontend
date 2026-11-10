@@ -45,7 +45,7 @@ const Content: React.FC<ContentProps> = ({ children }) => {
           "linear-gradient(180deg, #f3f6f4 0%, #eef2ef 48%, #f7faf8 100%)",
       }}
     >
-      <Box sx={{ width: "100%", maxWidth: 1200, mx: "auto" }}>
+      <Box sx={{ width: "100%", maxWidth: 1320, mx: "auto" }}>
         <Breadcrumbs
           aria-label="breadcrumb"
           sx={{ color: "#4d5c55", fontSize: "0.88rem", mb: 1.25 }}

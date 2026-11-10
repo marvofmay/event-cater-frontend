@@ -243,10 +243,31 @@ const RolesTable = () => {
                 <TableContainer
                     sx={{
                         maxHeight: '65vh',
-                        overflowY: 'auto',
+                        overflow: 'auto',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        width: '100%',
                     }}
                 >
-                    <Table>
+                    <Table size="small" stickyHeader sx={{
+                        tableLayout: 'fixed',
+                        width: '100%',
+                        minWidth: 1040,
+                        '& .MuiTableCell-root': { px: 1.5, py: 1, verticalAlign: 'middle', fontSize: '0.8125rem', lineHeight: 1.4, borderColor: 'divider' },
+                        '& .MuiTableCell-head': { height: 44, fontWeight: 600, backgroundColor: 'grey.50', whiteSpace: 'nowrap' },
+                        '& .MuiTableRow-root:last-child .MuiTableCell-body': { borderBottom: 0 },
+                        '& .MuiTableSortLabel-root': { maxWidth: '100%' },
+                    }}>
+                        <colgroup>
+                            {hasPermission("roles.delete") && <col style={{ width: 44 }} />}
+                            <col style={{ width: 44 }} />
+                            <col style={{ width: 180 }} />
+                            <col />
+                            <col style={{ width: 150 }} />
+                            <col style={{ width: 150 }} />
+                            <col style={{ width: 148 }} />
+                        </colgroup>
                         <TableHead>
                             <TableRow>
                                 {hasPermission("roles.delete") && (
@@ -278,7 +299,7 @@ const RolesTable = () => {
                                 <TableCell
                                     sortDirection={sortBy === 'description' ? sortDirection : false}
                                     onClick={() => handleSort('description')}
-                                    sx={{ width: 750, padding: "4px 8px" }}
+                                    sx={{ padding: '4px 8px' }}
                                 >
                                     <TableSortLabel active={sortBy === 'description'} direction={sortBy === 'description' ? sortDirection : 'asc'}>
                                         {t('role.table.column.description')}

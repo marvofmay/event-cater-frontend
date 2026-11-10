@@ -8,7 +8,7 @@ import FormControl from "@mui/material/FormControl";
 import Link from "@mui/material/Link";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { Alert, Autocomplete } from "@mui/material";
+import { Alert, Autocomplete, CircularProgress } from "@mui/material";
 import ForgotPassword from "./ForgotPassword";
 import { useUser } from "@/app/context/userContext";
 import { useTranslation } from "react-i18next";
@@ -89,9 +89,7 @@ export default function SignIn() {
 
     if (!email.value.trim()) {
       setEmailError(true);
-      setEmailErrorMessage(
-        "Podaj numer telefonu lub e-mail konta technicznego.",
-      );
+      setEmailErrorMessage("Podaj login.");
       isValid = false;
     } else {
       setEmailError(false);
@@ -127,7 +125,9 @@ export default function SignIn() {
     setBusy(true);
     try {
       await login(emailData, passwordData, tenantSlug.trim());
+      // Keep overlay until navigation unmounts this page.
     } catch (err: unknown) {
+      setBusy(false);
       if (
         typeof err === "object" &&
         err !== null &&
@@ -138,8 +138,6 @@ export default function SignIn() {
       } else {
         setBackendErrorMessage(t("common.message.somethingWentWrong"));
       }
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -147,7 +145,47 @@ export default function SignIn() {
     tenantOptions.find((option) => option.slug === tenantSlug)?.name || "";
 
   return (
-    <Box component="form" method="POST" onSubmit={handleSubmit} noValidate>
+    <Box component="form" method="POST" onSubmit={handleSubmit} noValidate sx={{ position: "relative" }}>
+      {busy ? (
+        <Box
+          aria-live="polite"
+          aria-busy="true"
+          sx={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1400,
+            display: "grid",
+            placeItems: "center",
+            bgcolor: "rgba(238, 243, 240, 0.78)",
+            backdropFilter: "blur(3px)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1.5,
+              px: 3,
+              py: 2.5,
+              borderRadius: "0.75rem",
+              bgcolor: "rgba(255,255,255,0.72)",
+              border: "1px solid rgba(28, 61, 50, 0.12)",
+              boxShadow: "0 12px 32px rgba(16, 38, 31, 0.08)",
+            }}
+          >
+            <CircularProgress
+              size={40}
+              thickness={3.4}
+              sx={{ color: "#1c3d32" }}
+            />
+            <Typography sx={{ color: "#1c3d32", fontWeight: 560, fontSize: "0.95rem" }}>
+              Logowanie…
+            </Typography>
+          </Box>
+        </Box>
+      ) : null}
+
       <Typography
         component="h1"
         sx={{
@@ -203,7 +241,7 @@ export default function SignIn() {
                 id="tenantSlug"
                 name="tenantSlug"
                 required
-                placeholder="np. mapa-smakow"
+                placeholder="Kod firmy"
                 helperText={
                   selectedName ||
                   "Wybierz firmę z listy lub wpisz jej kod"
@@ -228,7 +266,7 @@ export default function SignIn() {
             id="email"
             type="text"
             name="email"
-            placeholder="Telefon lub e-mail"
+            placeholder="Login"
             autoComplete="username"
             autoFocus
             required
@@ -304,7 +342,7 @@ export default function SignIn() {
             "&:hover": { bgcolor: "#10261f", boxShadow: "none" },
           }}
         >
-          {busy ? "Logowanie..." : "Zaloguj się"}
+          Zaloguj się
         </Button>
       </Box>
     </Box>
