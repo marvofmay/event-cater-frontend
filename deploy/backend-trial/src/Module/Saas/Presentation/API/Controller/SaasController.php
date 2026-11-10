@@ -77,4 +77,14 @@ final readonly class SaasController
 
         return new JsonResponse($this->service->changeStatus($uuid, $r->toArray(), $actor));
     }
+
+    #[Route('/tenants/{uuid}', methods: ['DELETE'])]
+    public function purge(Request $r, string $uuid): JsonResponse
+    {
+        $actor = $this->service->authenticate($r);
+        $data = $r->toArray();
+        $this->service->purge($uuid, (string) ($data['confirmSlug'] ?? ''), $actor);
+
+        return new JsonResponse(null, 204);
+    }
 }

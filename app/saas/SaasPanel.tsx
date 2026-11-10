@@ -18,6 +18,7 @@ export default function SaasPanel() {
     const [selected,setSelected] = useState<Tenant|null>(null);
     const [status,setStatus] = useState('inactive');
     const [reason,setReason] = useState('');
+    const [confirmSlug,setConfirmSlug] = useState('');
     const [notice,setNotice] = useState('');
     useEffect(()=>{ setToken(sessionStorage.getItem('saas_token')); },[]);
     async function api(path:string,method='GET',body?:unknown,auth=token) {
@@ -40,7 +41,11 @@ export default function SaasPanel() {
         if(!selected) return; setBusy(true); setError('');
         try { const updated=await api('/tenants/'+selected.uuid+'/status','PATCH',{status,reason,version:Number(selected.version)}); setSelected(updated); setReason(''); await refresh(); } catch(e) { setError((e as Error).message); } finally { setBusy(false); }
     }
-    async function details(tenant:Tenant) { setError(''); try { const detail=await api('/tenants/'+tenant.uuid); setSelected(detail); setStatus(detail.status); setReason(''); } catch(e) { setError((e as Error).message); } }
+    async function purgeTenant() {
+        if(!selected || confirmSlug !== selected.slug) return; setBusy(true); setError('');
+        try { await api('/tenants/'+selected.uuid,'DELETE',{confirmSlug}); setNotice('Firma '+selected.name+' została trwale usunięta. Kod '+selected.slug+' można nadać ponownie.'); setSelected(null); setConfirmSlug(''); await refresh(); } catch(e) { setError((e as Error).message); } finally { setBusy(false); }
+    }
+    async function details(tenant:Tenant) { setError(''); setConfirmSlug(''); try { const detail=await api('/tenants/'+tenant.uuid); setSelected(detail); setStatus(detail.status); setReason(''); } catch(e) { setError((e as Error).message); } }
     return <Box sx={{p:3}}>
         <Typography variant="h4" gutterBottom>Administracja SaaS</Typography>
         <Typography color="text.secondary" sx={{mb:2}}>Klienci systemu cateringowego</Typography>
@@ -68,11 +73,17 @@ export default function SaasPanel() {
             {error && <Alert severity="error">{error}</Alert>}
             <Typography>Kod firmy: {selected?.slug}</Typography>
             <Typography>{selected && provisioning[selected.provisioning]}</Typography>
-            <Alert severity="info">Zawieszenie, dezaktywacja i usunięcie blokują dostęp do aplikacji. Po opłaceniu abonamentu ustaw status „Aktywny” - dla konta trial po zawieszeniu plan przejdzie na abonament. Nieopłacony trial: dane są usuwane automatycznie 7 dni po zakończeniu. Usunięcie ręczne zachowuje dane; przywrócenie wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
+            <Alert severity="info">Zawieszenie, dezaktywacja i status „Usunięty” blokują dostęp, ale zostawiają rekord, więc ten sam kod firmy jest nadal zajęty. Trwałe usunięcie kasuje rekord i bazę firmy. Przywrócenie ze statusu „Usunięty” wymaga najpierw statusu „Nieaktywny”. Zmiana statusu unieważnia dotychczasowe sesje.</Alert>
             {selected?.plan === 'trial' && selected.trialEndsAt && <Typography color="text.secondary">Trial do: {selected.trialEndsAt}</Typography>}
             <TextField label="Status" select value={status} onChange={e=>setStatus(e.target.value)}>{Object.entries(statuses).map(([value,label])=><MenuItem key={value} value={value} disabled={value==='active'&&selected?.provisioning!=='ready' || selected?.status==='deleted'&&value!=='inactive'}>{label}</MenuItem>)}</TextField>
             <TextField label="Uzasadnienie zmiany" value={reason} multiline minRows={2} onChange={e=>setReason(e.target.value)} inputProps={{maxLength:1000}} />
             <Button sx={{ backgroundColor: '#34495e', color: 'white', fontWeight: 'bold' }} color="primary" variant="contained" disabled={busy || !reason.trim() || status===selected?.status} onClick={changeStatus}>Zapisz status</Button>
+            {selected?.status === 'deleted' && <Stack spacing={1} sx={{p:2, border:'1px solid', borderColor:'error.main', borderRadius:1}}>
+                <Typography fontWeight="bold">Trwałe usunięcie</Typography>
+                <Typography color="text.secondary">Kasuje firmę z listy tenantów i jej bazę. Kod {selected.slug} będzie wolny. Tej operacji nie da się cofnąć.</Typography>
+                <TextField label="Wpisz kod firmy, aby potwierdzić" value={confirmSlug} onChange={e=>setConfirmSlug(e.target.value)} autoComplete="off" />
+                <Button color="error" variant="contained" disabled={busy || confirmSlug !== selected.slug} onClick={purgeTenant}>Usuń trwale z bazy</Button>
+            </Stack>}
             <Typography variant="h6">Historia</Typography>
             {selected?.history?.map((entry,index)=><Box key={index}><Typography>{entry.createdAt} - {entry.actor} - {entry.action}</Typography><Typography color="text.secondary">{entry.reason}</Typography></Box>)}
         </Stack></DialogContent><DialogActions><Button variant="contained" color="primary" disabled={busy} onClick={()=>setSelected(null)}>Zamknij</Button></DialogActions></Dialog>

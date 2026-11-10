@@ -247,6 +247,43 @@ final readonly class SaasService
         return $this->detail($uuid);
     }
 
+    /** Drop the tenant database and the control-plane row. Only a status of deleted may be purged, which frees the slug. */
+    public function purge(string $uuid, string $confirmSlug, string $actor): void
+    {
+        if (!preg_match('/^[0-9a-f-]{36}$/Di', $uuid)) {
+            throw new BadRequestHttpException('Nieprawidłowy identyfikator.');
+        }
+        $db = $this->control->db();
+        $tenant = $db->fetchAssociative('SELECT * FROM saas_tenant WHERE uuid=?', [$uuid]) ?: throw new NotFoundHttpException('Nie znaleziono klienta.');
+        if ($tenant['slug'] === 'default' || $tenant['uuid'] === '00000000-0000-4000-8000-000000000001') {
+            throw new BadRequestHttpException('Firmy domyślnej nie można usunąć.');
+        }
+        if ($tenant['status'] !== 'deleted') {
+            throw new ConflictHttpException('Trwałe usunięcie jest możliwe tylko przy statusie Usunięty.');
+        }
+        if ($confirmSlug !== $tenant['slug']) {
+            throw new BadRequestHttpException('Wpisz aktualny kod firmy, aby potwierdzić trwałe usunięcie.');
+        }
+
+        $database = (string) ($tenant['database_name'] ?? '');
+        $controlDatabase = (string) $db->getDatabase();
+        if ($database !== '' && $database !== $controlDatabase && preg_match('/^ec_tenant_[a-f0-9]{32}$/D', $database)) {
+            $db->executeStatement('DROP DATABASE IF EXISTS '.$db->getDatabasePlatform()->quoteSingleIdentifier($database));
+        }
+
+        $db->transactional(function () use ($db, $uuid): void {
+            $locked = $db->fetchAssociative('SELECT status, slug FROM saas_tenant WHERE uuid=? FOR UPDATE', [$uuid]) ?: throw new NotFoundHttpException('Nie znaleziono klienta.');
+            if ($locked['status'] !== 'deleted' || $locked['slug'] === 'default') {
+                throw new ConflictHttpException('Trwałe usunięcie jest możliwe tylko przy statusie Usunięty.');
+            }
+            $db->executeStatement('DELETE FROM saas_audit WHERE tenant_uuid=?', [$uuid]);
+            if (1 !== $db->delete('saas_tenant', ['uuid' => $uuid, 'status' => 'deleted'])) {
+                throw new ConflictHttpException('Nie udało się usunąć rekordu firmy.');
+            }
+        });
+        $this->logger->info('Tenant purged.', ['tenantUuid' => $uuid, 'slug' => $tenant['slug'], 'actor' => $actor]);
+    }
+
     private function audit(string $tenant, string $actor, string $action, string $reason): void
     {
         $this->control->db()->insert('saas_audit', ['uuid' => Uuid::uuid4()->toString(), 'tenant_uuid' => $tenant, 'actor_uuid' => $actor, 'action' => $action, 'reason' => $reason, 'created_at' => date('Y-m-d H:i:s')]);
