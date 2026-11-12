@@ -11,18 +11,21 @@ import { Panel } from "./ui";
 import { CustomerPicker, CustomerOption } from "./CustomerPicker";
 export function EventForm({
   initial,
+  defaultDate,
   onSaved,
   onDirty,
 }: {
   initial?: EventDetails;
+  defaultDate?: string;
   onSaved: (event: EventDetails) => void;
   onDirty?: (dirty: boolean) => void;
 }) {
   const api = useApi();
   const action = useAction();
   const { hasPermission } = useUser();
+  const seededDate = initial?.date ?? defaultDate ?? "";
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [date, setDate] = useState(initial?.date ?? "");
+  const [date, setDate] = useState(seededDate);
   const [timezone, setTimezone] = useState(
     initial?.timezone ?? "Europe/Warsaw",
   );
@@ -40,13 +43,13 @@ export function EventForm({
       : null,
   );
   const [readyDate, setReadyDate] = useState(
-    localDateTime(initial?.readyAt, timezone).slice(0, 10) || date,
+    localDateTime(initial?.readyAt, timezone).slice(0, 10) || seededDate,
   );
   const [startDate, setStartDate] = useState(
-    localDateTime(initial?.startsAt, timezone).slice(0, 10) || date,
+    localDateTime(initial?.startsAt, timezone).slice(0, 10) || seededDate,
   );
   const [endDate, setEndDate] = useState(
-    localDateTime(initial?.endsAt, timezone).slice(0, 10) || date,
+    localDateTime(initial?.endsAt, timezone).slice(0, 10) || seededDate,
   );
   const [ready, setReady] = useState(
     localDateTime(initial?.readyAt, timezone).slice(11, 16),
