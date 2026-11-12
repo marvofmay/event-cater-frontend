@@ -68,9 +68,7 @@ final readonly class SaasController
         return new JsonResponse($this->payments->start(
             (string) ($data['slug'] ?? ''),
             (string) ($data['email'] ?? ''),
-            (string) ($data['blikCode'] ?? ''),
             $r->getClientIp() ?? '',
-            substr((string) $r->headers->get('User-Agent', ''), 0, 400),
         ), 201);
     }
 

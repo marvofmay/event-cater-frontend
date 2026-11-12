@@ -56,28 +56,18 @@ final class TpayClient
     }
 
     /** @return array{transactionId: string, title: string, paymentUrl: string} */
-    public function createBlikTransaction(string $crc, string $payerEmail, string $payerName, string $description, string $blikCode, string $ip, string $userAgent, string $notifyUrl, string $successUrl, string $errorUrl): array
+    public function createBlikTransaction(string $crc, string $payerEmail, string $payerName, string $description, string $notifyUrl, string $successUrl, string $errorUrl): array
     {
-        $payer = [
-            'email' => $payerEmail,
-            'name' => $payerName,
-        ];
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            $payer['ip'] = $ip;
-        }
-        if ($userAgent !== '') {
-            $payer['userAgent'] = $userAgent;
-        }
         $response = $this->request('POST', '/transactions', [
             'amount' => (float) self::AMOUNT,
             'description' => $description,
             'hiddenDescription' => $crc,
-            'payer' => $payer,
+            'payer' => [
+                'email' => $payerEmail,
+                'name' => $payerName,
+            ],
             'pay' => [
                 'groupId' => 150,
-                'blikPaymentData' => [
-                    'blikToken' => $blikCode,
-                ],
             ],
             'callbacks' => [
                 'notification' => ['url' => $notifyUrl],
