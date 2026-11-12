@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import localFont from "next/font/local";
+import SiteFooter from "../components/landing/SiteFooter";
 import "../components/landing/landing.css";
 
 const display = localFont({
@@ -138,13 +139,13 @@ const PrivacyPolicyPage = () => {
         </p>
       </main>
 
-      <footer className="ec-foot">
-        <span>EventCater © {year}</span>
-        <span className="ec-foot-links">
-          <Link href="/">Strona główna</Link>
-          <Link href="/login">Logowanie</Link>
-        </span>
-      </footer>
+      <SiteFooter
+        year={year}
+        links={[
+          { href: "/", label: "Strona główna" },
+          { href: "/login", label: "Logowanie" },
+        ]}
+      />
     </div>
   );
 };

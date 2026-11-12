@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import localFont from "next/font/local";
 import { passwordPolicyErrors } from "@/app/lib/passwordPolicy";
+import SiteFooter, { TermsButton } from "./SiteFooter";
 import "./landing.css";
 
 const display = localFont({
@@ -138,7 +139,9 @@ const TrialPage = () => {
           Pełny dostęp do systemu dla Twojej firmy cateringowej. Po 30 dniach
           konto zostaje zawieszone, a dane pozostają zachowane - po opłaceniu
           abonamentu przywracamy dostęp. Jeśli abonament nie zostanie opłacony,
-          dane usuwamy 7 dni po zakończeniu triala.
+          dane usuwamy 7 dni po zakończeniu triala. Dalej: 99 zł brutto
+          miesięcznie, rezygnacja w dowolnym momencie. Płatność BLIK przez
+          Tpay jest na razie w środowisku testowym (sandbox).
         </p>
 
         {!result && (
@@ -315,20 +318,21 @@ const TrialPage = () => {
           {!result && (
             <p className="ec-trial-legal">
               Zakładając trial akceptujesz{" "}
-              <Link href="/polityka-prywatnosci">politykę prywatności</Link>.
+              <Link href="/polityka-prywatnosci">politykę prywatności</Link> i{" "}
+              <TermsButton>regulamin</TermsButton>.
             </p>
           )}
         </form>
         )}
       </main>
 
-      <footer className="ec-foot">
-        <span>EventCater © {year}</span>
-        <span className="ec-foot-links">
-          <Link href="/polityka-prywatnosci">Polityka prywatności</Link>
-          <Link href="/login">Logowanie</Link>
-        </span>
-      </footer>
+      <SiteFooter
+        year={year}
+        links={[
+          { href: "/polityka-prywatnosci", label: "Polityka prywatności" },
+          { href: "/login", label: "Logowanie" },
+        ]}
+      />
     </div>
   );
 };
