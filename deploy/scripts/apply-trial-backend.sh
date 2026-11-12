@@ -28,6 +28,8 @@ cp -f "${PATCH_ROOT}/src/Module/Facebook/Infrastructure/Persistence/DoctrineFace
   "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence/"
 cp -f "${PATCH_ROOT}/config/packages/saas.yaml" "${BACKEND}/config/packages/saas.yaml"
 cp -f "${PATCH_ROOT}/config/services/main.yaml" "${BACKEND}/config/services/main.yaml"
+# cp honors the shell umask. A previous umask 077 made these files unreadable by www-data.
+chmod -R a+rX "${BACKEND}/src" "${BACKEND}/migrations" "${BACKEND}/config"
 
 # Branding leftovers from HRApp
 sed -i 's/Pracownik techniczny systemu HRApp/Pracownik techniczny systemu EventCater/g' \

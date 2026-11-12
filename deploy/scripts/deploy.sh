@@ -45,6 +45,7 @@ if [[ -x frontend/deploy/scripts/apply-trial-backend.sh ]]; then
     "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence/"
   cp -f "${PATCH_ROOT}/config/packages/saas.yaml" "${BACKEND}/config/packages/saas.yaml"
   cp -f "${PATCH_ROOT}/config/services/main.yaml" "${BACKEND}/config/services/main.yaml"
+  chmod -R a+rX "${BACKEND}/src" "${BACKEND}/migrations" "${BACKEND}/config"
   sed -i 's/Pracownik techniczny systemu HRApp/Pracownik techniczny systemu EventCater/g' \
     "${BACKEND}/src/Module/Company/Domain/Entity/User.php" || true
   sed -i "s/noreply@hrapp.com/noreply@eventcater.pl/g; s/System HRApp/EventCater/g" \
