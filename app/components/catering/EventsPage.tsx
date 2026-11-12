@@ -68,10 +68,10 @@ export function EventsPage() {
           <ToggleButtonGroup
             exclusive
             size="small"
+            color="primary"
             value={view}
             onChange={(_, next: "list" | "calendar" | null) => { if (next) setView(next); }}
             aria-label="Sposób prezentacji wydarzeń"
-            sx={{ "& .MuiToggleButton-root": { textTransform: "none", px: 1.75, color: "#34495e", borderColor: "rgba(52,73,94,0.35)" }, "& .Mui-selected": { bgcolor: "rgba(52,73,94,0.1) !important", color: "#24313c" } }}
           >
             <ToggleButton value="list">Lista</ToggleButton>
             <ToggleButton value="calendar">Kalendarz</ToggleButton>

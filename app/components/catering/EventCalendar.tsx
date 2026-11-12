@@ -5,6 +5,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddIcon from "@mui/icons-material/Add";
 import { useEffect, useMemo, useState } from "react";
 import {
+  alpha,
   Box,
   Button,
   CircularProgress,
@@ -15,6 +16,7 @@ import {
   Stack,
   Typography,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/app/context/userContext";
@@ -24,14 +26,13 @@ import { EventForm } from "./EventForm";
 import { Feedback, Loading, stateLabels } from "./ui";
 
 const WEEKDAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
-const TONE: Record<string, string> = {
-  draft: "#7d8b99",
-  planned: "#34495e",
-  confirmed: "#1f6f54",
-  in_progress: "#9a6408",
-  completed: "#5d6b66",
-  cancelled: "#8b9390",
-};
+const BRAND = "#34495e";
+
+function markColor(status: string, info: string, success: string, muted: string) {
+  if (["ready", "loaded", "handed_over", "completed"].includes(status)) return success;
+  if (status === "cancelled") return muted;
+  return info;
+}
 
 function iso(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -82,7 +83,11 @@ export function EventCalendar({
 }) {
   const api = useApi();
   const router = useRouter();
+  const theme = useTheme();
   const { hasPermission } = useUser();
+  const info = theme.palette.info.main;
+  const success = theme.palette.success.main;
+  const muted = theme.palette.text.secondary;
   const compact = useMediaQuery("(max-width:700px)");
   const today = iso(new Date());
   const [cursor, setCursor] = useState(() => new Date());
@@ -176,7 +181,7 @@ export function EventCalendar({
           <IconButton aria-label="Poprzedni miesiąc" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
             <ChevronLeftIcon />
           </IconButton>
-          <Typography sx={{ minWidth: { xs: 150, sm: 190 }, textAlign: "center", fontWeight: 650, color: "#24313c" }}>
+          <Typography sx={{ minWidth: { xs: 150, sm: 190 }, textAlign: "center", fontWeight: 650, color: "text.primary" }}>
             {monthName}
           </Typography>
           <IconButton aria-label="Następny miesiąc" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
@@ -184,17 +189,17 @@ export function EventCalendar({
           </IconButton>
         </Stack>
         <Stack direction="row" alignItems="center" gap={1}>
-          {loading && <CircularProgress size={16} aria-label="Wczytywanie kalendarza" sx={{ color: "#34495e" }} />}
-          <Button size="small" onClick={() => { const now = new Date(); setCursor(now); setSelected(iso(now)); }} sx={{ color: "#34495e", textTransform: "none" }}>
+          {loading && <CircularProgress size={16} aria-label="Wczytywanie kalendarza" sx={{ color: BRAND }} />}
+          <Button size="small" color="primary" onClick={() => { const now = new Date(); setCursor(now); setSelected(iso(now)); }}>
             Dziś
           </Button>
         </Stack>
       </Stack>
       <Feedback error={error} />
       {truncated && <Typography variant="caption" color="text.secondary">W tym zakresie jest więcej wydarzeń, niż kalendarz może pokazać naraz. Zawęź status albo wyszukiwanie.</Typography>}
-      <Box aria-label="Kalendarz wydarzeń" sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", border: "1px solid rgba(52,73,94,0.14)", borderRadius: 2, overflow: "hidden", bgcolor: "#fff" }}>
+      <Box aria-label="Kalendarz wydarzeń" sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", border: 1, borderColor: "divider", borderRadius: 2, overflow: "hidden", bgcolor: "background.paper" }}>
         {WEEKDAYS.map((name, index) => (
-          <Typography key={name} sx={{ py: 1, textAlign: "center", fontSize: 12, fontWeight: 650, color: index >= 5 ? "#8b97a1" : "#5c6b75", bgcolor: "#f6f7f8", borderBottom: "1px solid rgba(52,73,94,0.1)" }}>
+          <Typography key={name} sx={{ py: 1, textAlign: "center", fontSize: 12, fontWeight: 650, color: index >= 5 ? "text.disabled" : "text.secondary", bgcolor: "grey.50", borderBottom: 1, borderColor: "divider" }}>
             {name}
           </Typography>
         ))}
@@ -220,26 +225,30 @@ export function EventCalendar({
                 textAlign: "left",
                 appearance: "none",
                 border: 0,
-                borderTop: index >= 7 ? "1px solid rgba(52,73,94,0.08)" : 0,
-                borderRight: index % 7 === 6 ? 0 : "1px solid rgba(52,73,94,0.08)",
-                bgcolor: selected === key ? "rgba(52,73,94,0.06)" : inMonth ? "#fff" : "#fbfcfc",
+                borderTop: index >= 7 ? 1 : 0,
+                borderRight: index % 7 === 6 ? 0 : 1,
+                borderColor: "divider",
+                bgcolor: selected === key ? alpha(theme.palette.primary.main, 0.08) : inMonth ? "background.paper" : "grey.50",
                 cursor: "pointer",
-                "&:hover": { bgcolor: "rgba(52,73,94,0.05)" },
+                "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.06) },
               }}
             >
-              <Box sx={{ width: 26, height: 26, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 650, color: key === today ? "#fff" : inMonth ? "#24313c" : "#a0aab1", bgcolor: key === today ? "#34495e" : "transparent" }}>
+              <Box sx={{ width: 26, height: 26, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 650, color: key === today ? "#fff" : inMonth ? "text.primary" : "text.disabled", bgcolor: key === today ? BRAND : "transparent" }}>
                 {day.getDate()}
               </Box>
               <Stack gap={0.4} mt={0.4}>
-                {visible.map((event) => (
-                  <Box key={event.uuid} sx={{ px: 0.6, py: 0.15, borderRadius: 0.75, bgcolor: `${TONE[event.status] ?? "#34495e"}14`, color: TONE[event.status] ?? "#34495e", fontSize: 11, lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {eventTime(event) ? `${eventTime(event)} ` : ""}{event.title}
-                  </Box>
-                ))}
-                {!compact && events.length > 3 && <Typography sx={{ fontSize: 11, color: "#5c6b75" }}>jeszcze {events.length - 3}</Typography>}
+                {visible.map((event) => {
+                  const color = markColor(event.status, info, success, muted);
+                  return (
+                    <Box key={event.uuid} sx={{ px: 0.6, py: 0.15, borderRadius: 0.75, bgcolor: alpha(color, 0.12), color, fontSize: 11, lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {eventTime(event) ? `${eventTime(event)} ` : ""}{event.title}
+                    </Box>
+                  );
+                })}
+                {!compact && events.length > 3 && <Typography sx={{ fontSize: 11, color: "text.secondary" }}>jeszcze {events.length - 3}</Typography>}
                 {compact && events.length > 0 && (
                   <Stack direction="row" gap={0.4} justifyContent="center">
-                    {events.slice(0, 4).map((event) => <Box key={event.uuid} sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: TONE[event.status] ?? "#34495e" }} />)}
+                    {events.slice(0, 4).map((event) => <Box key={event.uuid} sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: markColor(event.status, info, success, muted) }} />)}
                   </Stack>
                 )}
               </Stack>
@@ -254,19 +263,19 @@ export function EventCalendar({
           <Stack gap={1} sx={{ pt: 0.5 }}>
             {selectedEvents.length === 0 && <Typography color="text.secondary">Brak wydarzeń tego dnia.</Typography>}
             {selectedEvents.map((event) => (
-              <Stack key={event.uuid} direction={{ xs: "column", sm: "row" }} gap={1} alignItems={{ sm: "center" }} justifyContent="space-between" sx={{ p: 1.25, border: "1px solid rgba(52,73,94,0.14)", borderRadius: 1.5 }}>
+              <Stack key={event.uuid} direction={{ xs: "column", sm: "row" }} gap={1} alignItems={{ sm: "center" }} justifyContent="space-between" sx={{ p: 1.25, border: 1, borderColor: "divider", borderRadius: 1.5 }}>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography fontWeight={650}>{eventTime(event) ? `${eventTime(event)} · ` : ""}{event.title}</Typography>
                   <Typography variant="body2" color="text.secondary">{stateLabels[event.status] ?? event.status}{event.guestCount ? ` · ${event.guestCount} gości` : ""}</Typography>
                 </Box>
                 <Stack direction="row" gap={1}>
-                  <Button size="small" onClick={() => router.push("/catering/events/" + event.uuid)} sx={{ textTransform: "none", color: "#34495e" }}>Otwórz</Button>
-                  {canUpdate && <Button size="small" onClick={() => void openEdit(event.uuid)} sx={{ textTransform: "none", color: "#34495e" }}>Edytuj</Button>}
+                  <Button size="small" color="primary" onClick={() => router.push("/catering/events/" + event.uuid)}>Otwórz</Button>
+                  {canUpdate && <Button size="small" color="primary" onClick={() => void openEdit(event.uuid)}>Edytuj</Button>}
                 </Stack>
               </Stack>
             ))}
             {canCreate && selected && (
-              <Button startIcon={<AddIcon />} variant="contained" onClick={() => setCreateDate(selected)} sx={{ alignSelf: "flex-start", mt: 1, backgroundColor: "#34495e", textTransform: "none" }}>
+              <Button startIcon={<AddIcon />} variant="contained" color="success" onClick={() => setCreateDate(selected)} sx={{ alignSelf: "flex-start", mt: 1 }}>
                 Dodaj wydarzenie
               </Button>
             )}
@@ -275,7 +284,7 @@ export function EventCalendar({
       </Dialog>
 
       <Dialog open={!!createDate || !!editing || editLoading} onClose={() => { setCreateDate(null); setEditing(null); setEditLoading(false); }} fullWidth maxWidth="lg">
-        <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>{editing ? "Edycja wydarzenia" : "Planowanie wydarzenia"}</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: BRAND, color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>{editing ? "Edycja wydarzenia" : "Planowanie wydarzenia"}</DialogTitle>
         <DialogContent>
           {editLoading && <Loading />}
           {createDate && (
