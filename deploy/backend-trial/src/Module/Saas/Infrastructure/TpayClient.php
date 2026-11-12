@@ -56,18 +56,28 @@ final class TpayClient
     }
 
     /** @return array{transactionId: string, title: string, paymentUrl: string} */
-    public function createBlikTransaction(string $crc, string $payerEmail, string $payerName, string $description, string $notifyUrl, string $successUrl, string $errorUrl): array
+    public function createBlikTransaction(string $crc, string $payerEmail, string $payerName, string $description, string $blikCode, string $ip, string $userAgent, string $notifyUrl, string $successUrl, string $errorUrl): array
     {
+        $payer = [
+            'email' => $payerEmail,
+            'name' => $payerName,
+        ];
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            $payer['ip'] = $ip;
+        }
+        if ($userAgent !== '') {
+            $payer['userAgent'] = $userAgent;
+        }
         $response = $this->request('POST', '/transactions', [
             'amount' => (float) self::AMOUNT,
             'description' => $description,
             'hiddenDescription' => $crc,
-            'payer' => [
-                'email' => $payerEmail,
-                'name' => $payerName,
-            ],
+            'payer' => $payer,
             'pay' => [
                 'groupId' => 150,
+                'blikPaymentData' => [
+                    'blikToken' => $blikCode,
+                ],
             ],
             'callbacks' => [
                 'notification' => ['url' => $notifyUrl],
@@ -247,10 +257,11 @@ final class TpayClient
         }
         $raw = curl_exec($handle);
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        $curlError = curl_error($handle);
         curl_close($handle);
         if (!is_string($raw) || $status < 200 || $status >= 300) {
-            $this->logger->error('Tpay HTTP failed.', ['status' => $status, 'host' => parse_url($url, PHP_URL_HOST)]);
-            throw new TpayTemporaryException('Nie udało się połączyć z Tpay.');
+            $this->logger->error('Tpay HTTP failed.', ['status' => $status, 'host' => parse_url($url, PHP_URL_HOST), 'curl' => $curlError]);
+            throw new TpayTemporaryException($this->publicFailure($status, is_string($raw) ? $raw : ''));
         }
 
         return $raw;
@@ -273,6 +284,29 @@ final class TpayClient
         $value = $fields[$key] ?? '';
 
         return is_string($value) ? $value : '';
+    }
+
+    private function publicFailure(int $status, string $raw): string
+    {
+        if ($status === 0) {
+            return 'Nie udało się połączyć z Tpay.';
+        }
+        $decoded = json_decode($raw, true);
+        $detail = '';
+        if (is_array($decoded)) {
+            if (isset($decoded['errors'][0]) && is_array($decoded['errors'][0])) {
+                $detail = (string) ($decoded['errors'][0]['errorMessage'] ?? $decoded['errors'][0]['message'] ?? '');
+            }
+            if ($detail === '') {
+                $detail = (string) ($decoded['error_description'] ?? $decoded['message'] ?? '');
+            }
+        }
+        $detail = trim((string) preg_replace('/\s+/', ' ', $detail));
+        if ($detail !== '' && strlen($detail) < 180 && !str_contains(strtolower($detail), 'secret')) {
+            return 'Tpay odrzucił płatność: '.$detail;
+        }
+
+        return 'Tpay odrzucił kod BLIK. Wygeneruj nowy kod w banku i wpisz go jeszcze raz.';
     }
 
     private function money(mixed $amount): string

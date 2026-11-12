@@ -65,7 +65,13 @@ final readonly class SaasController
     {
         $data = $r->toArray();
 
-        return new JsonResponse($this->payments->start((string) ($data['slug'] ?? ''), (string) ($data['email'] ?? ''), $r->getClientIp() ?? ''), 201);
+        return new JsonResponse($this->payments->start(
+            (string) ($data['slug'] ?? ''),
+            (string) ($data['email'] ?? ''),
+            (string) ($data['blikCode'] ?? ''),
+            $r->getClientIp() ?? '',
+            substr((string) $r->headers->get('User-Agent', ''), 0, 400),
+        ), 201);
     }
 
     #[Route('/payments/{uuid}', methods: ['GET'], requirements: ['uuid' => '[0-9a-fA-F-]{36}'])]

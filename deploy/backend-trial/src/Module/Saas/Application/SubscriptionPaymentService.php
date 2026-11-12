@@ -43,7 +43,7 @@ final readonly class SubscriptionPaymentService
         ];
     }
 
-    public function start(string $slug, string $email, string $ip): array
+    public function start(string $slug, string $email, string $blikCode, string $ip, string $userAgent): array
     {
         if (!$this->limiter->create(hash('sha256', $ip))->consume()->isAccepted()) {
             throw new TooManyRequestsHttpException(3600, 'Zbyt wiele prób. Spróbuj ponownie później.');
@@ -53,8 +53,12 @@ final readonly class SubscriptionPaymentService
         }
         $slug = strtolower(trim($slug));
         $email = strtolower(trim($email));
+        $blikCode = trim($blikCode);
         if (!preg_match('/^[a-z0-9][a-z0-9-]{1,62}$/D', $slug) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new BadRequestHttpException('Podaj kod firmy i adres e-mail właściciela konta.');
+        }
+        if (!preg_match('/^\d{6}$/D', $blikCode)) {
+            throw new BadRequestHttpException('Wpisz 6-cyfrowy kod BLIK z aplikacji banku.');
         }
         $tenant = $this->control->db()->fetchAssociative(
             'SELECT * FROM saas_tenant WHERE slug=? AND contact_email=?',
@@ -85,7 +89,10 @@ final readonly class SubscriptionPaymentService
                 $uuid,
                 $email,
                 mb_substr((string) $tenant['name'], 0, 64),
-                'EventCater abonament 1 miesiac',
+                'Abonament EventCater',
+                $blikCode,
+                $ip,
+                $userAgent,
                 $origin.'/api/saas/payments/tpay/notify',
                 $origin.'/oplata?wynik=ok&platnosc='.$uuid,
                 $origin.'/oplata?wynik=blad&platnosc='.$uuid,
