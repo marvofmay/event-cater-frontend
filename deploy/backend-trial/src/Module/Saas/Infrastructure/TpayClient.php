@@ -258,7 +258,8 @@ final class TpayClient
 
     private function apiOrigin(): string
     {
-        return $this->sandbox() ? 'https://api.sandbox.tpay.com' : 'https://api.tpay.com';
+        // api.sandbox.tpay.com does not exist. Sandbox Open API is on openapi.sandbox.tpay.com.
+        return $this->sandbox() ? 'https://openapi.sandbox.tpay.com' : 'https://api.tpay.com';
     }
 
     private function secureOrigin(): string
