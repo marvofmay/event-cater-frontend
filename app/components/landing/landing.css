@@ -313,6 +313,116 @@
   margin-bottom: 1.75rem;
 }
 
+.ec-price-note {
+  margin: -0.35rem 0 1.6rem;
+  max-width: 36rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(247, 250, 248, 0.16);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(243, 247, 245, 0.86);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.ec-price-note strong {
+  color: #f7faf8;
+  font-weight: 620;
+}
+
+.ec-text-btn {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ec-foot .ec-text-btn:hover,
+.ec-trial-legal .ec-text-btn:hover {
+  color: var(--ec-pine);
+}
+
+.ec-trial-legal .ec-text-btn {
+  color: var(--ec-pine);
+  text-decoration: underline;
+}
+
+.ec-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(16, 38, 31, 0.48);
+}
+
+.ec-modal {
+  width: min(720px, 100%);
+  max-height: min(86vh, 840px);
+  overflow: auto;
+  padding: 1.35rem 1.4rem 1.6rem;
+  border-radius: 0.85rem;
+  background: #f7faf8;
+  color: var(--ec-ink);
+  box-shadow: 0 24px 60px rgba(16, 38, 31, 0.24);
+}
+
+.ec-modal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.ec-modal-top h2 {
+  margin: 0;
+  font-family: var(--ec-display);
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+  color: var(--ec-pine-deep);
+}
+
+.ec-modal-close {
+  appearance: none;
+  border: 1px solid var(--ec-line);
+  background: transparent;
+  color: var(--ec-pine-deep);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ec-modal-close:hover {
+  background: rgba(28, 61, 50, 0.06);
+}
+
+.ec-modal h2 {
+  margin: 1.35rem 0 0.45rem;
+  font-size: 1.05rem;
+  color: var(--ec-pine-deep);
+}
+
+.ec-modal-top h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.ec-modal p {
+  margin: 0 0 0.75rem;
+  color: var(--ec-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
 .ec-close .ec-btn-primary {
   background: #eef5f1;
   color: var(--ec-pine-deep);

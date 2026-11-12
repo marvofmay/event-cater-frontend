@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import localFont from "next/font/local";
+import SiteFooter from "./SiteFooter";
 import "./landing.css";
 
 // Local fonts only - Google Fonts break offline / restricted Docker builds.
@@ -124,6 +125,12 @@ const LandingPage = () => {
             7 dni - potem są usuwane, jeśli abonament nie zostanie opłacony.
             Istniejący klienci logują się kodem firmy.
           </p>
+          <p className="ec-price-note">
+            Po trialu <strong>99 zł brutto miesięcznie</strong>. Rezygnacja w
+            dowolnym momencie, bez okresu wypowiedzenia. Płatność BLIK przez
+            Tpay, na razie w środowisku testowym (sandbox), bez pobierania
+            opłat produkcyjnych.
+          </p>
           <div className="ec-cta">
             <Link className="ec-btn ec-btn-ghost" href="/trial">
               30-dniowy trial
@@ -135,14 +142,14 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <footer className="ec-foot">
-        <span>EventCater © {year}</span>
-        <span className="ec-foot-links">
-          <Link href="/polityka-prywatnosci">Polityka prywatności</Link>
-          <Link href="/trial">Trial</Link>
-          <Link href="/login">Logowanie</Link>
-        </span>
-      </footer>
+      <SiteFooter
+        year={year}
+        links={[
+          { href: "/polityka-prywatnosci", label: "Polityka prywatności" },
+          { href: "/trial", label: "Trial" },
+          { href: "/login", label: "Logowanie" },
+        ]}
+      />
     </div>
   );
 };
