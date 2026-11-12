@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { AppBar, Toolbar, Button, Link, Badge, Box, IconButton, Tooltip } from "@mui/material";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
@@ -142,18 +141,9 @@ const Navigation: React.FC = () => {
           underline="none"
           sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
         >
-          <Image
-            src="/icons/event-cater-logo.png"
-            alt="EventCater"
-            width={44}
-            height={44}
-            className="logo"
-            style={{ width: 44, height: 44, marginRight: 0 }}
-          />
           <Box
             component="span"
             sx={{
-              display: { xs: "none", sm: "inline" },
               fontWeight: 620,
               letterSpacing: "-0.02em",
               fontSize: "1.05rem",

@@ -91,6 +91,16 @@ body {
         word-break: break-word;
     }
 
+    table.MuiTable-root > tbody > tr > td:has(.MuiIconButton-root) {
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
+
+    table.MuiTable-root > tbody > tr > td:has(.MuiIconButton-root) > * {
+        flex: 0 0 auto;
+        width: auto !important;
+    }
+
     table.MuiTable-root > tbody > tr > td:last-child,
     table.MuiTable-root > tbody > tr > th:last-child {
         border-bottom: 0;

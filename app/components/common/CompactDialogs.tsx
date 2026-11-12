@@ -4,6 +4,8 @@ export default function CompactDialogs() {
             padding: 12px 20px;
             font-size: 1.1rem;
             line-height: 1.4;
+            background-color: #171717 !important;
+            color: #fff !important;
         }
         .MuiDialog-root .MuiDialogContent-root { padding: 12px 20px; }
         .MuiDialog-root .MuiDialogActions-root { padding: 10px 20px; }

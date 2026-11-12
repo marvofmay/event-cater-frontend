@@ -332,7 +332,8 @@ const RolesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}>{role.description || '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(role.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{role.updatedAt ? moment(role.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap' }}>
+                                        <Box sx={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center' }}>
                                         {hasPermission("roles.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', role)}><Preview /></IconButton>
@@ -355,6 +356,7 @@ const RolesTable = () => {
                                                 <IconButton onClick={() => openModal('delete', role)}><Delete /></IconButton>
                                             </Tooltip>
                                         )}
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}

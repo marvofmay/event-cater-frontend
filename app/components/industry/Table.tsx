@@ -331,7 +331,8 @@ const IndustriesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}>{industry.description || '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(industry.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{industry.updatedAt ? moment(industry.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap' }}>
+                                        <Box sx={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center' }}>
                                         {hasPermission("industries.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', industry)}><Preview /></IconButton>
@@ -349,6 +350,7 @@ const IndustriesTable = () => {
                                                 <IconButton onClick={() => openModal('delete', industry)}><Delete /></IconButton>
                                             </Tooltip>
                                         )}
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}

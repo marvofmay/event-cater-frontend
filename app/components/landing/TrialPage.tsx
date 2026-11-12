@@ -204,6 +204,7 @@ const TrialPage = () => {
           </div>
         )}
 
+        {!result && (
         <form className="ec-trial-form" onSubmit={onSubmit} noValidate>
           {error && (
             <p className="ec-trial-error" role="alert">
@@ -318,6 +319,7 @@ const TrialPage = () => {
             </p>
           )}
         </form>
+        )}
       </main>
 
       <footer className="ec-foot">
