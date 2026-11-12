@@ -143,6 +143,7 @@ const PrivacyPolicyPage = () => {
         year={year}
         links={[
           { href: "/", label: "Strona główna" },
+          { href: "/oplata", label: "Opłata" },
           { href: "/login", label: "Logowanie" },
         ]}
       />

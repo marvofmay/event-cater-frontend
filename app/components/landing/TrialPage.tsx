@@ -141,7 +141,8 @@ const TrialPage = () => {
           abonamentu przywracamy dostęp. Jeśli abonament nie zostanie opłacony,
           dane usuwamy 7 dni po zakończeniu triala. Dalej: 99 zł brutto
           miesięcznie, rezygnacja w dowolnym momencie. Płatność BLIK przez
-          Tpay jest na razie w środowisku testowym (sandbox).
+          Tpay jest na razie w środowisku testowym (sandbox).{" "}
+          <Link href="/oplata">Opłać abonament</Link>.
         </p>
 
         {!result && (
@@ -330,6 +331,7 @@ const TrialPage = () => {
         year={year}
         links={[
           { href: "/polityka-prywatnosci", label: "Polityka prywatności" },
+          { href: "/oplata", label: "Opłata" },
           { href: "/login", label: "Logowanie" },
         ]}
       />

@@ -127,9 +127,9 @@ const LandingPage = () => {
           </p>
           <p className="ec-price-note">
             Po trialu <strong>99 zł brutto miesięcznie</strong>. Rezygnacja w
-            dowolnym momencie, bez okresu wypowiedzenia. Płatność BLIK przez
-            Tpay, na razie w środowisku testowym (sandbox), bez pobierania
-            opłat produkcyjnych.
+            dowolnym momencie: nie opłacasz kolejnego miesiąca. Płatność{" "}
+            <Link href="/oplata">BLIK przez Tpay</Link>, na razie w środowisku
+            testowym (sandbox).
           </p>
           <div className="ec-cta">
             <Link className="ec-btn ec-btn-ghost" href="/trial">
@@ -137,6 +137,9 @@ const LandingPage = () => {
             </Link>
             <Link className="ec-btn ec-btn-ghost" href="/login">
               Zaloguj się
+            </Link>
+            <Link className="ec-btn ec-btn-ghost" href="/oplata">
+              Opłać abonament
             </Link>
           </div>
         </div>
@@ -146,6 +149,7 @@ const LandingPage = () => {
         year={year}
         links={[
           { href: "/polityka-prywatnosci", label: "Polityka prywatności" },
+          { href: "/oplata", label: "Opłata" },
           { href: "/trial", label: "Trial" },
           { href: "/login", label: "Logowanie" },
         ]}

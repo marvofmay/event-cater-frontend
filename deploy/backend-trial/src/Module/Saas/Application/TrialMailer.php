@@ -65,7 +65,7 @@ final readonly class TrialMailer
             ."Logowanie: {$loginUrl}\n\n"
             ."Po zakończeniu triala konto zostanie zawieszone. Dane pozostaną przez 7 dni - "
             ."potem zostaną usunięte, jeśli abonament nie zostanie opłacony.\n"
-            ."Po opłaceniu abonamentu możemy ponownie aktywować firmę.\n\n"
+            ."Opłata 99 zł brutto (BLIK, Tpay): ".rtrim($this->appUrl, '/')."/oplata\n\n"
             ."Kontakt: {$this->notifyEmail}\n\nEventCater\n";
         $this->send($to, 'EventCater - koniec triala za '.$windowLabel, $body);
     }
@@ -74,8 +74,33 @@ final readonly class TrialMailer
     {
         $body = "Witaj,\n\nOkres próbny EventCater dla firmy „{$companyName}” (kod: {$slug}) zakończył się. "
             ."Konto zostało zawieszone. Dane firmy pozostaną przez 7 dni, potem zostaną usunięte.\n\n"
-            ."Aby wznowić dostęp przed usunięciem, napisz na {$this->notifyEmail}.\n\nEventCater\n";
+            ."Aby wznowić dostęp przed usunięciem, opłać abonament: ".rtrim($this->appUrl, '/')."/oplata\n"
+            ."albo napisz na {$this->notifyEmail}.\n\nEventCater\n";
         $this->send($to, 'EventCater - koniec triala, konto zawieszone', $body);
+    }
+
+    public function sendPaymentReceived(string $to, string $companyName, string $slug, \DateTimeInterface $paidUntil, bool $sandbox): void
+    {
+        $until = $paidUntil->format('Y-m-d H:i');
+        $loginUrl = rtrim($this->appUrl, '/').'/login?tenant='.rawurlencode($slug);
+        $mode = $sandbox ? "To była płatność testowa Tpay (sandbox).\n\n" : '';
+        $body = "Witaj,\n\nWpłata 99 zł brutto za EventCater dla firmy „{$companyName}” została zaksięgowana.\n\n"
+            ."Kod firmy: {$slug}\n"
+            ."Abonament aktywny do: {$until}\n"
+            ."Logowanie: {$loginUrl}\n\n"
+            .$mode
+            ."Kolejny miesiąc przedłużysz tą samą płatnością BLIK. Rezygnacja oznacza, że nie opłacasz następnego miesiąca.\n\n"
+            ."EventCater\n";
+        $this->send($to, 'EventCater - abonament opłacony', $body);
+    }
+
+    public function sendPaidSuspendedNotice(string $to, string $companyName, string $slug): void
+    {
+        $payUrl = rtrim($this->appUrl, '/').'/oplata';
+        $body = "Witaj,\n\nOpłacony miesiąc EventCater dla firmy „{$companyName}” (kod: {$slug}) zakończył się. "
+            ."Konto zostało zawieszone. Dane zostają na koncie.\n\n"
+            ."Aby wznowić dostęp, opłać kolejny miesiąc: {$payUrl}\n\nEventCater\n";
+        $this->send($to, 'EventCater - abonament wygasł', $body);
     }
 
     private function send(string $to, string $subject, string $body): void

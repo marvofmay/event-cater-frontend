@@ -4,6 +4,7 @@ export function isPublicMarketingPath(pathname: string | null): boolean {
   return (
     pathname === "/" ||
     pathname === "/polityka-prywatnosci" ||
-    pathname === "/trial"
+    pathname === "/trial" ||
+    pathname === "/oplata"
   );
 }
