@@ -70,7 +70,7 @@ final readonly class SaasService
 
     public function list(): array
     {
-        return $this->control->db()->fetchAllAssociative('SELECT uuid,slug,name,contact_email AS contactEmail,status,provisioning,version,plan,trial_ends_at AS trialEndsAt,created_at AS createdAt,updated_at AS updatedAt FROM saas_tenant ORDER BY created_at DESC, name');
+        return $this->control->db()->fetchAllAssociative('SELECT uuid,slug,name,contact_email AS contactEmail,status,provisioning,version,plan,trial_ends_at AS trialEndsAt,paid_until AS paidUntil,created_at AS createdAt,updated_at AS updatedAt FROM saas_tenant ORDER BY created_at DESC, name');
     }
 
     public function tenantOptions(): array

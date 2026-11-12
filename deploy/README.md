@@ -94,7 +94,8 @@ Publiczny formularz: `https://eventcater.pl/trial` → `POST /api/saas/trial`.
 
 - Po założeniu: login + hasło na e-mail właściciela oraz na ekranie; powiadomienie na `kontakt@eventcater.pl`.
 - Worker `worker-trials` co godzinę: przypomnienia 5 dni / 3 dni / 24 h przed końcem, zawieszenie po terminie, usunięcie bazy 7 dni po końcu triala.
-- Po opłaceniu (przed purge): w panelu SaaS ustaw status zawieszonego tenanta na `active` - plan zmieni się na abonament.
+- Opłata 99 zł brutto: `https://eventcater.pl/oplata`. BLIK przez Tpay. Dopóki `TPAY_ENV=sandbox`, to środowisko testowe. Dostęp przedłuża dopiero powiadomienie Tpay (albo odczyt statusu transakcji), nie samo wrócenie na stronę. Klucze wpisz do pliku `tpay.env` i uruchom `bash frontend/deploy/scripts/set-tpay-env.sh`. W panelu Tpay włącz nadpisywanie adresu powiadomień. Po opłaconym miesiącu konto jest zawieszane, dane zostają.
+- Ręczne wznowienie bez płatności: w panelu SaaS ustaw status zawieszonego tenanta na `active`.
 - Patch backendu leży w `deploy/backend-trial/` i jest nakładany przy `deploy.sh` (oraz ręcznie: `bash frontend/deploy/scripts/apply-trial-backend.sh`).
 
 ## 5. Aktualizacje

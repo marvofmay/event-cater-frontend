@@ -41,6 +41,7 @@ final class ProcessTrialsCommand extends Command
         $now = new \DateTimeImmutable('now');
         $this->sendReminders($now, $output);
         $this->suspendExpired($now, $output);
+        $this->suspendPaid($now, $output);
         $this->purgeExpired($now, $output);
 
         return Command::SUCCESS;
@@ -124,6 +125,51 @@ final class ProcessTrialsCommand extends Command
             } catch (\Throwable) {
             }
             $output->writeln('Suspended trial: '.$row['slug']);
+        }
+    }
+
+    /** Suspend a paid account when the month bought via Tpay has ended. Data stays. */
+    private function suspendPaid(\DateTimeImmutable $now, OutputInterface $output): void
+    {
+        $columns = $this->control->db()->createSchemaManager()->listTableColumns('saas_tenant');
+        if (!isset($columns['paid_until'])) {
+            return;
+        }
+        $rows = $this->control->db()->fetchAllAssociative(
+            "SELECT * FROM saas_tenant
+             WHERE plan='paid' AND status='active'
+               AND paid_until IS NOT NULL AND paid_until <= ?
+               AND slug<>'default'",
+            [$now->format('Y-m-d H:i:s')]
+        );
+        foreach ($rows as $row) {
+            $this->control->db()->transactional(function () use ($row, $now): void {
+                $tenant = $this->control->db()->fetchAssociative('SELECT * FROM saas_tenant WHERE uuid=? FOR UPDATE', [$row['uuid']]);
+                if (!$tenant || $tenant['status'] !== 'active' || ($tenant['plan'] ?? '') !== 'paid' || empty($tenant['paid_until'])) {
+                    return;
+                }
+                if (new \DateTimeImmutable((string) $tenant['paid_until']) > $now) {
+                    return;
+                }
+                $this->control->db()->update('saas_tenant', [
+                    'status' => 'suspended',
+                    'version' => (int) $tenant['version'] + 1,
+                    'updated_at' => $now->format('Y-m-d H:i:s'),
+                ], ['uuid' => $tenant['uuid']]);
+                $this->control->db()->insert('saas_audit', [
+                    'uuid' => Uuid::uuid4()->toString(),
+                    'tenant_uuid' => $tenant['uuid'],
+                    'actor_uuid' => self::SYSTEM_ACTOR,
+                    'action' => 'active -> suspended',
+                    'reason' => 'Koniec opłaconego miesiąca. Dane zostają. Kolejna wpłata BLIK wznawia dostęp.',
+                    'created_at' => $now->format('Y-m-d H:i:s'),
+                ]);
+            });
+            try {
+                $this->mailer->sendPaidSuspendedNotice($row['contact_email'], $row['name'], $row['slug']);
+            } catch (\Throwable) {
+            }
+            $output->writeln('Suspended paid: '.$row['slug']);
         }
     }
 
