@@ -99,12 +99,12 @@ for key in "${keys[@]}"; do
   fi
 done
 
-umask 077
 cat "${tmp}" > "${ENV_FILE}"
-chmod 600 "${ENV_FILE}"
+# The API runs as www-data and reads this mounted file. 600 root-only breaks boot.
+chmod 644 "${ENV_FILE}"
 if [[ -d "${APP_ROOT}/backend" ]]; then
   cat "${ENV_FILE}" > "${APP_ROOT}/backend/.env"
-  chmod 600 "${APP_ROOT}/backend/.env"
+  chmod 644 "${APP_ROOT}/backend/.env"
 fi
 rm -f "${SOURCE}"
 
