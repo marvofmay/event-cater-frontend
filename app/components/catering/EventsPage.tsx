@@ -12,6 +12,8 @@ import {
   DialogTitle,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Table,
   TableHead,
   TableRow,
@@ -34,6 +36,7 @@ import {
   stateLabels,
 } from "./ui";
 import { EventForm } from "./EventForm";
+import { EventCalendar } from "./EventCalendar";
 export function EventsPage() {
   const { hasPermission } = useUser();
   const router = useRouter();
@@ -43,6 +46,8 @@ export function EventsPage() {
   const [status, setStatus] = useState("");
   const [involvement, setInvolvement] = useState("staff");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<"list" | "calendar">("list");
+  const [calendarRevision, setCalendarRevision] = useState(0);
   const [create, setCreate] = useState(false);
   const params = new URLSearchParams({
     q,
@@ -54,12 +59,25 @@ export function EventsPage() {
     ...(involvement === "packing" ? { packing: "1" } : {}),
   });
   const remote = useRemote<Page<EventItem>>(
-    hasPermission("events.list") ? "/events?" + params : null,
+    view === "list" && hasPermission("events.list") ? "/events?" + params : null,
   );
   return (
     <Permission name="events.list">
       <Panel title="Wydarzenia">
-        <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1} mb={2} flexWrap="wrap">
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            color="primary"
+            value={view}
+            onChange={(_, next: "list" | "calendar" | null) => { if (next) setView(next); }}
+            aria-label="Sposób prezentacji wydarzeń"
+          >
+            <ToggleButton value="list">Lista</ToggleButton>
+            <ToggleButton value="calendar">Kalendarz</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" mb={2} sx={{ "& > .MuiFormControl-root": { width: { xs: "100%", sm: 200 }, maxWidth: "100%" } }}>
           <TextField
             size="small"
             label="Szukaj wydarzenia"
@@ -69,7 +87,7 @@ export function EventsPage() {
               setPage(1);
             }}
           />
-          <TextField
+          {view === "list" && <TextField
             size="small"
             label="Od dnia"
             type="date"
@@ -79,8 +97,8 @@ export function EventsPage() {
               setPage(1);
             }}
             slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
+          />}
+          {view === "list" && <TextField
             size="small"
             label="Do dnia"
             type="date"
@@ -90,7 +108,7 @@ export function EventsPage() {
               setPage(1);
             }}
             slotProps={{ inputLabel: { shrink: true } }}
-          />
+          />}
           <FieldSelect
             label="Status"
             value={status}
@@ -130,10 +148,14 @@ export function EventsPage() {
               Dodaj wydarzenie
             </Button>
           )}
-          <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={remote.reload}>Odśwież</Button>
+          <Button variant="outlined" color="primary" startIcon={<RefreshIcon />} disabled={remote.loading} onClick={() => { remote.reload(); setCalendarRevision((value) => value + 1); }}>Odśwież</Button>
         </Stack>
         <Feedback error={remote.error} />
         {remote.loading && <Loading />}
+        {view === "calendar" ? (
+          <EventCalendar q={q} status={status} involvement={involvement} revision={calendarRevision} />
+        ) : (
+        <>
         <TableContainer>
           <Table>
             <TableHead>
@@ -192,6 +214,8 @@ export function EventsPage() {
         )}
         {remote.data && (
           <Pager page={page} total={remote.data.total} onChange={setPage} />
+        )}
+        </>
         )}
         <Dialog
           open={create}

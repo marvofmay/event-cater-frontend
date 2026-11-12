@@ -134,7 +134,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
           )
         }
       >
-        <Stack direction="row" gap={2} flexWrap="wrap" alignItems="center" mb={2} sx={{ "& > .MuiButton-root": { minHeight: 40 } }}>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" alignItems={{ xs: "stretch", sm: "center" }} mb={2} sx={{ "& > .MuiFormControl-root, & > .MuiButton-root": { width: { xs: "100%", sm: "auto" }, maxWidth: "100%", minHeight: 40 } }}>
           <TextField
             size="small"
             label={kind === "equipment" ? "Szukaj po nazwie, nazwie slangowej lub kodzie" : "Szukaj po nazwie lub kodzie"}

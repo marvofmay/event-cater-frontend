@@ -72,7 +72,7 @@ export function EquipmentCategoriesPage({ kind = "equipment" }: { kind?: "equipm
           </Tooltip>
         </>
       }>
-        <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" mb={2} sx={{ "& > .MuiFormControl-root, & > .MuiButton-root": { width: { xs: "100%", sm: "auto" }, maxWidth: "100%" } }}>
           <Button component={Link} href={catalogPath}>Wróć do {subject}</Button>
           <TextField
             size="small"

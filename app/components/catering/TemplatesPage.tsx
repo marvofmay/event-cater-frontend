@@ -74,7 +74,7 @@ export function TemplatesPage() {
           </Tooltip>
         </>
       }>
-        <Stack direction="row" gap={2} flexWrap="wrap">
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" sx={{ "& > .MuiFormControl-root": { width: { xs: "100%", sm: 220 }, maxWidth: "100%" } }}>
           <TextField
             size="small"
             label="Szukaj szablonu"

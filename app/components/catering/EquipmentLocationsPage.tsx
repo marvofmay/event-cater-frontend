@@ -32,7 +32,7 @@ export function EquipmentLocationsPage() {
           </Tooltip>
         </>
       }>
-        <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" mb={2} sx={{ "& > .MuiFormControl-root, & > .MuiButton-root": { width: { xs: "100%", sm: "auto" }, maxWidth: "100%" } }}>
           <Button component={Link} href="/catering/equipment">Wróć do sprzętu</Button>
           <TextField size="small" label="Szukaj miejsca sprzętu" value={search} onChange={(event) => {
             setSearch(event.target.value);

@@ -29,8 +29,8 @@ function CustomerWorkspace() {
   if (!isAuthenticated || !canBrowse) return <Alert severity="warning">Brak dostępu do biblioteki kontrahentów.</Alert>;
   return <Panel title="Kontrahenci">
     <Typography variant="body2" color="text.secondary" mb={2}>Klienci i organizatorzy zapisani w tej firmie. Z tej samej biblioteki wybierasz kontrahenta w formularzu wydarzenia.</Typography>
-    <Stack direction="row" gap={2} flexWrap="wrap" alignItems="center" mb={2}>
-      <TextField size="small" label="Szukaj kontrahenta" placeholder="Nazwa, NIP, REGON, KRS, telefon lub e-mail" value={search} onChange={event => setSearch(event.target.value)} sx={{ flex: 1, minWidth: 240 }} slotProps={{ htmlInput: { maxLength: 200 } }} />
+    <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" alignItems={{ xs: "stretch", sm: "center" }} mb={2} sx={{ "& > .MuiButton-root": { width: { xs: "100%", sm: "auto" } } }}>
+      <TextField size="small" label="Szukaj kontrahenta" placeholder="Nazwa, NIP, REGON, KRS, telefon lub e-mail" value={search} onChange={event => setSearch(event.target.value)} sx={{ flex: 1, minWidth: { xs: 0, sm: 240 }, width: { xs: "100%", sm: "auto" } }} slotProps={{ htmlInput: { maxLength: 200 } }} />
       {canWrite && <Button variant="contained" color="success" startIcon={<Add />} sx={{ minHeight: 40 }} onClick={() => setCreate(true)}>Dodaj kontrahenta</Button>}
       <Button variant="outlined" startIcon={<Refresh />} disabled={remote.loading} sx={{ minHeight: 40 }} onClick={remote.reload}>Odśwież</Button>
     </Stack>

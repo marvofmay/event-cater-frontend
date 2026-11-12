@@ -185,13 +185,13 @@ const RolesTable = () => {
 
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2} gap={1} flexWrap="wrap">
+                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" sx={{ width: { xs: '100%', md: 'auto' }, minWidth: 0 }}>
                     <TextField
                         variant="outlined"
                         placeholder={t('common.enterPhraseToSearch')}
                         size="small"
-                        sx={{ width: '500px' }}
+                        sx={{ width: { xs: '100%', sm: 280, md: 420 }, maxWidth: '100%' }}
                         onChange={(e) => setSearchPhrase(e.target.value)}
                     />
                     <Button
@@ -204,7 +204,7 @@ const RolesTable = () => {
                     </Button>
                 </Box>
 
-                <Box display="flex" alignItems="center" gap={1} ml="auto">
+                <Box display="flex" alignItems="center" gap={1} ml="auto" flexWrap="wrap" sx={{ width: { xs: '100%', md: 'auto' } }}>
                     {hasPermission("roles.create") && (
                         <>
                             <Button
@@ -289,7 +289,7 @@ const RolesTable = () => {
                                 <TableCell
                                     sortDirection={sortBy === 'description' ? sortDirection : false}
                                     onClick={() => handleSort('description')}
-                                    sx={{ width: 750, padding: "4px 8px" }}
+                                    sx={{ padding: "4px 8px" }}
                                 >
                                     <TableSortLabel active={sortBy === 'description'} direction={sortBy === 'description' ? sortDirection : 'asc'}>
                                         {t('role.table.column.description')}
@@ -313,7 +313,7 @@ const RolesTable = () => {
                                         {t('role.table.column.updatedAt')}
                                     </TableSortLabel>
                                 </TableCell>
-                                <TableCell sx={{ padding: '4px 8px' }}>{t('role.table.column.actions')}</TableCell>
+                                <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap', width: '1%', minWidth: 'max-content' }}>{t('role.table.column.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -332,7 +332,8 @@ const RolesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}>{role.description || '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(role.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{role.updatedAt ? moment(role.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px' }}>
+                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap', width: '1%', minWidth: 'max-content' }}>
+                                        <Box sx={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', minWidth: 'max-content' }}>
                                         {hasPermission("roles.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', role)}><Preview /></IconButton>
@@ -355,6 +356,7 @@ const RolesTable = () => {
                                                 <IconButton onClick={() => openModal('delete', role)}><Delete /></IconButton>
                                             </Tooltip>
                                         )}
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}
