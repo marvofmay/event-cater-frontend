@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { AppBar, Toolbar, Button, Link, Badge, Box, IconButton, Tooltip } from "@mui/material";
+import { AppBar, Toolbar, Button, Link, Badge, Box, Drawer, IconButton, ListItemButton, Tooltip } from "@mui/material";
 import { usePathname } from "next/navigation";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import CircleNotificationsIcon from "@mui/icons-material/CircleNotifications";
@@ -38,6 +40,11 @@ const Navigation: React.FC = () => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [hydrated, setHydrated] = useState(false);
   const [saasToken, setSaasToken] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     setHydrated(true);
@@ -116,6 +123,24 @@ const Navigation: React.FC = () => {
     "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
   });
 
+  const closeMenu = () => setMenuOpen(false);
+  const drawerItemSx = (active: boolean) => ({
+    color: "#f7faf8",
+    textDecoration: "none",
+    mx: 1,
+    my: 0.25,
+    borderRadius: "0.45rem",
+    minHeight: 48,
+    px: 1.5,
+    gap: 1.25,
+    backgroundColor: active ? "rgba(255,255,255,0.14)" : "transparent",
+    "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+  });
+  const menuLabel = (key: string) => {
+    const text = t(`navigation.${key}`);
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+
   return (
     <AppBar
       position="sticky"
@@ -153,12 +178,22 @@ const Navigation: React.FC = () => {
           </Box>
         </Link>
 
+        <IconButton
+          color="inherit"
+          aria-label="Menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(true)}
+          sx={{ display: { xs: "inline-flex", md: "none" }, ml: "auto" }}
+        >
+          <MenuIcon />
+        </IconButton>
+
         <Box
           sx={{
-            display: "flex",
+            display: { xs: "none", md: "flex" },
             gap: 0.5,
             alignItems: "center",
-            flexWrap: "wrap",
+            flexWrap: "nowrap",
             justifyContent: "flex-end",
           }}
         >
@@ -247,6 +282,85 @@ const Navigation: React.FC = () => {
           ) : null}
         </Box>
       </Toolbar>
+
+      <Drawer
+        anchor="right"
+        open={menuOpen}
+        onClose={closeMenu}
+        slotProps={{
+          paper: {
+            sx: {
+              width: "min(320px, 100vw)",
+              bgcolor: "#10261f",
+              color: "#f7faf8",
+              backgroundImage: "none",
+            },
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 64, px: 2 }}>
+          <Box component="span" sx={{ fontWeight: 620, letterSpacing: "-0.02em" }}>EventCater</Box>
+          <IconButton color="inherit" aria-label="Zamknij menu" onClick={closeMenu}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Box sx={{ overflow: "auto", pb: 3 }}>
+          {isAuthenticated && navLinks.map((link) => (
+            <ListItemButton
+              key={link.href}
+              component={Link}
+              href={link.href}
+              underline="none"
+              onClick={closeMenu}
+              sx={drawerItemSx(pathname === link.activePath)}
+            >
+              {link.icon}
+              {menuLabel(link.label.toLowerCase())}
+            </ListItemButton>
+          ))}
+          {isAuthenticated && (
+            <>
+              <ManageListNavigation variant="drawer" onNavigate={closeMenu} />
+              <SettingsListNavigation variant="drawer" onNavigate={closeMenu} />
+            </>
+          )}
+          {isAuthenticated && hasAccess("notifications") && (
+            <ListItemButton
+              component={Link}
+              href="/notifications"
+              underline="none"
+              onClick={closeMenu}
+              sx={drawerItemSx(pathname === "/notifications")}
+            >
+              <Badge badgeContent={notificationCount} color="error">
+                <CircleNotificationsIcon fontSize="small" />
+              </Badge>
+              {menuLabel("notifications")}
+            </ListItemButton>
+          )}
+          {isAuthenticated && hasAccess("messages") && (hasPermission("messages.list") || hasPermission("messages.create")) && (
+            <ListItemButton
+              component={Link}
+              href="/messages"
+              underline="none"
+              onClick={closeMenu}
+              sx={drawerItemSx(pathname === "/messages")}
+            >
+              <Badge badgeContent={messageCount} color="error" max={99}>
+                <EmailIcon fontSize="small" />
+              </Badge>
+              {menuLabel("messages")}
+            </ListItemButton>
+          )}
+          {isAuthenticated ? <UserProfileNavigation variant="drawer" onNavigate={closeMenu} /> : null}
+          {pathname === "/saas" && saasToken ? (
+            <ListItemButton onClick={() => { closeMenu(); void logoutSaas(); }} sx={drawerItemSx(false)}>
+              <LogoutIcon fontSize="small" />
+              Wyloguj z SaaS
+            </ListItemButton>
+          ) : null}
+        </Box>
+      </Drawer>
     </AppBar>
   );
 };

@@ -1,4 +1,4 @@
-import { Button, Menu, MenuItem, Link } from "@mui/material";
+import { Box, Button, ListItemButton, Menu, MenuItem, Link, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -17,7 +17,10 @@ const menuItems = [
     { label: "ContractTypes", href: "/manage/contractTypes/list", key: "contract_types" },
 ];
 
-const ManageListNavigation: React.FC = () => {
+const ManageListNavigation: React.FC<{ variant?: "bar" | "drawer"; onNavigate?: () => void }> = ({
+    variant = "bar",
+    onNavigate,
+}) => {
     const { hasAccess, hasPermission } = useUser();
     const visibleItems = menuItems.filter(item => hasAccess(item.key) && hasPermission(`${item.key}.list`));
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -49,6 +52,40 @@ const ManageListNavigation: React.FC = () => {
     }, [pathname]);
 
     if (!hasAccess('manage') || visibleItems.length === 0) return null;
+    if (variant === "drawer") {
+        return (
+            <Box sx={{ mt: 1.5 }}>
+                <Typography sx={{ px: 2, pb: 0.5, fontSize: "0.72rem", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(247,250,248,0.55)" }}>
+                    {t("navigation.manage")}
+                </Typography>
+                {visibleItems.map((item) => {
+                    const active = pathname.includes(item.href);
+                    const label = t(`navigation.${lowercaseFirstLetter(item.label)}`);
+                    return (
+                        <ListItemButton
+                            key={item.key}
+                            component={Link}
+                            href={item.href}
+                            underline="none"
+                            onClick={() => onNavigate?.()}
+                            sx={{
+                                color: "#f7faf8",
+                                textDecoration: "none",
+                                mx: 1,
+                                my: 0.25,
+                                borderRadius: "0.45rem",
+                                minHeight: 48,
+                                backgroundColor: active ? "rgba(255,255,255,0.14)" : "transparent",
+                                "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+                            }}
+                        >
+                            {label.charAt(0).toUpperCase() + label.slice(1)}
+                        </ListItemButton>
+                    );
+                })}
+            </Box>
+        );
+    }
     return (
         <>
             <Button
@@ -57,10 +94,13 @@ const ManageListNavigation: React.FC = () => {
                 aria-haspopup="true"
                 onClick={handleMenuOpen}
                 sx={{
-                    backgroundColor: open || selectedMenuItem ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                    textTransform: "none",
+                    fontWeight: 520,
+                    backgroundColor: open || selectedMenuItem ? "rgba(255, 255, 255, 0.14)" : "transparent",
                 }}
             >
-                <DashboardIcon /> {t('navigation.manage')}
+                <DashboardIcon fontSize="small" />
+                <Box component="span" sx={{ ml: 0.75 }}>{t('navigation.manage')}</Box>
             </Button>
 
             <Menu
