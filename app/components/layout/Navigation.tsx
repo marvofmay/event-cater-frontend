@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { AppBar, Toolbar, Button, Link, Badge } from "@mui/material";
+import { AppBar, Toolbar, Button, Link, Badge, Box } from "@mui/material";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import HomeIcon from "@mui/icons-material/Home";
@@ -110,13 +110,15 @@ const Navigation: React.FC = () => {
           alignItems: "center",
         }}
       >
-        <Link href="/" color="inherit" underline="none">
-          <Image
-            src="/icons/event-cater-logo.png"
-            alt="Logo"
-            width={100}
-            height={100}
-          />
+        <Link href="/" color="inherit" underline="none" sx={{ display: 'inline-flex', flexShrink: 0 }}>
+          <Box sx={{ position: 'relative', width: { xs: 44, sm: 64, md: 74 }, height: { xs: 44, sm: 64, md: 74 } }}>
+            <Image
+              src="/icons/event-cater-logo.png"
+              alt="EventCater"
+              fill
+              style={{ objectFit: 'contain' }}
+            />
+          </Box>
         </Link>
 
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>

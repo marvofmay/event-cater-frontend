@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import localFont from "next/font/local";
 import CompactDialogs from './components/common/CompactDialogs';
+import ResponsiveTables from './components/common/ResponsiveTables';
 import PendingOperations from './components/common/PendingOperations';
 import SessionInactivity from './components/common/SessionInactivity';
 import PasswordChangeGate from './components/user/PasswordChangeGate';
@@ -39,6 +40,7 @@ const RootLayout = ({ children, }: Readonly<{ children: React.ReactNode; }>) => 
                     <UserProvider>
                         <PreferencesProvider>
                         <CompactDialogs />
+                        <ResponsiveTables />
                         <PendingOperations />
                         <SessionInactivity />
                         <ToastContainer />

@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
                 color: "white",
             }}
         >
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ px: 1, fontSize: { xs: "0.75rem", sm: "0.875rem" }, overflowWrap: "anywhere" }}>
                 {APP_NAME} {new Date().getFullYear()} - {t('common.footer.info')}
             </Typography>
         </Box>

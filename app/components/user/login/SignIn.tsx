@@ -171,7 +171,8 @@ export default function SignIn() {
                             variant="h4"
                             sx={{
                                 width: '100%',
-                                fontSize: 'clamp(1.5rem, 8vw, 1.8rem)',
+                                fontSize: 'clamp(1.15rem, 5vw, 1.8rem)',
+                                overflowWrap: 'anywhere',
                                 color: '#34495e',
                                 textTransform: 'uppercase',
                             }}
@@ -230,7 +231,7 @@ export default function SignIn() {
                                 />
                             </FormControl>
                             <FormControl>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'baseline' }, gap: 0.5, mb: 0.5 }}>
                                     <FormLabel htmlFor="password">{t('loginForm.label.password')}</FormLabel>
                                     <Link
                                         component="button"

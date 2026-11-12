@@ -185,13 +185,13 @@ const CompaniesTable = () => {
 
     return (
         <div>
-            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2}>
-                <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={2} gap={1} flexWrap="wrap">
+                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" sx={{ width: { xs: '100%', md: 'auto' }, minWidth: 0 }}>
                     <TextField
                         variant="outlined"
                         placeholder={t('common.enterPhraseToSearch')}
                         size="small"
-                        sx={{ width: '500px' }}
+                        sx={{ width: { xs: '100%', sm: 280, md: 420 }, maxWidth: '100%' }}
                         onChange={(e) => setSearchPhrase(e.target.value)}
                     />
                     <Button
@@ -204,7 +204,7 @@ const CompaniesTable = () => {
                     </Button>
                 </Box>
 
-                <Box display="flex" alignItems="center" gap={1} ml="auto">
+                <Box display="flex" alignItems="center" gap={1} ml="auto" flexWrap="wrap" sx={{ width: { xs: '100%', md: 'auto' } }}>
                     {hasPermission("companies.create") && (
                         <>
                             <Button

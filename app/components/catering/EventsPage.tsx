@@ -59,7 +59,7 @@ export function EventsPage() {
   return (
     <Permission name="events.list">
       <Panel title="Wydarzenia">
-        <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" mb={2} sx={{ "& > .MuiFormControl-root": { width: { xs: "100%", sm: 200 }, maxWidth: "100%" } }}>
           <TextField
             size="small"
             label="Szukaj wydarzenia"

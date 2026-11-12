@@ -22,7 +22,7 @@ const Login: React.FC = () => {
         sx={{
           width: "100%",
           maxWidth: 900,
-          p: 4,
+          p: { xs: 2, sm: 4 },
           borderRadius: 3,
         }}
       >

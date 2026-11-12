@@ -58,7 +58,7 @@ export function VenuesPage() {
           </Tooltip>
         </>
       }>
-        <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} flexWrap="wrap" mb={2} sx={{ "& > .MuiFormControl-root, & > .MuiButton-root": { width: { xs: "100%", sm: "auto" }, maxWidth: "100%" } }}>
           <TextField
             size="small"
             label="Szukaj miejsca, miasta lub ulicy"
