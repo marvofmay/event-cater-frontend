@@ -2,7 +2,8 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import axios, { InternalAxiosRequestConfig } from "axios";
-import { Backdrop, CircularProgress, Modal, Paper, Typography } from "@mui/material";
+import { Backdrop } from "@mui/material";
+import { BrandSpinner } from "@/app/components/common/BrandSpinner";
 import { beginPendingOperation, hasPendingOperations, isWriteMethod, subscribePendingOperations } from "@/app/utils/pendingOperations";
 
 export default function PendingOperations() {
@@ -43,13 +44,8 @@ export default function PendingOperations() {
     }, []);
 
     return (
-        <Modal open={pending} disableEscapeKeyDown hideBackdrop sx={{ zIndex: theme => theme.zIndex.tooltip + 100 }}>
-        <Backdrop aria-hidden={false} open={pending} transitionDuration={180} sx={{ zIndex: theme => theme.zIndex.tooltip + 100, backgroundColor: "rgba(30, 41, 59, 0.22)", backdropFilter: "blur(1px)", cursor: "wait" }}>
-            <Paper role="status" aria-live="polite" elevation={3} sx={{ display: "flex", alignItems: "center", gap: 2, px: 3, py: 2, borderRadius: 2 }}>
-                <CircularProgress size={26} thickness={3} aria-label="Proszę czekać" />
-                <Typography variant="body2" color="text.secondary">Proszę czekać…</Typography>
-            </Paper>
+        <Backdrop open={pending} transitionDuration={160} sx={{ zIndex: theme => theme.zIndex.tooltip + 100, backgroundColor: "rgba(243, 246, 244, 0.55)", backdropFilter: "blur(1.5px)", cursor: "wait" }}>
+            <BrandSpinner size={32} label="Proszę czekać" />
         </Backdrop>
-        </Modal>
     );
 }

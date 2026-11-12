@@ -288,7 +288,7 @@ const IndustriesTable = () => {
                                 <TableCell
                                     sortDirection={sortBy === 'description' ? sortDirection : false}
                                     onClick={() => handleSort('description')}
-                                    sx={{ width: 750, padding: "4px 8px" }}
+                                    sx={{ padding: "4px 8px" }}
                                 >
                                     <TableSortLabel active={sortBy === 'description'} direction={sortBy === 'description' ? sortDirection : 'asc'}>
                                         {t('industry.table.column.description')}
@@ -312,7 +312,7 @@ const IndustriesTable = () => {
                                         {t('industry.table.column.updatedAt')}
                                     </TableSortLabel>
                                 </TableCell>
-                                <TableCell sx={{ padding: '4px 8px' }}>{t('industry.table.column.actions')}</TableCell>
+                                <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap', width: '1%', minWidth: 'max-content' }}>{t('industry.table.column.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -331,8 +331,8 @@ const IndustriesTable = () => {
                                     <TableCell sx={{ padding: '4px 8px' }}>{industry.description || '-'}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{moment(industry.createdAt).format('YYYY-MM-DD HH:mm:ss')}</TableCell>
                                     <TableCell sx={{ padding: '4px 8px' }}>{industry.updatedAt ? moment(industry.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</TableCell>
-                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap' }}>
-                                        <Box sx={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center' }}>
+                                    <TableCell sx={{ padding: '4px 8px', whiteSpace: 'nowrap', width: '1%', minWidth: 'max-content' }}>
+                                        <Box sx={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', minWidth: 'max-content' }}>
                                         {hasPermission("industries.view") && (
                                             <Tooltip title={t('common.view')} placement="top">
                                                 <IconButton onClick={() => openModal('preview', industry)}><Preview /></IconButton>

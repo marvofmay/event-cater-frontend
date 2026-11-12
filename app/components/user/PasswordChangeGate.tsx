@@ -2,8 +2,8 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Box, CircularProgress } from '@mui/material';
 import { useUser } from '@/app/context/userContext';
+import CenteredSpinner from '@/app/components/common/BrandSpinner';
 import ChangePasswordDialog from './ChangePasswordDialog';
 
 export default function PasswordChangeGate({ children }: { children: ReactNode }) {
@@ -14,7 +14,7 @@ export default function PasswordChangeGate({ children }: { children: ReactNode }
     useEffect(() => {
         if (!loading && !isAuthenticated && protectedPage) router.replace('/login');
     }, [loading, isAuthenticated, protectedPage, router]);
-    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress aria-label="Ładowanie konta" /></Box>;
+    if (loading) return <CenteredSpinner minHeight="100svh" label="Ładowanie konta" />;
     if (!isAuthenticated && protectedPage) return null;
     if (isAuthenticated && mustChangePassword && pathname !== '/reset-password') return <ChangePasswordDialog required />;
     return children;

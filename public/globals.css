@@ -32,6 +32,20 @@ body {
     vertical-align: middle;
 }
 
+/* Action icons stay on one row even when the description column is wide. */
+table.MuiTable-root td:has(.MuiIconButton-root),
+table.MuiTable-root th:has(.MuiIconButton-root) {
+    white-space: nowrap !important;
+    width: 1% !important;
+    min-width: max-content !important;
+}
+
+table.MuiTable-root td:has(.MuiIconButton-root) .MuiIconButton-root {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    vertical-align: middle;
+}
+
 /* Phones and tablets: data tables become stacked cards. Desktop keeps the grid. */
 @media (max-width: 1100px) {
     .MuiTableContainer-root,
@@ -92,8 +106,13 @@ body {
     }
 
     table.MuiTable-root > tbody > tr > td:has(.MuiIconButton-root) {
-        flex-wrap: nowrap;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         justify-content: flex-end;
+        white-space: nowrap !important;
+        min-width: max-content !important;
+        width: auto !important;
     }
 
     table.MuiTable-root > tbody > tr > td:has(.MuiIconButton-root) > * {
