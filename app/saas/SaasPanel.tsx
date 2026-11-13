@@ -9,6 +9,23 @@ type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; 
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
 const provisioning: Record<string,string> = {pending:'Przygotowanie bazy',ready:'Baza gotowa',failed:'Błąd przygotowania - wymagana pomoc operatora'};
 const plans: Record<string,string> = {trial:'Trial',paid:'Abonament'};
+const historyActions: Record<string,string> = {
+    payment_paid: 'Opłacono abonament',
+    payment_refunded: 'Zwrot płatności',
+    provisioned: 'Konto gotowe',
+    provisioning_failed: 'Błąd przygotowania',
+    trial_created: 'Utworzono trial',
+    created: 'Utworzono klienta',
+};
+const historyActionLabel = (action: string) => {
+    if (historyActions[action]) return historyActions[action];
+    const parts = action.split(/\s*(?:->|→)\s*/);
+    if (parts.length === 2 && statuses[parts[0]] && statuses[parts[1]]) return `${statuses[parts[0]]} → ${statuses[parts[1]]}`;
+    return action;
+};
+const historyReason = (reason: string) => reason
+    .replace('(status,', '(potwierdzenie statusu,')
+    .replace('(notify,', '(powiadomienie Tpay,');
 const dialogTitleSx = { backgroundColor: '#10261f', color: '#fff', fontSize: '1.2rem', fontWeight: 'bold' };
 
 export default function SaasPanel() {
@@ -98,7 +115,7 @@ export default function SaasPanel() {
             {manageTab === 1 && <>
             {error && <Alert severity="error">{error}</Alert>}
             {(selected?.history?.length ?? 0) === 0 && <Typography color="text.secondary">Brak wpisów.</Typography>}
-            {selected?.history?.map((entry,index)=>{ const line=[entry.createdAt, entry.actor?.trim(), entry.action].filter(Boolean).join(' - '); return <Box key={index}><Typography>{line}</Typography>{entry.reason ? <Typography color="text.secondary">{entry.reason}</Typography> : null}</Box>; })}
+            {selected?.history?.map((entry,index)=>{ const line=[entry.createdAt, entry.actor?.trim(), historyActionLabel(entry.action)].filter(Boolean).join(' - '); return <Box key={index}><Typography>{line}</Typography>{entry.reason ? <Typography color="text.secondary">{historyReason(entry.reason)}</Typography> : null}</Box>; })}
             </>}
         </Stack></DialogContent><DialogActions><Button variant="contained" color="primary" disabled={busy} onClick={()=>setSelected(null)}>Zamknij</Button></DialogActions></Dialog>
     </Box>;
