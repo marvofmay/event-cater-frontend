@@ -338,6 +338,75 @@
   text-decoration: underline;
 }
 
+.ec-pay-methods {
+  display: grid;
+  gap: 1rem;
+}
+
+.ec-pay-method {
+  padding: 1.15rem 1.15rem 1.3rem;
+  border: 1px solid var(--ec-line);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.ec-pay-method h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--ec-display);
+  font-size: 1.25rem;
+  color: var(--ec-pine-deep);
+}
+
+.ec-blik-logo {
+  display: block;
+  width: min(220px, 72%);
+  height: auto;
+  margin: 0 0 0.9rem;
+  border-radius: 0.55rem;
+}
+
+.ec-pay-lead {
+  margin: 0 0 1rem;
+  color: var(--ec-muted);
+  line-height: 1.5;
+}
+
+.ec-pay-account {
+  margin: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ec-pay-account div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.ec-pay-account dt {
+  font-size: 0.75rem;
+  font-weight: 620;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ec-muted);
+}
+
+.ec-pay-account dd {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  justify-items: start;
+  font-weight: 620;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.ec-pay-account .ec-text-btn {
+  color: var(--ec-pine);
+  font-size: 0.85rem;
+  font-weight: 560;
+  text-decoration: underline;
+}
+
 .ec-pay-ok {
   margin: 0 0 1rem;
   padding: 0.75rem 0.9rem;

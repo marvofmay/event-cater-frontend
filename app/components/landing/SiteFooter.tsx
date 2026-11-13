@@ -36,10 +36,11 @@ const TermsBody = () => (
     </p>
     <h2>5. Płatności</h2>
     <p>
-      Płatność za miesiąc odbywa się BLIK-iem przez Tpay na stronie opłaty.
-      Obecnie Tpay działa w środowisku testowym (sandbox). Dostęp przedłuża
-      wyłącznie potwierdzenie płatności po stronie Tpay, nie samo otwarcie
-      strony powrotu.
+      Płatność za miesiąc odbywa się na stronie opłaty: BLIK-iem przez Tpay
+      albo przelewem tradycyjnym na konto Banku Millennium. Obecnie Tpay działa
+      w środowisku testowym (sandbox). Dostęp przy BLIK przedłuża wyłącznie
+      potwierdzenie płatności po stronie Tpay, nie samo otwarcie strony
+      powrotu. Przelew tradycyjny przedłuża dostęp po zaksięgowaniu wpłaty.
     </p>
     <h2>6. Konto i obowiązki</h2>
     <p>

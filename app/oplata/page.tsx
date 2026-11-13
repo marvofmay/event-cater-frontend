@@ -4,7 +4,7 @@ import PayPage from "../components/landing/PayPage";
 
 export const metadata: Metadata = {
   title: "Abonament 99 zł - EventCater",
-  description: "Opłać miesiąc EventCater BLIK-iem przez Tpay. 99 zł brutto.",
+  description: "Opłać miesiąc EventCater BLIK-iem przez Tpay albo przelewem tradycyjnym. 99 zł brutto.",
 };
 
 export default function PayRoute() {

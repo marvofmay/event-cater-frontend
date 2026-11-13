@@ -52,6 +52,8 @@ const PayPage = () => {
   const [config, setConfig] = useState<PayConfig | null>(null);
   const [payment, setPayment] = useState<PayStatus | null>(null);
   const [activeId, setActiveId] = useState<string | null>(paymentId);
+  const [copied, setCopied] = useState(false);
+  const accountNumber = "46 1160 2202 0000 0002 6766 1582";
 
   useEffect(() => {
     let cancelled = false;
@@ -130,9 +132,9 @@ const PayPage = () => {
         </Link>
         <h1>Abonament 99 zł brutto</h1>
         <p className="ec-legal-meta">
-          Jeden miesiąc dla jednej firmy. Po kliknięciu przejdziesz na stronę
-          Tpay i tam wpiszesz kod BLIK.
-          {sandbox ? " Na razie jest to środowisko testowe (sandbox), nie prawdziwe obciążenie." : ""}{" "}
+          Jeden miesiąc dla jednej firmy. Możesz zapłacić BLIK-iem albo przelewem
+          tradycyjnym.
+          {sandbox ? " BLIK idzie na razie przez środowisko testowe Tpay (sandbox), nie jako prawdziwe obciążenie." : ""}{" "}
           Rezygnacja oznacza, że nie opłacasz kolejnego miesiąca.
         </p>
 
@@ -158,51 +160,90 @@ const PayPage = () => {
         )}
 
         {payment?.status !== "paid" && !(activeId && payment?.status === "pending") && (
-        <form className="ec-trial-form" onSubmit={onSubmit} noValidate>
-          {error && (
-            <p className="ec-trial-error" role="alert">
-              {error}
-            </p>
-          )}
-          {config && !config.enabled && (
-            <p className="ec-trial-error" role="alert">
-              Płatność BLIK jest chwilowo niedostępna. Napisz na kontakt@eventcater.pl.
-            </p>
-          )}
-          <label>
-            Kod firmy
-            <input
-              name="slug"
-              required
-              autoComplete="off"
-              maxLength={63}
-              pattern="[a-z0-9][a-z0-9-]{1,62}"
-              value={slug}
-              onChange={(event) => setSlug(event.target.value.toLowerCase())}
-            />
-          </label>
-          <label>
-            E-mail właściciela konta
-            <input
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              maxLength={100}
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-            <span className="ec-field-hint">Ten sam adres, który podano przy zakładaniu firmy.</span>
-          </label>
-          <button className="ec-btn ec-btn-pine" type="submit" disabled={busy || config?.enabled === false}>
-            {busy ? "Przekierowanie do Tpay..." : "Zapłać 99 zł BLIK-iem"}
-          </button>
-          {sandbox && (
-            <p className="ec-field-hint">
-              Kod BLIK wpisujesz na stronie Tpay. W sandboxie testowy kod to zwykle 777777.
-            </p>
-          )}
-        </form>
+        <div className="ec-pay-methods">
+          <section className="ec-pay-method" aria-labelledby="pay-blik">
+            <h2 id="pay-blik">BLIK</h2>
+            <img className="ec-blik-logo" src="/blik.webp" alt="BLIK" width={898} height={425} />
+            <p className="ec-pay-lead">Po kliknięciu przejdziesz na stronę Tpay i tam wpiszesz kod BLIK.</p>
+            <form className="ec-trial-form" onSubmit={onSubmit} noValidate>
+              {error && (
+                <p className="ec-trial-error" role="alert">
+                  {error}
+                </p>
+              )}
+              {config && !config.enabled && (
+                <p className="ec-trial-error" role="alert">
+                  Płatność BLIK jest chwilowo niedostępna. Napisz na kontakt@eventcater.pl.
+                </p>
+              )}
+              <label>
+                Kod firmy
+                <input
+                  name="slug"
+                  required
+                  autoComplete="off"
+                  maxLength={63}
+                  pattern="[a-z0-9][a-z0-9-]{1,62}"
+                  value={slug}
+                  onChange={(event) => setSlug(event.target.value.toLowerCase())}
+                />
+              </label>
+              <label>
+                E-mail właściciela konta
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  maxLength={100}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+                <span className="ec-field-hint">Ten sam adres, który podano przy zakładaniu firmy.</span>
+              </label>
+              <button className="ec-btn ec-btn-pine" type="submit" disabled={busy || config?.enabled === false}>
+                {busy ? "Przekierowanie do Tpay..." : "Zapłać 99 zł BLIK-iem"}
+              </button>
+              {sandbox && (
+                <p className="ec-field-hint">
+                  Kod BLIK wpisujesz na stronie Tpay. W sandboxie testowy kod to zwykle 777777.
+                </p>
+              )}
+            </form>
+          </section>
+          <section className="ec-pay-method" aria-labelledby="pay-transfer">
+            <h2 id="pay-transfer">Przelew tradycyjny</h2>
+            <p className="ec-pay-lead">99 zł brutto. Dostęp przedłużamy po zaksięgowaniu wpłaty.</p>
+            <dl className="ec-pay-account">
+              <div>
+                <dt>Numer konta</dt>
+                <dd>
+                  <span>{accountNumber}</span>
+                  <button
+                    className="ec-text-btn"
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(accountNumber.replace(/ /g, "")).then(() => {
+                        setCopied(true);
+                        window.setTimeout(() => setCopied(false), 2000);
+                      });
+                    }}
+                  >
+                    {copied ? "Skopiowano" : "Kopiuj numer"}
+                  </button>
+                </dd>
+              </div>
+              <div>
+                <dt>Bank</dt>
+                <dd>Bank Millennium</dd>
+              </div>
+              <div>
+                <dt>Tytuł przelewu</dt>
+                <dd>W tytule przelewu podaj nazwę firmy oraz dopisz eventcater.</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
         )}
       </main>
       <SiteFooter
