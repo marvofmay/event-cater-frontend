@@ -53,3 +53,22 @@ for (const ownSettings of [false, true]) {
         await expect(panel).not.toContainText('dzwoneczek');
     });
 }
+
+test('personal SMS stays off until the company has saved Brevo and enabled the channel', async ({ page }) => {
+    const claims = { exp: Math.floor(Date.now() / 1000) + 3600, user: { tenantAdministrator: true }, tenantSlug: 'mapa-smakow', tenantName: 'Mapa Smaków', modules: ['system'], accesses: ['settings', 'notifications'], permissions: ['notifications.list'], roles: ['Pracownik techniczny firmy'] };
+    const token = [Buffer.from('{"alg":"none"}').toString('base64url'), Buffer.from(JSON.stringify(claims)).toString('base64url'), 'test'].join('.');
+    await page.addInitScript(value => localStorage.setItem('auth_token', value), token);
+    await page.route('**/api/**', route => {
+        const path = new URL(route.request().url()).pathname;
+        if (path === '/api/preferences/notifications') {
+            return route.fulfill({ json: { data: { tenant: { pageSize: 25, channels: { sms: true, email: true, internal: true }, smsReady: false, sms: { hasApiKey: false, sender: '', quotaMode: 'monthly', limit: 0, used: 0, remaining: 0, period: '2026-11' } }, user: { pageSize: null, channels: { sms: null, email: null, internal: null } }, effective: { pageSize: 25, channels: { sms: false, email: true, internal: true } }, canManageTenant: true, tenantVersion: 0, userVersion: 0 } } });
+        }
+        return route.fulfill({ json: { data: { pageSizes: { notifications: 25 } } } });
+    });
+    await page.goto('/me/settings?section=notifications');
+    const panel = page.getByRole('main').last();
+    const sms = panel.getByRole('switch', { name: 'SMS', exact: true });
+    await expect(sms).not.toBeChecked();
+    await expect(sms).toBeDisabled();
+    await expect(panel.getByText('SMS można włączyć dopiero, gdy firma zapisze klucz Brevo, nadawcę i pulę oraz włączy kanał.')).toBeVisible();
+});

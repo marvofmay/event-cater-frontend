@@ -48,8 +48,9 @@ if [[ -x frontend/deploy/scripts/apply-trial-backend.sh ]]; then
   mkdir -p "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence"
   cp -f "${PATCH_ROOT}/src/Module/Facebook/Infrastructure/Persistence/DoctrineFacebookPageConnectionRepository.php" \
     "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence/"
-  mkdir -p "${BACKEND}/src/Module/System/Presentation/API/Controller"
+  mkdir -p "${BACKEND}/src/Module/System/Presentation/API/Controller" "${BACKEND}/src/Module/System/Infrastructure/Preference"
   cp -f "${PATCH_ROOT}/src/Module/System/Presentation/API/Controller/PreferenceController.php" "${BACKEND}/src/Module/System/Presentation/API/Controller/"
+  cp -f "${PATCH_ROOT}/src/Module/System/Infrastructure/Preference/PreferenceService.php" "${BACKEND}/src/Module/System/Infrastructure/Preference/"
   cp -f "${PATCH_ROOT}/config/packages/saas.yaml" "${BACKEND}/config/packages/saas.yaml"
   cp -f "${PATCH_ROOT}/config/services/main.yaml" "${BACKEND}/config/services/main.yaml"
   chmod -R a+rX "${BACKEND}/src" "${BACKEND}/migrations" "${BACKEND}/config"

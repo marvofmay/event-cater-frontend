@@ -31,8 +31,9 @@ cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/LinkTrialOwnersCommand
 mkdir -p "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence"
 cp -f "${PATCH_ROOT}/src/Module/Facebook/Infrastructure/Persistence/DoctrineFacebookPageConnectionRepository.php" \
   "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence/"
-mkdir -p "${BACKEND}/src/Module/System/Presentation/API/Controller"
+mkdir -p "${BACKEND}/src/Module/System/Presentation/API/Controller" "${BACKEND}/src/Module/System/Infrastructure/Preference"
 cp -f "${PATCH_ROOT}/src/Module/System/Presentation/API/Controller/PreferenceController.php" "${BACKEND}/src/Module/System/Presentation/API/Controller/"
+cp -f "${PATCH_ROOT}/src/Module/System/Infrastructure/Preference/PreferenceService.php" "${BACKEND}/src/Module/System/Infrastructure/Preference/"
 cp -f "${PATCH_ROOT}/config/packages/saas.yaml" "${BACKEND}/config/packages/saas.yaml"
 cp -f "${PATCH_ROOT}/config/services/main.yaml" "${BACKEND}/config/services/main.yaml"
 # cp honors the shell umask. A previous umask 077 made these files unreadable by www-data.

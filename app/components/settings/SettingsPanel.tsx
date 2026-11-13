@@ -13,7 +13,7 @@ import { canConfigureListPreference } from '@/app/utils/preferenceAccess';
 type Channel = 'sms' | 'email' | 'internal';
 const labels: Record<PreferenceResource, string> = { companies: 'Firmy', departments: 'Oddziały / departamenty', employees: 'Pracownicy', positions: 'Stanowiska', roles: 'Role', contractTypes: 'Formy zatrudnienia', industries: 'Branże', notifications: 'Powiadomienia' };
 const channelLabels: Record<Channel, string> = { sms: 'SMS', email: 'E-mail', internal: 'Systemowe' };
-interface Values { pageSize: number | null; channels?: Record<Channel, boolean | null>; sms?: { hasApiKey: boolean; sender: string; quotaMode: 'monthly' | 'pool'; limit: number; used: number; remaining: number; period: string } }
+interface Values { pageSize: number | null; channels?: Record<Channel, boolean | null>; smsReady?: boolean; sms?: { hasApiKey: boolean; sender: string; quotaMode: 'monthly' | 'pool'; limit: number; used: number; remaining: number; period: string } }
 interface Snapshot { tenant: Values; user: Values; effective: Values; canManageTenant: boolean; tenantVersion: number; userVersion: number }
 
 export default function SettingsPanel({ resource, personalOnly = false }: { resource: PreferenceResource; personalOnly?: boolean }) {
@@ -43,6 +43,7 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
         && Boolean(apiKey.trim() || data?.tenant.sms?.hasApiKey)
         && Boolean(sender.trim())
         && limit > 0;
+    const brevoReady = data?.tenant.smsReady === true || (data?.tenant.smsReady == null && Boolean(data?.tenant.sms?.hasApiKey) && Boolean(data?.tenant.sms?.sender?.trim()) && (data?.tenant.sms?.limit ?? 0) > 0);
     useEffect(() => {
         if (!loading && !personalOnly && !technical) router.replace(`/me/settings?section=${resource}`);
     }, [loading, personalOnly, technical, resource, router]);
@@ -81,7 +82,7 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
             const tenantChannels = smsReady ? channels : { ...channels, sms: false };
             const response = await axios.put(`/api/preferences/${resource}`, {
                 scope, version: scope === 'tenant' ? data.tenantVersion : data.userVersion, pageSize: canConfigureList ? pageSize : null,
-                ...(resource === 'notifications' ? { channels: scope === 'user' ? { ...channels, internal: null } : tenantChannels } : {}),
+                ...(resource === 'notifications' ? { channels: scope === 'user' ? { ...channels, internal: null, ...(!brevoReady ? { sms: null } : {}) } : tenantChannels } : {}),
                 ...(resource === 'notifications' && scope === 'tenant' ? { sms: { sender, limit, quotaMode, apiKey, clearApiKey } } : {}),
             }, { headers: { Authorization: `Bearer ${token}` } });
             setData(response.data.data);
@@ -126,18 +127,19 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
                 <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Kanały powiadomień</Typography>
                 <Stack spacing={2}>
                     {(Object.keys(channelLabels) as Channel[]).map(channel => {
-                        const companyOff = scope === 'user' && !data.tenant.channels?.[channel];
+                        const smsNeedsBrevo = channel === 'sms' && (scope === 'tenant' ? !smsReady : !brevoReady);
+                        const companyOff = scope === 'user' && !data.tenant.channels?.[channel] && !smsNeedsBrevo;
                         const mandatory = scope === 'user' && channel === 'internal' && Boolean(data.tenant.channels?.internal);
-                        const smsNeedsBrevo = scope === 'tenant' && channel === 'sms' && !smsReady;
                         const blocked = companyOff || mandatory || smsNeedsBrevo;
                         const checked = scope === 'tenant'
                             ? Boolean(channels[channel]) && !(channel === 'sms' && !smsReady)
-                            : !companyOff && (mandatory || Boolean(channels[channel] ?? data.tenant.channels?.[channel]));
+                            : !companyOff && !smsNeedsBrevo && (mandatory || Boolean(channels[channel] ?? data.tenant.channels?.[channel]));
                         return <Box key={channel}>
                             <FormControlLabel control={<Switch checked={checked} disabled={saving || blocked} onChange={(_, enabled) => setChannels(current => ({ ...current, [channel]: channel === 'internal' && scope === 'user' ? null : enabled }))} />} label={channelLabels[channel]} />
                             {companyOff && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Kanał wyłączony przez firmę.</Typography>}
                             {mandatory && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Kanał systemowy jest zawsze włączony.</Typography>}
-                            {smsNeedsBrevo && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Najpierw uzupełnij klucz Brevo, nadawcę i dodatnią pulę w zakładce SMS / Brevo.</Typography>}
+                            {smsNeedsBrevo && scope === 'tenant' && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Najpierw uzupełnij klucz Brevo, nadawcę i dodatnią pulę w zakładce SMS / Brevo.</Typography>}
+                            {smsNeedsBrevo && scope === 'user' && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>SMS można włączyć dopiero, gdy firma zapisze klucz Brevo, nadawcę i pulę oraz włączy kanał.</Typography>}
                         </Box>;
                     })}
                 </Stack>
