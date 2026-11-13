@@ -42,6 +42,32 @@ Obsługa cateringu, baza miejsc i ekrany Kuchni: [dokumentacja](docs/catering.md
 
 Wdrożenie na droplecie DigitalOcean w `/home/marcin/apps/eventcater`: [deploy/README.md](deploy/README.md).
 
+## Konta przy trialu
+
+Osoba, która zakłada trial i podaje e-mail, staje się **pracownikiem technicznym tej firmy**. Ma pełny dostęp w tym tenancie (ustawienia, Brevo, pracownicy, pozostałe moduły). Przy starcie nie powstaje karta pracownika. Na `/me/data` widać: „Pracownik techniczny tej firmy. To konto ma pełny dostęp w tej firmie.” oraz e-mail z formularza.
+
+Brevo (SMS) zapisuje się w **Ustawienia → Powiadomienia**, zakładka **SMS / Brevo** (`/settings/notifications`).
+
+Jedno konto techniczne całego EventCater wchodzi do każdej firmy i loguje się na `https://eventcater.pl/saas`. Adres: `marcin.jaroszynski.gdansk@gmail.com`. Hasło zostaje takie, jakie było przy poprzednim adresie. Przeniesienie ze starego adresu: `bash frontend/deploy/scripts/set-saas-admin-email.sh`.
+
+## Maile trialu i abonamentu
+
+Wychodzą ze skrzynki `PASSWORD_RESET_SENDER` przez `MAILER_DSN` (smtp.home.pl). Brevo służy tylko do SMS. Worker `worker-trials` sprawdza terminy co godzinę (`app:saas:process-trials`). Adresatem maili do firmy jest e-mail z formularza trialu (`contact_email`).
+
+| Kiedy | Do kogo | Temat |
+|-------|---------|--------|
+| Trial gotowy | właściciel | EventCater - dane logowania do triala (30 dni) |
+| Trial gotowy | `TRIAL_NOTIFY_EMAIL` (kontakt@eventcater.pl) | EventCater - nowy trial: nazwa firmy |
+| 5 dni, 3 dni i 24 h przed końcem triala | właściciel | EventCater - koniec triala za 5 dni / 3 dni / 24 godziny |
+| Koniec triala | właściciel | EventCater - koniec triala, konto zawieszone |
+| Wpłata 99 zł brutto zaksięgowana | właściciel | EventCater - abonament opłacony |
+| 3 dni po terminie opłaconego miesiąca, raz | właściciel | EventCater - prośba o opłacenie abonamentu |
+| 14 dni po terminie opłaconego miesiąca, brak wpłaty | właściciel | EventCater - minęło 14 dni, konto zawieszone |
+
+Trial: po terminie konto jest zawieszane. Dane zostają 7 dni, potem baza triala jest usuwana, jeśli abonament nie został opłacony. Link do opłaty: `https://eventcater.pl/oplata`.
+
+Opłacony abonament: 3 dni po `paid_until` idzie jedno przypomnienie, konto zostaje aktywne. 14 dni po terminie, bez nowej wpłaty BLIK, konto jest zawieszane. Dane zostają. Wpłata w tym czasie przedłuża miesiąc i kasuje znacznik przypomnienia.
+
 ## Logowanie nowego pracownika
 
 Po utworzeniu konta pracownika (formularz lub import):
