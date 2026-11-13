@@ -23,7 +23,7 @@ const SettingsListNavigation: React.FC<{ variant?: "bar" | "drawer"; onNavigate?
     onNavigate,
 }) => {
     const { hasAccess, hasPermission, user, roles } = useUser();
-    const isTechnical = user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS');
+    const isTechnical = user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS') || roles.includes('Superadministrator');
     const canFacebook = hasPermission("events.publish_facebook");
     const visibleItems = menuItems.filter(item => {
         if (item.key === "facebook") return canFacebook;

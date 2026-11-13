@@ -21,12 +21,16 @@ cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TpaySignature.php" "${BACKEN
 cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TpayRejectedException.php" "${BACKEND}/src/Module/Saas/Infrastructure/"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TpayTemporaryException.php" "${BACKEND}/src/Module/Saas/Infrastructure/"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TenantProvisioner.php" "${BACKEND}/src/Module/Saas/Infrastructure/"
+cp -f "${PATCH_ROOT}/src/Module/Saas/Infrastructure/TrialOwnerLinker.php" "${BACKEND}/src/Module/Saas/Infrastructure/"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/API/Controller/SaasController.php" "${BACKEND}/src/Module/Saas/Presentation/API/Controller/"
 mkdir -p "${BACKEND}/src/Module/Saas/Presentation/Console"
 cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/ProcessTrialsCommand.php" "${BACKEND}/src/Module/Saas/Presentation/Console/"
+cp -f "${PATCH_ROOT}/src/Module/Saas/Presentation/Console/LinkTrialOwnersCommand.php" "${BACKEND}/src/Module/Saas/Presentation/Console/"
 mkdir -p "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence"
 cp -f "${PATCH_ROOT}/src/Module/Facebook/Infrastructure/Persistence/DoctrineFacebookPageConnectionRepository.php" \
   "${BACKEND}/src/Module/Facebook/Infrastructure/Persistence/"
+mkdir -p "${BACKEND}/src/Module/System/Presentation/API/Controller"
+cp -f "${PATCH_ROOT}/src/Module/System/Presentation/API/Controller/PreferenceController.php" "${BACKEND}/src/Module/System/Presentation/API/Controller/"
 cp -f "${PATCH_ROOT}/config/packages/saas.yaml" "${BACKEND}/config/packages/saas.yaml"
 cp -f "${PATCH_ROOT}/config/services/main.yaml" "${BACKEND}/config/services/main.yaml"
 # cp honors the shell umask. A previous umask 077 made these files unreadable by www-data.
