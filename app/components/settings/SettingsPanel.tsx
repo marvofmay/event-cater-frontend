@@ -21,7 +21,8 @@ export default function SettingsPanel({ resource, personalOnly = false }: { reso
     const canConfigureList = !personalOnly || canConfigureListPreference(resource, hasAccess, hasPermission);
     const canOpen = !personalOnly || resource === 'notifications' || canConfigureList;
     const router = useRouter();
-    const technical = user?.technicalAdministrator || roles.includes('Administrator techniczny SaaS') || roles.includes('Superadministrator');
+    const companyTechnical = Boolean(user?.tenantAdministrator) || roles.some((role) => role.startsWith('Pracownik techniczny')) || roles.includes('Superadministrator');
+    const technical = Boolean(user?.technicalAdministrator) || roles.includes('Administrator techniczny SaaS') || companyTechnical;
     const { refresh } = usePreferences();
     const [data, setData] = useState<Snapshot | null>(null);
     const scope = personalOnly ? 'user' : 'tenant';

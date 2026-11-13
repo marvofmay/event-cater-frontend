@@ -34,7 +34,7 @@ const DataContent: React.FC = () => {
 };
 
 const InnerDataContent: React.FC = () => {
-  const { isAuthenticated, loading } = useUser();
+  const { isAuthenticated, loading, user } = useUser();
   const { t } = useTranslation();
 
   const {
@@ -88,7 +88,7 @@ const InnerDataContent: React.FC = () => {
                   {isTechnicalAccount ? (
                     <Box className="p-4 bg-gray-100 rounded-md shadow text-center">
                       <Typography variant="body1">
-                        {t("userProfile.technicalAccountMessage", {
+                        {t(user?.technicalAdministrator ? "userProfile.technicalAccountMessage" : "userProfile.companyTechnicalAccountMessage", {
                           email: userData?.email,
                         })}
                       </Typography>

@@ -3,4 +3,5 @@ export default interface Employee {
     email: string | null;
     loginPhone?: string | null;
     technicalAdministrator?: boolean;
+    tenantAdministrator?: boolean;
 }

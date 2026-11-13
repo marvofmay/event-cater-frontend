@@ -21,7 +21,6 @@ final readonly class TenantProvisioner
         private Connection $connection,
         private EntityManagerInterface $em,
         private UserFactory $users,
-        private TrialOwnerLinker $owners,
         private LoggerInterface $logger,
         #[AutowireIterator('app.command.initialize-system-default-data')] private iterable $seeders,
     ) {
@@ -49,7 +48,6 @@ final readonly class TenantProvisioner
             $owner = $this->users->create($email, $password);
             $owner->makeTenantAdministrator();
             $this->em->persist($owner);
-            $this->owners->link($owner, (string) ($tenant['name'] ?? ''));
             $this->em->flush();
             // SchemaTool creates current metadata; record all historical migrations as the baseline.
             $this->connection->executeStatement('CREATE TABLE doctrine_migration_versions (version VARCHAR(191) NOT NULL PRIMARY KEY, executed_at DATETIME DEFAULT NULL, execution_time INT DEFAULT NULL)');
