@@ -38,7 +38,7 @@ const LandingPage = () => {
         <div className="ec-hero-inner">
           <p className="ec-brand ec-reveal">EventCater</p>
           <h1 className="ec-reveal ec-reveal-delay ec-hero-title">
-            System dla cateringu wydarzeń - na miejscu i&nbsp;w&nbsp;terenie
+            System dla cateringu wydarzeń
           </h1>
           <p className="ec-lede ec-reveal ec-reveal-delay-2">
             System dla firm, które obsługują przyjęcia, eventy i serwis wyjazdowy:
@@ -108,8 +108,7 @@ const LandingPage = () => {
         <h2>Aplikacja dla ekipy na evencie</h2>
         <p>
           EventCater ma dedykowaną aplikację mobilną dla ekipy w terenie.
-          Pracownicy logują się kodem firmy - tak jak na stronie. Po uruchomieniu
-          konta administrator firmy otrzymuje od nas link do instalacji.
+          Po uruchomieniu konta administrator firmy otrzymuje link do instalacji.
         </p>
       </section>
 

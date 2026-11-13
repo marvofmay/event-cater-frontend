@@ -147,11 +147,6 @@ const TrialPage = () => {
 
         {!result && (
           <ul className="ec-trial-points">
-            <li>Osobna przestrzeń firmy (kod firmy do logowania)</li>
-            <li>Konto administratora z hasłem zgodnym z polityką hasła</li>
-            <li>
-              Przypomnienia e-mail 5 dni, 3 dni i 24 h przed końcem triala
-            </li>
             <li>
               Po wygaśnięciu: zawieszenie bez usuwania danych - dane zostaną
               usunięte po 7 dniach od zakończenia triala
@@ -251,7 +246,7 @@ const TrialPage = () => {
               autoComplete="off"
             />
             <span className="ec-field-hint">
-              2-63 znaki: a-z, cyfry, myślnik. Przykład: mapa-smakow
+              2-63 znaki: a-z, cyfry, myślnik.
             </span>
           </label>
           <label>
