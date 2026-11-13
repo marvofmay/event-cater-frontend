@@ -247,10 +247,11 @@ final class TpayClient
         }
         $raw = curl_exec($handle);
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        $curlError = curl_error($handle);
         curl_close($handle);
         if (!is_string($raw) || $status < 200 || $status >= 300) {
-            $this->logger->error('Tpay HTTP failed.', ['status' => $status, 'host' => parse_url($url, PHP_URL_HOST)]);
-            throw new TpayTemporaryException('Nie udało się połączyć z Tpay.');
+            $this->logger->error('Tpay HTTP failed.', ['status' => $status, 'host' => parse_url($url, PHP_URL_HOST), 'curl' => $curlError]);
+            throw new TpayTemporaryException($this->publicFailure($status, is_string($raw) ? $raw : ''));
         }
 
         return $raw;
@@ -258,7 +259,8 @@ final class TpayClient
 
     private function apiOrigin(): string
     {
-        return $this->sandbox() ? 'https://api.sandbox.tpay.com' : 'https://api.tpay.com';
+        // api.sandbox.tpay.com does not exist. Sandbox Open API is on openapi.sandbox.tpay.com.
+        return $this->sandbox() ? 'https://openapi.sandbox.tpay.com' : 'https://api.tpay.com';
     }
 
     private function secureOrigin(): string
@@ -272,6 +274,29 @@ final class TpayClient
         $value = $fields[$key] ?? '';
 
         return is_string($value) ? $value : '';
+    }
+
+    private function publicFailure(int $status, string $raw): string
+    {
+        if ($status === 0) {
+            return 'Nie udało się połączyć z Tpay.';
+        }
+        $decoded = json_decode($raw, true);
+        $detail = '';
+        if (is_array($decoded)) {
+            if (isset($decoded['errors'][0]) && is_array($decoded['errors'][0])) {
+                $detail = (string) ($decoded['errors'][0]['errorMessage'] ?? $decoded['errors'][0]['message'] ?? '');
+            }
+            if ($detail === '') {
+                $detail = (string) ($decoded['error_description'] ?? $decoded['message'] ?? '');
+            }
+        }
+        $detail = trim((string) preg_replace('/\s+/', ' ', $detail));
+        if ($detail !== '' && strlen($detail) < 180 && !str_contains(strtolower($detail), 'secret')) {
+            return 'Tpay odrzucił płatność: '.$detail;
+        }
+
+        return 'Tpay odrzucił kod BLIK. Wygeneruj nowy kod w banku i wpisz go jeszcze raz.';
     }
 
     private function money(mixed $amount): string

@@ -51,6 +51,7 @@ const PayPage = () => {
   const [error, setError] = useState("");
   const [config, setConfig] = useState<PayConfig | null>(null);
   const [payment, setPayment] = useState<PayStatus | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(paymentId);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,12 +67,16 @@ const PayPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!paymentId) return;
+    setActiveId(paymentId);
+  }, [paymentId]);
+
+  useEffect(() => {
+    if (!activeId) return;
     let cancelled = false;
     let timer = 0;
     const load = async () => {
       try {
-        const response = await fetch(`/api/saas/payments/${paymentId}`);
+        const response = await fetch(`/api/saas/payments/${activeId}`);
         if (!response.ok) return;
         const data = (await response.json()) as PayStatus;
         if (cancelled) return;
@@ -86,7 +91,7 @@ const PayPage = () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [paymentId]);
+  }, [activeId]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -125,9 +130,10 @@ const PayPage = () => {
         </Link>
         <h1>Abonament 99 zł brutto</h1>
         <p className="ec-legal-meta">
-          Jeden miesiąc dla jednej firmy. Płatność BLIK-iem przez Tpay.
+          Jeden miesiąc dla jednej firmy. Po kliknięciu przejdziesz na stronę
+          Tpay i tam wpiszesz kod BLIK.
           {sandbox ? " Na razie jest to środowisko testowe (sandbox), nie prawdziwe obciążenie." : ""}{" "}
-          Rezygnacja oznacza, że nie opłacasz kolejnego miesiąca. Sam powrót z Tpay nie przedłuża dostępu.
+          Rezygnacja oznacza, że nie opłacasz kolejnego miesiąca.
         </p>
 
         {payment?.status === "paid" && (
@@ -137,7 +143,7 @@ const PayPage = () => {
         )}
         {payment?.status === "pending" && (
           <p className="ec-field-hint" role="status">
-            Czekamy na potwierdzenie z Tpay. {result === "ok" ? "Wróciłeś ze strony płatności, ale to jeszcze nie jest zaksięgowanie." : ""}
+            Czekamy na potwierdzenie z Tpay. Sam powrót na tę stronę jeszcze nie oznacza zaksięgowania.
           </p>
         )}
         {payment?.status === "refunded" && (
@@ -151,6 +157,7 @@ const PayPage = () => {
           </p>
         )}
 
+        {payment?.status !== "paid" && !(activeId && payment?.status === "pending") && (
         <form className="ec-trial-form" onSubmit={onSubmit} noValidate>
           {error && (
             <p className="ec-trial-error" role="alert">
@@ -192,10 +199,11 @@ const PayPage = () => {
           </button>
           {sandbox && (
             <p className="ec-field-hint">
-              W sandboxie Tpay kod BLIK do testu to zwykle 777777. Płatność testowa nie pobiera pieniędzy z banku.
+              Kod BLIK wpisujesz na stronie Tpay. W sandboxie testowy kod to zwykle 777777.
             </p>
           )}
         </form>
+        )}
       </main>
       <SiteFooter
         year={year}
