@@ -12,11 +12,13 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'app:saas:process-trials', description: 'Trial reminders, suspend after end, purge data 7 days later.')]
+#[AsCommand(name: 'app:saas:process-trials', description: 'Trial reminders, paid reminders, suspend overdue accounts, purge trial data.')]
 final class ProcessTrialsCommand extends Command
 {
     private const SYSTEM_ACTOR = '00000000-0000-4000-8000-000000000099';
     private const PURGE_AFTER_DAYS = 7;
+    private const PAID_REMIND_AFTER_DAYS = 3;
+    private const PAID_SUSPEND_AFTER_DAYS = 14;
 
     public function __construct(private ControlPlane $control, private TrialMailer $mailer)
     {
@@ -40,6 +42,7 @@ final class ProcessTrialsCommand extends Command
 
         $now = new \DateTimeImmutable('now');
         $this->sendReminders($now, $output);
+        $this->remindPaid($now, $output);
         $this->suspendExpired($now, $output);
         $this->suspendPaid($now, $output);
         $this->purgeExpired($now, $output);
@@ -128,27 +131,78 @@ final class ProcessTrialsCommand extends Command
         }
     }
 
-    /** Suspend a paid account when the month bought via Tpay has ended. Data stays. */
+    /** One polite reminder once the paid month is 3 days overdue. Account stays active. */
+    private function remindPaid(\DateTimeImmutable $now, OutputInterface $output): void
+    {
+        $columns = $this->control->db()->createSchemaManager()->listTableColumns('saas_tenant');
+        if (!isset($columns['paid_until'], $columns['paid_reminded_at'])) {
+            $output->writeln('Paid reminder column missing - run migrations first.');
+
+            return;
+        }
+        $remindBefore = $now->modify('-'.self::PAID_REMIND_AFTER_DAYS.' days')->format('Y-m-d H:i:s');
+        $stillBeforeSuspend = $now->modify('-'.self::PAID_SUSPEND_AFTER_DAYS.' days')->format('Y-m-d H:i:s');
+        $rows = $this->control->db()->fetchAllAssociative(
+            "SELECT * FROM saas_tenant
+             WHERE plan='paid' AND status='active'
+               AND paid_until IS NOT NULL AND paid_until <= ? AND paid_until > ?
+               AND paid_reminded_at IS NULL
+               AND slug<>'default'",
+            [$remindBefore, $stillBeforeSuspend]
+        );
+        foreach ($rows as $row) {
+            $due = new \DateTimeImmutable((string) $row['paid_until']);
+            try {
+                $this->mailer->sendPaidReminder($row['contact_email'], $row['name'], $row['slug'], $due);
+            } catch (\Throwable $e) {
+                $output->writeln(sprintf('Paid reminder failed for %s: %s', $row['slug'], $e->getMessage()));
+                continue;
+            }
+            $this->control->db()->transactional(function () use ($row, $now): void {
+                $tenant = $this->control->db()->fetchAssociative('SELECT * FROM saas_tenant WHERE uuid=? FOR UPDATE', [$row['uuid']]);
+                if (!$tenant || $tenant['status'] !== 'active' || ($tenant['plan'] ?? '') !== 'paid' || !empty($tenant['paid_reminded_at'])) {
+                    return;
+                }
+                $stamp = $now->format('Y-m-d H:i:s');
+                $this->control->db()->update('saas_tenant', [
+                    'paid_reminded_at' => $stamp,
+                    'updated_at' => $stamp,
+                ], ['uuid' => $tenant['uuid']]);
+                $this->control->db()->insert('saas_audit', [
+                    'uuid' => Uuid::uuid4()->toString(),
+                    'tenant_uuid' => $tenant['uuid'],
+                    'actor_uuid' => self::SYSTEM_ACTOR,
+                    'action' => 'paid_reminder',
+                    'reason' => 'Przypomnienie 3 dni po terminie opłacenia abonamentu. Konto nadal aktywne.',
+                    'created_at' => $stamp,
+                ]);
+            });
+            $output->writeln('Paid reminder -> '.$row['slug'].' ('.$row['contact_email'].')');
+        }
+    }
+
+    /** Suspend a paid account 14 days after paid_until when no new BLIK arrived. Data stays. */
     private function suspendPaid(\DateTimeImmutable $now, OutputInterface $output): void
     {
         $columns = $this->control->db()->createSchemaManager()->listTableColumns('saas_tenant');
         if (!isset($columns['paid_until'])) {
             return;
         }
+        $cutoff = $now->modify('-'.self::PAID_SUSPEND_AFTER_DAYS.' days');
         $rows = $this->control->db()->fetchAllAssociative(
             "SELECT * FROM saas_tenant
              WHERE plan='paid' AND status='active'
                AND paid_until IS NOT NULL AND paid_until <= ?
                AND slug<>'default'",
-            [$now->format('Y-m-d H:i:s')]
+            [$cutoff->format('Y-m-d H:i:s')]
         );
         foreach ($rows as $row) {
-            $this->control->db()->transactional(function () use ($row, $now): void {
+            $this->control->db()->transactional(function () use ($row, $now, $cutoff): void {
                 $tenant = $this->control->db()->fetchAssociative('SELECT * FROM saas_tenant WHERE uuid=? FOR UPDATE', [$row['uuid']]);
                 if (!$tenant || $tenant['status'] !== 'active' || ($tenant['plan'] ?? '') !== 'paid' || empty($tenant['paid_until'])) {
                     return;
                 }
-                if (new \DateTimeImmutable((string) $tenant['paid_until']) > $now) {
+                if (new \DateTimeImmutable((string) $tenant['paid_until']) > $cutoff) {
                     return;
                 }
                 $this->control->db()->update('saas_tenant', [
@@ -161,7 +215,7 @@ final class ProcessTrialsCommand extends Command
                     'tenant_uuid' => $tenant['uuid'],
                     'actor_uuid' => self::SYSTEM_ACTOR,
                     'action' => 'active -> suspended',
-                    'reason' => 'Koniec opłaconego miesiąca. Dane zostają. Kolejna wpłata BLIK wznawia dostęp.',
+                    'reason' => 'Minęło 14 dni od terminu opłacenia abonamentu. Brak wpłaty. Konto zawieszone. Dane zostają.',
                     'created_at' => $now->format('Y-m-d H:i:s'),
                 ]);
             });

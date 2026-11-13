@@ -11,6 +11,7 @@ const provisioning: Record<string,string> = {pending:'Przygotowanie bazy',ready:
 const plans: Record<string,string> = {trial:'Trial',paid:'Abonament'};
 const historyActions: Record<string,string> = {
     payment_paid: 'Opłacono abonament',
+    paid_reminder: 'Przypomnienie o płatności',
     payment_refunded: 'Zwrot płatności',
     provisioned: 'Konto gotowe',
     provisioning_failed: 'Błąd przygotowania',

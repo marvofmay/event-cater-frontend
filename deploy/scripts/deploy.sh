@@ -29,6 +29,7 @@ if [[ -x frontend/deploy/scripts/apply-trial-backend.sh ]]; then
   BACKEND="${APP_ROOT}/backend"
   cp -f "${PATCH_ROOT}/migrations/Version20261109150000.php" "${BACKEND}/migrations/"
   cp -f "${PATCH_ROOT}/migrations/Version20261112170000.php" "${BACKEND}/migrations/"
+  cp -f "${PATCH_ROOT}/migrations/Version20261113100000.php" "${BACKEND}/migrations/"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/SaasService.php" "${BACKEND}/src/Module/Saas/Application/"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/TrialMailer.php" "${BACKEND}/src/Module/Saas/Application/"
   cp -f "${PATCH_ROOT}/src/Module/Saas/Application/SubscriptionPaymentService.php" "${BACKEND}/src/Module/Saas/Application/"

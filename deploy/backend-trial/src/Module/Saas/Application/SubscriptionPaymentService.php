@@ -198,14 +198,19 @@ final readonly class SubscriptionPaymentService
                 }
             }
             $paidUntil = $anchor->modify('+1 month');
-            $this->control->db()->update('saas_tenant', [
+            $fields = [
                 'status' => 'active',
                 'plan' => 'paid',
                 'trial_ends_at' => null,
                 'paid_until' => $paidUntil->format('Y-m-d H:i:s'),
                 'version' => (int) $tenant['version'] + 1,
                 'updated_at' => $stamp,
-            ], ['uuid' => $tenant['uuid']]);
+            ];
+            $columns = $this->control->db()->createSchemaManager()->listTableColumns('saas_tenant');
+            if (isset($columns['paid_reminded_at'])) {
+                $fields['paid_reminded_at'] = null;
+            }
+            $this->control->db()->update('saas_tenant', $fields, ['uuid' => $tenant['uuid']]);
             $this->control->db()->insert('saas_audit', [
                 'uuid' => Uuid::uuid4()->toString(),
                 'tenant_uuid' => $tenant['uuid'],

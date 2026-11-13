@@ -89,18 +89,32 @@ final readonly class TrialMailer
             ."Abonament aktywny do: {$until}\n"
             ."Logowanie: {$loginUrl}\n\n"
             .$mode
-            ."Kolejny miesiąc przedłużysz tą samą płatnością BLIK. Rezygnacja oznacza, że nie opłacasz następnego miesiąca.\n\n"
+            ."Kolejny miesiąc przedłużysz tą samą płatnością BLIK. Trzy dni po terminie wyślemy przypomnienie. "
+            ."Brak wpłaty przez 14 dni zawiesza konto, dane zostają.\n\n"
             ."EventCater\n";
         $this->send($to, 'EventCater - abonament opłacony', $body);
+    }
+
+    public function sendPaidReminder(string $to, string $companyName, string $slug, \DateTimeInterface $paidUntil): void
+    {
+        $due = $paidUntil->format('Y-m-d H:i');
+        $payUrl = rtrim($this->appUrl, '/').'/oplata';
+        $body = "Witaj,\n\nMinęły 3 dni od terminu opłacenia abonamentu EventCater dla firmy „{$companyName}” "
+            ."(kod: {$slug}, termin: {$due}).\n\n"
+            ."Prosimy o opłacenie kolejnego miesiąca: 99 zł brutto, BLIK.\n"
+            ."{$payUrl}\n\n"
+            ."Konto pozostaje aktywne. Jeśli wpłata nie wpłynie w ciągu 14 dni od terminu, dostęp zostanie zawieszony. "
+            ."Dane firmy zostaną zachowane.\n\nEventCater\n";
+        $this->send($to, 'EventCater - prośba o opłacenie abonamentu', $body);
     }
 
     public function sendPaidSuspendedNotice(string $to, string $companyName, string $slug): void
     {
         $payUrl = rtrim($this->appUrl, '/').'/oplata';
-        $body = "Witaj,\n\nOpłacony miesiąc EventCater dla firmy „{$companyName}” (kod: {$slug}) zakończył się. "
-            ."Konto zostało zawieszone. Dane zostają na koncie.\n\n"
-            ."Aby wznowić dostęp, opłać kolejny miesiąc: {$payUrl}\n\nEventCater\n";
-        $this->send($to, 'EventCater - abonament wygasł', $body);
+        $body = "Witaj,\n\nMinęło 14 dni od terminu opłacenia abonamentu EventCater dla firmy „{$companyName}” (kod: {$slug}). "
+            ."Nie odnotowaliśmy wpłaty, dlatego konto zostało zawieszone. Dane zostają na koncie.\n\n"
+            ."Aby wznowić dostęp, opłać abonament: {$payUrl}\n\nEventCater\n";
+        $this->send($to, 'EventCater - minęło 14 dni, konto zawieszone', $body);
     }
 
     private function send(string $to, string $subject, string $body): void
