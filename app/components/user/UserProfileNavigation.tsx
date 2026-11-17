@@ -10,6 +10,7 @@ const menuItems = [
     { label: "Settings", href: "/me/settings", key: "companies" },
     { label: "UserData", href: "/me/data", key: "employees" },
     { label: "ChangePassword", href: "/me/password", key: "password" },
+    { label: "Help", href: "/me/help", key: "help" },
     { label: "Logout", href: "/me/logout", key: "roles" },
 ];
 

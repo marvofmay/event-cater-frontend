@@ -4,6 +4,7 @@ import { RowAction } from "../components/common/RowAction";
 import { notifySaasSession, SAAS_SESSION_EVENT } from "./session";
 import { FormEvent, useEffect, useState } from 'react';
 import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tab, Tabs, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, MenuItem } from '@mui/material';
+import SupportInbox from './SupportInbox';
 
 type Tenant = { uuid: string; slug: string; name: string; contactEmail: string; status: string; provisioning: string; version: number; plan?: string; trialEndsAt?: string | null; paidUntil?: string | null; history?: {action: string; reason: string; actor: string; createdAt: string}[] };
 const statuses: Record<string,string> = {inactive:'Nieaktywny',active:'Aktywny',suspended:'Zawieszony',deleted:'Usunięty'};
@@ -28,6 +29,20 @@ const historyReason = (reason: string) => reason
     .replace('(status,', '(potwierdzenie statusu,')
     .replace('(notify,', '(powiadomienie Tpay,');
 const dialogTitleSx = { backgroundColor: '#10261f', color: '#fff', fontSize: '1.2rem', fontWeight: 'bold' };
+const tileSx = (active: boolean) => ({
+    textAlign: 'left' as const,
+    p: 1.75,
+    border: 0,
+    borderRadius: '0.55rem',
+    cursor: 'pointer',
+    color: '#f7faf8',
+    background: active ? 'linear-gradient(160deg, #10261f 0%, #1c3d32 100%)' : 'linear-gradient(160deg, #34495e 0%, #2c3e50 100%)',
+    boxShadow: active ? '0 10px 20px rgba(16, 38, 31, 0.18)' : 'none',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 0.5,
+    minHeight: 92,
+});
 
 export default function SaasPanel() {
     const [token,setToken] = useState<string|null>(null);
@@ -41,6 +56,9 @@ export default function SaasPanel() {
     const [confirmSlug,setConfirmSlug] = useState('');
     const [manageTab,setManageTab] = useState(0);
     const [notice,setNotice] = useState('');
+    const [section,setSection] = useState<'clients'|'tickets'>('clients');
+    const [attention,setAttention] = useState(0);
+    const [attentionTick,setAttentionTick] = useState(0);
     useEffect(()=>{
         const sync=()=>{ const next=sessionStorage.getItem('saas_token'); setToken(next); if(!next){ setItems([]); setSelected(null); setCreating(false); } };
         sync();
@@ -55,6 +73,15 @@ export default function SaasPanel() {
     }
     async function refresh() { try { setItems((await api('/tenants')).items); } catch(e) { setError((e as Error).message); } }
     useEffect(()=>{ if(token) void refresh(); },[token]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(()=>{
+        if(!token){ setAttention(0); return; }
+        let current=true;
+        fetch('/api/saas/support/summary',{headers:{Authorization:'Bearer '+token},cache:'no-store'})
+            .then(response=>response.ok?response.json():null)
+            .then(data=>{ if(current && data) setAttention(Number(data.attention)||0); })
+            .catch(()=>{});
+        return ()=>{ current=false; };
+    },[token, attentionTick]);
     async function login(event:FormEvent<HTMLFormElement>) {
         event.preventDefault(); const form=new FormData(event.currentTarget); setBusy(true); setError('');
         try { const data=await api('/login','POST',{email:form.get('email'),password:form.get('password')}); sessionStorage.setItem('saas_token',data.token); setToken(data.token); notifySaasSession(); } catch(e) { setError((e as Error).message); } finally { setBusy(false); }
@@ -84,8 +111,20 @@ export default function SaasPanel() {
             <Button type="submit" variant="contained" disabled={busy}>Zaloguj do SaaS</Button>
             <Button href="/login">Logowanie pracownika firmy</Button>
         </Stack></Box> : <>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(2, minmax(180px, 240px))' }, gap: 1.5, mb: 2 }}>
+                <Box component="button" type="button" aria-label="Klienci" aria-pressed={section==='clients'} onClick={()=>setSection('clients')} sx={tileSx(section==='clients')}>
+                    <Typography fontWeight={700}>Klienci</Typography>
+                    <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>Firmy w systemie</Typography>
+                </Box>
+                <Box component="button" type="button" aria-label="Zgłoszenia" aria-pressed={section==='tickets'} onClick={()=>setSection('tickets')} sx={tileSx(section==='tickets')}>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Typography fontWeight={700}>Zgłoszenia</Typography>{attention>0 && <Chip size="small" label={attention} color="warning" />}</Stack>
+                    <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>{attention>0 ? `${attention} wymaga uwagi` : 'Skrzynka pomocy'}</Typography>
+                </Box>
+            </Box>
+            {section==='tickets' && token ? <SupportInbox token={token} onChanged={()=>setAttentionTick(value=>value+1)} /> : <>
             <Stack direction="row" spacing={2} useFlexGap sx={{mb:2, flexWrap:'wrap'}}><Button color="success" startIcon={<AddIcon fontSize="medium" />} variant="contained" disabled={busy} onClick={()=>setCreating(true)}>Dodaj klienta</Button><Button variant="contained" sx={{ backgroundColor: '#34495e', color: '#fff', fontWeight: 'bold' }} onClick={refresh}>Odśwież</Button></Stack>
             <Box sx={{overflowX:'auto'}}><Table><TableHead><TableRow>{['Firma','Kod firmy','Kontakt','Plan','Status','Przygotowanie',''].map(v=><TableCell key={v}>{v}</TableCell>)}</TableRow></TableHead><TableBody>{items.map(item=><TableRow key={item.uuid}><TableCell>{item.name}</TableCell><TableCell>{item.slug}</TableCell><TableCell>{item.contactEmail}</TableCell><TableCell><Chip size="small" label={plans[item.plan || 'paid'] || item.plan || '—'} color={item.plan==='trial'?'info':'default'} />{item.trialEndsAt ? <Typography variant="caption" display="block" color="text.secondary">do {item.trialEndsAt}</Typography> : item.paidUntil ? <Typography variant="caption" display="block" color="text.secondary">abonament do {item.paidUntil}</Typography> : null}</TableCell><TableCell><Chip label={statuses[item.status]} color={item.status==='active'?'success':item.status==='suspended'?'warning':'default'} /></TableCell><TableCell>{provisioning[item.provisioning]}</TableCell><TableCell><RowAction action="preview" label="Zarządzaj" onClick={()=>details(item)} /></TableCell></TableRow>)}</TableBody></Table></Box>
+            </>}
         </>}
         <Dialog open={creating} onClose={()=>{if(!busy)setCreating(false);}} fullWidth PaperProps={{ sx: { overflow: 'hidden' } }}><Box component="form" onSubmit={create}><DialogTitle sx={dialogTitleSx}>Nowy klient SaaS</DialogTitle><DialogContent><Stack spacing={2} sx={{pt:1}}>
             {error && <Alert severity="error">{error}</Alert>}
