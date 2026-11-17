@@ -83,6 +83,7 @@ export default function HelpDesk() {
     const [message, setMessage] = useState("");
     const [files, setFiles] = useState<File[]>([]);
     const [formError, setFormError] = useState("");
+    const [sentSubject, setSentSubject] = useState("");
     const [selected, setSelected] = useState<Ticket | null>(null);
     const [reply, setReply] = useState("");
 
@@ -139,14 +140,14 @@ export default function HelpDesk() {
         body.set("subject", subject.trim());
         body.set("message", message.trim());
         files.forEach((file) => body.append("attachments[]", file));
+        const sent = subject.trim();
         const ok = await run(async () => {
-            const created = await api<{ uuid: string }>("/support/tickets", "POST", body);
+            await api<{ uuid: string }>("/support/tickets", "POST", body);
             setSubject("");
             setMessage("");
             setFiles([]);
+            setSentSubject(sent);
             await load();
-            setSelected(await api<Ticket>("/support/tickets/" + created.uuid));
-            setReply("");
         }, "Zgłoszenie zostało wysłane.");
         if (!ok) setFormError("");
     }
@@ -172,6 +173,7 @@ export default function HelpDesk() {
             <Stack spacing={2}>
                 <Typography variant="h6" component="h2">Nowe zgłoszenie</Typography>
                 {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
+                {sentSubject && <Alert severity="success" onClose={() => setSentSubject("")}>Zgłoszenie „{sentSubject}” jest na liście poniżej. Odpowiedź zespołu pojawi się w tym wątku.</Alert>}
                 <TextField select required label="Kategoria" value={category} onChange={(event) => setCategory(event.target.value)}>
                     {categories.map((item) => <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>)}
                 </TextField>
@@ -215,12 +217,12 @@ export default function HelpDesk() {
                         {entry.body && <Typography sx={{ whiteSpace: "pre-wrap", mt: 0.5 }}>{entry.body}</Typography>}
                         {token && (entry.attachments ?? []).length > 0 && <Stack spacing={1} sx={{ mt: 1 }}>{(entry.attachments ?? []).map((file) => <PrivateImage key={file.uuid} token={token} name={file.name} path={`/support/tickets/${selected.uuid}/attachments/${file.uuid}`} />)}</Stack>}
                     </Box>)}
-                    <TextField label="Dopisek" value={reply} onChange={(event) => setReply(event.target.value)} multiline minRows={3} inputProps={{ maxLength: 8000 }} />
+                    <TextField label="Twoja wiadomość" value={reply} onChange={(event) => setReply(event.target.value)} multiline minRows={3} inputProps={{ maxLength: 8000 }} placeholder="Dopisz coś, jeśli chcesz uzupełnić zgłoszenie albo odpowiedzieć zespołowi." />
                 </Stack>}
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => setSelected(null)}>Zamknij</Button>
-                <Button variant="contained" disabled={busy || !reply.trim()} onClick={() => void sendReply()}>Wyślij dopisek</Button>
+                <Button variant="contained" disabled={busy || !reply.trim()} onClick={() => void sendReply()}>Wyślij wiadomość</Button>
             </DialogActions>
         </Dialog>
     </Stack>;
