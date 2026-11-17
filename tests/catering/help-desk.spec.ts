@@ -10,8 +10,7 @@ test('avatar menu opens help and sends a ticket with a screenshot', async ({ pag
     await page.addInitScript(value => localStorage.setItem('auth_token', value), auth);
     const tickets: { uuid: string; subject: string; status: string; statusLabel: string; categoryLabel: string; updatedAt: string; messages: unknown[] }[] = [];
     await page.route('**/api/**', route => {
-        const url = new URL(route.request().url());
-        const path = url.pathname;
+        const path = new URL(route.request().url()).pathname;
         if (path === '/api/support/meta') {
             return route.fulfill({ json: { categories: [{ value: 'system_error', label: 'Błąd systemu' }, { value: 'billing', label: 'Opłaty' }, { value: 'other', label: 'Inne' }], statuses: [{ value: 'open', label: 'Nowe' }] } });
         }
@@ -42,18 +41,24 @@ test('avatar menu opens help and sends a ticket with a screenshot', async ({ pag
     await page.locator('input[type="file"]').setInputFiles({ name: 'zrzut.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2ioAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Wyślij zgłoszenie' }).click();
     await expect(page.getByText('Zgłoszenie zostało wysłane.')).toBeVisible();
-    await expect(page.getByRole('dialog')).toContainText('Pusty ekran');
+    await expect(page.getByText('jest na liście poniżej')).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Pusty ekran/ })).toBeVisible();
 });
 
 test('saas desk tile opens the ticket inbox', async ({ page }) => {
     await page.addInitScript(() => sessionStorage.setItem('saas_token', 'a'.repeat(64)));
     await page.route('**/api/saas/**', route => {
-        const path = new URL(route.request().url()).pathname;
-        if (path === '/api/saas/tenants') return route.fulfill({ json: { items: [] } });
+        const url = new URL(route.request().url());
+        const path = url.pathname;
+        if (path === '/api/saas/tenants') return route.fulfill({ json: { items: [{ uuid: '00000000-0000-4000-8000-000000000010', slug: 'mapa-smakow', name: 'Mapa Smaków', status: 'active', provisioning: 'ready', version: 1 }] } });
         if (path === '/api/saas/support/summary') return route.fulfill({ json: { attention: 2, open: 2, inProgress: 0, waiting: 0, resolved: 0, closed: 0 } });
         if (path === '/api/saas/support/meta') return route.fulfill({ json: { categories: [{ value: 'billing', label: 'Opłaty' }], statuses: [{ value: 'open', label: 'Nowe' }] } });
         const ticket = { uuid: '00000000-0000-4000-8000-000000000124', subject: 'Faktura', status: 'open', statusLabel: 'Nowe', categoryLabel: 'Opłaty', tenantName: 'Mapa Smaków', tenantSlug: 'mapa-smakow', authorName: 'Anna', authorEmail: 'anna@example.test', updatedAt: '2026-11-17T09:00:00Z', preview: 'Nie widzę płatności', messages: [{ uuid: 'm1', role: 'user', author: 'Anna', body: 'Nie widzę płatności', createdAt: '2026-11-17T09:00:00Z', attachments: [] }] };
-        if (path === '/api/saas/support/tickets') return route.fulfill({ json: { items: [ticket] } });
+        if (path === '/api/saas/support/tickets') {
+            const tenant = url.searchParams.get('tenant');
+            return route.fulfill({ json: { items: tenant && tenant !== 'mapa-smakow' ? [] : [ticket] } });
+        }
         if (path === '/api/saas/support/tickets/' + ticket.uuid) return route.fulfill({ json: ticket });
         return route.fulfill({ json: {} });
     });
@@ -62,6 +67,10 @@ test('saas desk tile opens the ticket inbox', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'Zgłoszenia', exact: true })).toContainText('2');
     await page.getByRole('button', { name: 'Zgłoszenia', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Zgłoszenia' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Firma' })).toBeVisible();
+    await expect(page.getByText('Faktura')).toBeVisible();
+    await page.getByLabel('Firma').click();
+    await page.getByRole('option', { name: 'Mapa Smaków' }).click();
     await expect(page.getByText('Faktura')).toBeVisible();
     await page.getByRole('button', { name: 'Otwórz zgłoszenie Faktura' }).click();
     await expect(page.getByRole('dialog')).toContainText('Mapa Smaków');
