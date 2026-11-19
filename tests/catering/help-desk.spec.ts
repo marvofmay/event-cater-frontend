@@ -43,6 +43,10 @@ test('avatar menu opens help and sends a ticket with a screenshot', async ({ pag
     expect(createBox!.x).toBeGreaterThan(statusBox!.x);
     await create.click();
     const form = page.getByRole('dialog');
+    await expect(form.getByRole('button', { name: 'Anuluj' })).toBeVisible();
+    await form.getByRole('button', { name: 'Anuluj' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await create.click();
     await form.getByLabel('Kategoria').click();
     await page.getByRole('option', { name: 'Błąd systemu' }).click();
     await form.getByLabel('Temat').fill('Pusty ekran');
