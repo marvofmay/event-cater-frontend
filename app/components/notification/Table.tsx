@@ -15,8 +15,6 @@ import {
   CircularProgress,
   TextField,
   Checkbox,
-  ToggleButton,
-  ToggleButtonGroup,
 } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { Preview, Delete, Search } from "@mui/icons-material";
@@ -38,6 +36,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import useMarkAsReadMultipleNotificationMutation from "@/app/hooks/notification/markAsReadMultipleNotificationMutate";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MarkAsReadNotificationsModal from "./modal/MarkAsRead";
+import { SegmentedChoice } from "@/app/components/common/SegmentedChoice";
 
 const NotificationsTable = () => {
   const [pageSize, setPageSize] = useTablePageSize('notifications');
@@ -233,21 +232,19 @@ const NotificationsTable = () => {
         marginBottom={2}
       >
         <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-          <ToggleButtonGroup
-            exclusive
-            size="small"
+          <SegmentedChoice
+            label="Filtr przeczytania"
             value={unreadFilter}
-            onChange={(_, value) => {
-              if (!value) return;
+            options={[
+              { value: "unread", label: "Nieprzeczytane" },
+              { value: "read", label: "Przeczytane" },
+              { value: "all", label: "Wszystkie" },
+            ]}
+            onChange={(value) => {
               setUnreadFilter(value);
               setPage(1);
             }}
-            aria-label="Filtr przeczytania"
-          >
-            <ToggleButton value="unread">Nieprzeczytane</ToggleButton>
-            <ToggleButton value="read">Przeczytane</ToggleButton>
-            <ToggleButton value="all">Wszystkie</ToggleButton>
-          </ToggleButtonGroup>
+          />
           <TextField
             variant="outlined"
             placeholder={t("common.enterPhraseToSearch")}
