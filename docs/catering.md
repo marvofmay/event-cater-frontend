@@ -17,7 +17,7 @@ Kafelki istniejącego pulpitu Wydarzenia, Sprzęt, Produkty i Kuchnia prowadzą 
 
 ## Typowy przebieg
 
-Najpierw dodaj kategorie sprzętu (np. Meble, Zastawa) przez „Sprzęt → Kategorie sprzętu”. W pozycji sprzętu wybierz kategorię, wpisz posiadaną ilość w wybranej jednostce oraz opcjonalną nazwę slangową używaną przez pracowników. Nazwa slangowa jest widoczna w podpowiedziach i uwzględniana przy wyszukiwaniu. Ilość posiadana nie jest automatycznie pomniejszana przez wydarzenia. Dotychczasowe pozycje po migracji mają ilość 0 do uzupełnienia; istniejące kategorie są zachowane.
+Najpierw dodaj kategorie sprzętu (np. Meble, Zastawa) przez „Sprzęt → Kategorie sprzętu”. Formularz pozycji zaczyna się od nazwy, potem jest opcjonalna nazwa slangowa, opis, a następnie opcjonalny kod. Kod, jeśli podany, musi być unikalny. Ilość posiadana też jest opcjonalna; puste pole zapisuje 0 i nie jest automatycznie pomniejszane przez wydarzenia. Nazwa slangowa jest widoczna w podpowiedziach i uwzględniana przy wyszukiwaniu. Istniejące kategorie są zachowane.
 
 Zapisz obsłużone miejsce w bazie (również ze starego wydarzenia), a przy nowym wydarzeniu wybierz je z podpowiedzi. Adres zostaje wczytany do edytowalnego formularza. Wczytanie miejsca w istniejącym wydarzeniu pozwala jawnie zastąpić kontakty. Zmiana katalogu nie zmienia historii przyjęć.
 

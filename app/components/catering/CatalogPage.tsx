@@ -183,7 +183,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                   category: "",
                   unit: "piece",
                   description: "",
-                  ...(kind === "equipment" ? { slangName: "", stockQuantity: 0, storageLocationUuid: null } : {}),
+                  ...(kind === "equipment" ? { slangName: "", storageLocationUuid: null } : {}),
                 })
               }
             >
@@ -247,7 +247,7 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                         : "-"}
                     </TableCell>
                   )}
-                  <TableCell sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.code}</TableCell>
+                  <TableCell sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.code || "-"}</TableCell>
                   <TableCell sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.name}>{item.name}</TableCell>
                   {kind === "equipment" && (
                     <>
@@ -321,10 +321,17 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
               e.preventDefault();
               action.run(async () => {
                 try {
+                  const payload = kind === "equipment" && edit
+                    ? {
+                        ...edit,
+                        code: edit.code?.trim() ? edit.code : null,
+                        stockQuantity: typeof edit.stockQuantity === "number" ? edit.stockQuantity : 0,
+                      }
+                    : edit;
                   let saved = await api<CatalogItem>(
                     path + (edit?.uuid ? "/" + edit.uuid : ""),
                     edit?.uuid ? "PUT" : "POST",
-                    edit,
+                    payload,
                   );
                   setEdit(saved);
                   if (kind === "equipment") {
@@ -366,15 +373,16 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                   <Stack gap={2}>
                     <TextField
                       required
-                      label="Kod"
-                      value={edit?.code ?? ""}
-                      onChange={(e) => setEdit({ ...edit, code: e.target.value })}
-                    />
-                    <TextField
-                      required
                       label="Nazwa"
                       value={edit?.name ?? ""}
                       onChange={(e) => setEdit({ ...edit, name: e.target.value })}
+                    />
+                    <TextField
+                      label="Nazwa slangowa"
+                      helperText="Np. termos, bemar - do wyszukiwania."
+                      value={edit?.slangName ?? ""}
+                      onChange={(event) => setEdit({ ...edit, slangName: event.target.value })}
+                      slotProps={{ htmlInput: { maxLength: 200 } }}
                     />
                     <TextField
                       label="Opis"
@@ -384,11 +392,10 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                       minRows={2}
                     />
                     <TextField
-                      label="Nazwa slangowa"
-                      helperText="Np. termos, bemar - do wyszukiwania."
-                      value={edit?.slangName ?? ""}
-                      onChange={(event) => setEdit({ ...edit, slangName: event.target.value })}
-                      slotProps={{ htmlInput: { maxLength: 200 } }}
+                      label="Kod"
+                      helperText="Opcjonalny. Litery, cyfry, myślnik lub podkreślenie."
+                      value={edit?.code ?? ""}
+                      onChange={(e) => setEdit({ ...edit, code: e.target.value })}
                     />
                     <FieldSelect
                       label="Jednostka"
@@ -397,10 +404,9 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                       onChange={(unit) => setEdit({ ...edit, unit })}
                     />
                     <TextField
-                      required
                       label="Ilość posiadana"
                       type="number"
-                      helperText={`Łączna liczba (${units[edit?.unit ?? "piece"]}), bez odjęcia zapotrzebowania wydarzeń.`}
+                      helperText={`Opcjonalna łączna liczba (${units[edit?.unit ?? "piece"]}), bez odjęcia zapotrzebowania wydarzeń.`}
                       value={edit?.stockQuantity ?? ""}
                       onChange={(event) => setEdit({ ...edit, stockQuantity: event.target.value === "" ? undefined : Number(event.target.value) })}
                       slotProps={{ htmlInput: { min: 0, max: 2147483647, step: 1 } }}

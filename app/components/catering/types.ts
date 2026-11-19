@@ -29,7 +29,7 @@ export interface Venue {
 }
 export interface CatalogItem {
   uuid: string;
-  code: string;
+  code: string | null;
   name: string;
   category: string;
   categoryUuid?: string;
@@ -113,7 +113,7 @@ export interface EventDetails extends EventItem {
     uuid: string;
     equipmentUuid: string;
     name: string;
-    code: string;
+    code: string | null;
     unit: string;
     quantity: number;
     notes: string | null;
@@ -137,7 +137,7 @@ export interface PreparationLine {
   kind: string;
   itemUuid: string;
   name: string;
-  code: string;
+  code: string | null;
   unit: string;
   requiredQuantity: string;
   preparedQuantity: string;
