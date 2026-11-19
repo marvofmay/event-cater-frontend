@@ -16,6 +16,7 @@ import { useUser } from "@/app/context/userContext";
 import { useAction, useApi, useRemote } from "./api";
 import { Lookup, LookupItem } from "./Lookup";
 import { Feedback, Loading, Panel } from "./ui";
+import { EventCreationNotice } from "./EventCreationNotice";
 
 interface RecipientRow {
   employeeUuid: string;
@@ -54,9 +55,13 @@ const defaultChannels: ChannelMap = { internal: true, email: true, sms: true };
 export function EventNotificationRecipients({
   eventUuid,
   closed,
+  sentAt,
+  onNoticeSent,
 }: {
   eventUuid: string;
   closed?: boolean;
+  sentAt?: string | null;
+  onNoticeSent: (sentAt: string, version: number) => void;
 }) {
   const { hasPermission } = useUser();
   const canEdit = hasPermission("events.update") && !closed;
@@ -146,10 +151,16 @@ export function EventNotificationRecipients({
 
   return (
     <Panel title="Powiadomienia wydarzenia">
+      <EventCreationNotice
+        eventUuid={eventUuid}
+        sentAt={sentAt}
+        closed={closed}
+        onSent={onNoticeSent}
+      />
       <Typography variant="body2" color="text.secondary" mb={2}>
         Ustal odbiorców i kanały dla tego wydarzenia — m.in. kto dostanie info, że lista
         kompletacji została złożona. Odznacz wszystkich albo wyłącz kanały, jeśli powiadomienie
-        ma nie iść. Osobiste powiadomienia o przypisaniu zawsze trafiają do wskazanej osoby.
+        ma nie iść. Osobiste powiadomienie o przypisaniu idzie po wysłaniu powiadomienia o utworzeniu.
       </Typography>
       <Feedback error={remote.error || prefs.error} />
       {(remote.loading || prefs.loading) && <Loading />}
