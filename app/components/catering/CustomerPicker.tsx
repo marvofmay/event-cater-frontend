@@ -35,7 +35,7 @@ export function CustomerPicker({ value, onChange, disabled }: { value: CustomerO
   const remote = useRemote<{ items: CustomerOption[] }>(open && !disabled ? `/event-customers?q=${encodeURIComponent(query)}` : null);
 
   return <Box sx={{ flex: 1, minWidth: 0 }}>
-    <Stack direction="row" gap={0.5} alignItems="center">
+    <Stack direction="row" gap={0.5} alignItems="stretch">
       <Autocomplete<CustomerOption>
         size="small"
         fullWidth disabled={disabled} open={open} openOnFocus
@@ -77,11 +77,15 @@ export function CustomerPicker({ value, onChange, disabled }: { value: CustomerO
             onClick={() => { setOpen(false); setDialog(true); }}
             sx={{
               width: 40,
-              height: 40,
+              height: "auto",
+              alignSelf: "stretch",
+              p: 0,
+              boxSizing: "border-box",
               border: 1,
               borderColor: "divider",
               borderRadius: 1,
               flexShrink: 0,
+              ".MuiDialog-root &": { mt: "8px", mb: "4px" },
             }}
           >
             <AddIcon fontSize="small" />
