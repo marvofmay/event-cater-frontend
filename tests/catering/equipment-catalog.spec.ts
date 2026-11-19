@@ -117,6 +117,14 @@ test("equipment categories, owned quantity and employee slang name", async ({ pa
   await expect(page.getByRole("button", { name: "Dodaj pozycję", exact: true }).getByTestId("AddIcon")).toBeVisible();
   await expect(page.getByRole("button", { name: "Dodaj pozycję", exact: true })).toHaveClass(/MuiButton-containedSuccess/);
   await page.getByRole("button", { name: "Dodaj pozycję" }).click();
+  const fieldTop = async (label: string | RegExp) => (await dialog.getByLabel(label).boundingBox())!.y;
+  expect(await fieldTop(/^Nazwa(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Nazwa slangowa(?:\s*\*)?$/));
+  expect(await fieldTop(/^Nazwa slangowa(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Opis(?:\s*\*)?$/));
+  expect(await fieldTop(/^Opis(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Kod(?:\s*\*)?$/));
+  expect(await fieldTop(/^Kod(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Ilość posiadana(?:\s*\*)?$/));
+  await expect(dialog.getByLabel(/^Nazwa(?:\s*\*)?$/)).toHaveAttribute("required", "");
+  await expect(dialog.getByLabel("Kod", { exact: false })).not.toHaveAttribute("required", "");
+  await expect(dialog.getByLabel("Ilość posiadana")).not.toHaveAttribute("required", "");
   await dialog.getByLabel("Kod", { exact: false }).fill("BOWL-1");
   await dialog.getByLabel(/^Nazwa(?:\s*\*)?$/).fill("Miska do zupy");
   await dialog.getByLabel("Nazwa slangowa", { exact: true }).fill("Bulionówka");
@@ -173,4 +181,63 @@ test("equipment categories, owned quantity and employee slang name", async ({ pa
   await page.getByRole("button", { name: "Usuń", exact: true }).click();
   await dialog.getByRole("button", { name: "Usuń kategorię", exact: true }).click();
   await expect(page.getByText("Brak kategorii. Dodaj pierwszą kategorię sprzętu.")).toBeVisible();
+});
+
+test("new equipment starts with name, slang, description and optional code", async ({ page }) => {
+  const token = [
+    Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url"),
+    Buffer.from(JSON.stringify({
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      modules: ["equipment"], accesses: ["equipment"], permissions: ["equipment.*"],
+      tenantSlug: "default",
+    })).toString("base64url"),
+    "test",
+  ].join(".");
+  await page.addInitScript((value) => localStorage.setItem("auth_token", value), token);
+  const category = { uuid: "00000000-0000-4000-8000-000000000010", name: "Zastawa", version: 1 };
+  let created: Record<string, unknown> | null = null;
+  await page.route("**/api/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const parts = url.pathname.split("/").filter(Boolean);
+    const method = request.method();
+    const body = request.postData() ? request.postDataJSON() : {};
+    if (parts[1] === "equipment-categories" && method === "GET") {
+      return route.fulfill({ json: { items: [category], total: 1, page: 1, limit: 20 } });
+    }
+    if (parts[1] === "equipment" && method === "POST") {
+      created = { ...body, uuid: "00000000-0000-4000-8000-000000000011", category: category.name, active: true, version: 1, photos: [] };
+      return route.fulfill({ status: 201, json: created });
+    }
+    if (parts[1] === "equipment" && method === "GET") {
+      const items = created ? [created] : [];
+      return route.fulfill({ json: { items, total: items.length, page: 1, limit: 20 } });
+    }
+    return route.fulfill({ json: { items: [], total: 0 } });
+  });
+
+  await page.goto("/catering/equipment");
+  await page.getByRole("button", { name: "Dodaj pozycję", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const fieldTop = async (label: RegExp) => (await dialog.getByLabel(label).boundingBox())!.y;
+  expect(await fieldTop(/^Nazwa(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Nazwa slangowa(?:\s*\*)?$/));
+  expect(await fieldTop(/^Nazwa slangowa(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Opis(?:\s*\*)?$/));
+  expect(await fieldTop(/^Opis(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Kod(?:\s*\*)?$/));
+  expect(await fieldTop(/^Kod(?:\s*\*)?$/)).toBeLessThan(await fieldTop(/^Ilość posiadana(?:\s*\*)?$/));
+  await expect(dialog.getByLabel(/^Nazwa(?:\s*\*)?$/)).toHaveAttribute("required", "");
+  await expect(dialog.getByLabel(/^Kod(?:\s*\*)?$/)).not.toHaveAttribute("required");
+  await expect(dialog.getByLabel(/^Ilość posiadana(?:\s*\*)?$/)).not.toHaveAttribute("required");
+  await expect(dialog.getByLabel(/^Ilość posiadana(?:\s*\*)?$/)).toHaveValue("");
+  await dialog.getByLabel(/^Nazwa(?:\s*\*)?$/).fill("Miska");
+  await dialog.getByLabel(/^Nazwa slangowa(?:\s*\*)?$/).fill("Bulionówka");
+  await dialog.getByLabel(/^Opis(?:\s*\*)?$/).fill("Do zupy");
+  await dialog.getByRole("combobox", { name: "Kategoria sprzętu" }).click();
+  await page.getByRole("option", { name: "Zastawa" }).click();
+  await dialog.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(created).toMatchObject({ name: "Miska", slangName: "Bulionówka", description: "Do zupy", code: null, stockQuantity: 0 });
+  const row = page.getByRole("row").filter({ hasText: "Miska" });
+  await expect(row).toContainText("Bulionówka");
+  await expect(row).toContainText("0 szt.");
+  await expect(row.getByRole("cell").nth(1)).toHaveText("-");
 });

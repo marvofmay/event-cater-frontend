@@ -644,7 +644,7 @@ function PreparationPlanRow({ line, list, closed, onChange }: { line: Preparatio
         <Stack direction="row" gap={1.5} alignItems="flex-start" justifyContent="space-between">
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={600}>{line.name}</Typography>
-            <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'} - {line.code}</Typography>
+            <Typography variant="caption" color="text.secondary">{line.kind === 'equipment' ? 'Sprzęt' : 'Produkt / materiał'}{line.code ? ` - ${line.code}` : ''}</Typography>
             {line.instructions && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{line.instructions}</Typography>}
           </Box>
           <PreparationLinePhoto eventUuid={list.eventUuid} line={line} />
@@ -867,8 +867,8 @@ function PreparationRow({
               {line.name}
             </Typography>
             <Typography variant="body2">
-              {line.kind === "equipment" ? "Sprzęt" : "Produkt / materiał"} ·{" "}
-              {line.code}
+              {line.kind === "equipment" ? "Sprzęt" : "Produkt / materiał"}
+              {line.code ? ` · ${line.code}` : ""}
             </Typography>
             {line.sourceLocation && <Typography variant="body2">Skąd pobrać: {line.sourceLocation}</Typography>}
             {line.instructions && <Typography variant="body2">{line.instructions}</Typography>}
