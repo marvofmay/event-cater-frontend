@@ -46,6 +46,7 @@ import { PreparationPanel } from "./PreparationPanel";
 import { KitchenCard } from "./KitchenCard";
 import { HistoryPanel } from "./HistoryPanel";
 import { EventNotificationRecipients } from "./EventNotificationRecipients";
+import { EventCreationNotice } from "./EventCreationNotice";
 import PublishFacebookDialog from "@/app/components/facebook/PublishFacebookDialog";
 export function EventDetailsPage({ uuid }: { uuid: string }) {
   const { hasPermission } = useUser();
@@ -70,6 +71,11 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
   const save = (event: EventDetails) => {
     remote.setData(event);
     setDirty(false);
+  };
+  const noteSent = (sentAt: string, version: number) => {
+    remote.setData((previous) =>
+      previous ? { ...previous, creationNoticeSentAt: sentAt, version } : previous,
+    );
   };
   const event = remote.data;
   const closed = ["completed", "cancelled"].includes(event?.status ?? "");
@@ -245,7 +251,12 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
             />
           )}
           {tab === "notifications" && (
-            <EventNotificationRecipients eventUuid={event.uuid} closed={closed} />
+            <EventNotificationRecipients
+              eventUuid={event.uuid}
+              closed={closed}
+              sentAt={event.creationNoticeSentAt}
+              onNoticeSent={noteSent}
+            />
           )}
           {tab === "staff" && (
             <StaffSection
@@ -253,11 +264,13 @@ export function EventDetailsPage({ uuid }: { uuid: string }) {
               event={event}
               onChange={save}
               closed={closed}
+              onNoticeSent={noteSent}
             />
           )}
           {tab === "preparation" && (
             <PreparationPanel
               event={event}
+              onNoticeSent={noteSent}
               onChanged={(version) => {
                 remote.setData((previous) =>
                   previous ? { ...previous, version } : previous,
@@ -558,10 +571,12 @@ function StaffSection({
   event,
   onChange,
   closed,
+  onNoticeSent,
 }: {
   event: EventDetails;
   onChange: (e: EventDetails) => void;
   closed: boolean;
+  onNoticeSent: (sentAt: string, version: number) => void;
 }) {
   const { hasPermission } = useUser();
   const api = useApi();
@@ -585,8 +600,14 @@ function StaffSection({
   const packerUuid = event.preparation?.responsibleUuid ?? null;
   return (
     <Panel title="Zespół wydarzenia">
+      <EventCreationNotice
+        eventUuid={event.uuid}
+        sentAt={event.creationNoticeSentAt}
+        closed={closed}
+        onSent={onNoticeSent}
+      />
       <Alert severity="info" sx={{ mb: 2 }}>
-        Obsada i osoba kompletująca to osobne role. Pracownik może być w obsadzie bez kompletacji, kompletować poza obsadą albo łączyć obie role. Przy obsadzeniu i przy wyznaczeniu do kompletacji dostaje osobne powiadomienie.
+        Obsada i osoba kompletująca to osobne role. Pracownik może być w obsadzie bez kompletacji, kompletować poza obsadą albo łączyć obie role. Powiadomienie o przypisaniu idzie dopiero po jednorazowym powiadomieniu o utworzeniu wydarzenia.
       </Alert>
       {packerUuid ? (
         <Typography sx={{ mb: 2 }} color="text.secondary">

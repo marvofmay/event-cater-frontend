@@ -45,6 +45,7 @@ import {
 } from "./ui";
 import { Lookup, LookupItem } from "./Lookup";
 import { PreparationLookup } from "./PreparationLookup";
+import { EventCreationNotice } from "./EventCreationNotice";
 import { SourceLocationAutocomplete } from './SourceLocationAutocomplete';
 const quantityText = (value: string) => Number(value).toLocaleString('pl-PL', { maximumFractionDigits: 3 });
 
@@ -222,9 +223,11 @@ function PreparationLinePhoto({
 export function PreparationPanel({
   event,
   onChanged,
+  onNoticeSent,
 }: {
   event: EventDetails;
   onChanged: (version: number) => void;
+  onNoticeSent: (sentAt: string, version: number) => void;
 }) {
   const { hasPermission } = useUser();
   const path = "/events/" + event.uuid + "/preparation";
@@ -236,6 +239,12 @@ export function PreparationPanel({
   };
   return (
     <Panel title="Lista rzeczy do zabrania">
+      <EventCreationNotice
+        eventUuid={event.uuid}
+        sentAt={event.creationNoticeSentAt}
+        closed={["cancelled", "completed"].includes(event.status)}
+        onSent={onNoticeSent}
+      />
       <Feedback error={remote.error} />
       {remote.loading && <Loading />}
       {remote.data && (

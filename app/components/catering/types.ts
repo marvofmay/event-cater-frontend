@@ -100,6 +100,7 @@ export interface EventDetails extends EventItem {
   customerUuid?: string | null;
   contacts: Contact[];
   menu: MenuItem[];
+  creationNoticeSentAt?: string | null;
   staff: {
     uuid: string;
     employeeUuid: string;
