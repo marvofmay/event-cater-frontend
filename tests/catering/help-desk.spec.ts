@@ -34,16 +34,76 @@ test('avatar menu opens help and sends a ticket with a screenshot', async ({ pag
     await page.getByRole('button', { name: 'Menu użytkownika' }).click();
     await page.getByRole('menuitem', { name: 'pomoc', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Pomoc' })).toBeVisible();
-    await page.getByLabel('Kategoria').click();
+    await expect(page.getByRole('heading', { name: 'Moje zgłoszenia' })).toBeVisible();
+    const create = page.getByRole('button', { name: 'Utwórz zgłoszenie' });
+    const status = page.getByLabel('Status');
+    const createBox = await create.boundingBox();
+    const statusBox = await status.boundingBox();
+    expect(createBox!.y).toBeLessThan(statusBox!.y);
+    expect(createBox!.x).toBeGreaterThan(statusBox!.x);
+    await create.click();
+    const form = page.getByRole('dialog');
+    await form.getByLabel('Kategoria').click();
     await page.getByRole('option', { name: 'Błąd systemu' }).click();
-    await page.getByLabel('Temat').fill('Pusty ekran');
-    await page.getByLabel('Wiadomość').fill('Biała strona.');
-    await page.locator('input[type="file"]').setInputFiles({ name: 'zrzut.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2ioAAAAASUVORK5CYII=', 'base64') });
-    await page.getByRole('button', { name: 'Wyślij zgłoszenie' }).click();
+    await form.getByLabel('Temat').fill('Pusty ekran');
+    await form.getByLabel('Wiadomość').fill('Biała strona.');
+    await form.locator('input[type="file"]').setInputFiles({ name: 'zrzut.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2ioAAAAASUVORK5CYII=', 'base64') });
+    const send = form.getByRole('button', { name: 'Wyślij zgłoszenie' });
+    const formBox = await form.boundingBox();
+    const sendBox = await send.boundingBox();
+    expect(sendBox!.x + sendBox!.width).toBeGreaterThan(formBox!.x + formBox!.width * 0.7);
+    await send.click();
     await expect(page.getByText('Zgłoszenie zostało wysłane.')).toBeVisible();
     await expect(page.getByText('jest na liście poniżej')).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Pusty ekran/ })).toBeVisible();
+});
+
+test('my tickets can be filtered by status, searched and paged', async ({ page }) => {
+    await page.addInitScript(value => localStorage.setItem('auth_token', value), token());
+    const tickets = [
+        ...Array.from({ length: 11 }, (_, index) => ({
+            uuid: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+            subject: `Otwarte ${index + 1}`,
+            status: 'open',
+            statusLabel: 'Nowe',
+            categoryLabel: 'Błąd systemu',
+            updatedAt: '2026-11-17T09:00:00Z',
+        })),
+        {
+            uuid: '00000000-0000-4000-8000-000000000099',
+            subject: 'Rozwiązane rozliczenie',
+            status: 'resolved',
+            statusLabel: 'Rozwiązane',
+            categoryLabel: 'Opłaty',
+            updatedAt: '2026-11-16T09:00:00Z',
+        },
+    ];
+    await page.route('**/api/**', route => {
+        const path = new URL(route.request().url()).pathname;
+        if (path === '/api/support/meta') {
+            return route.fulfill({ json: { categories: [{ value: 'system_error', label: 'Błąd systemu' }], statuses: [{ value: 'open', label: 'Nowe' }, { value: 'resolved', label: 'Rozwiązane' }] } });
+        }
+        if (path === '/api/support/tickets') return route.fulfill({ json: { items: tickets } });
+        return route.fulfill({ json: { items: [] } });
+    });
+
+    await page.goto('/me/help');
+    await expect(page.getByRole('columnheader', { name: 'Temat' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Otwarte 1', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Otwarte 11', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Następna strona' }).click();
+    await expect(page.getByRole('cell', { name: 'Otwarte 11', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Rozwiązane rozliczenie' })).toBeVisible();
+    await page.getByRole('combobox', { name: /^Status/ }).click();
+    await page.getByRole('option', { name: 'Rozwiązane' }).click();
+    await expect(page.getByRole('cell', { name: 'Rozwiązane rozliczenie' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: /Otwarte/ })).toHaveCount(0);
+    await page.getByRole('combobox', { name: /^Status/ }).click();
+    await page.getByRole('option', { name: 'Wszystkie' }).click();
+    await page.getByLabel('Szukaj').fill('rozliczenie');
+    await expect(page.getByRole('cell', { name: 'Rozwiązane rozliczenie' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: /Otwarte/ })).toHaveCount(0);
 });
 
 test('saas desk tile opens the ticket inbox', async ({ page }) => {

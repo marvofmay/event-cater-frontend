@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography, useMediaQuery } from "@mui/material";
+import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField, Typography, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useUser } from "@/app/context/userContext";
 import { useAction, useApi } from "@/app/components/catering/api";
@@ -31,6 +31,14 @@ const fallbackCategories: Option[] = [
     { value: "feature", label: "Propozycja funkcji" },
     { value: "question", label: "Pytanie" },
     { value: "other", label: "Inne" },
+];
+
+const fallbackStatuses: Option[] = [
+    { value: "open", label: "Nowe" },
+    { value: "in_progress", label: "W trakcie" },
+    { value: "waiting", label: "Oczekuje na użytkownika" },
+    { value: "resolved", label: "Rozwiązane" },
+    { value: "closed", label: "Zamknięte" },
 ];
 
 const statusColor: Record<string, "default" | "info" | "warning" | "success"> = {
@@ -76,8 +84,14 @@ export default function HelpDesk() {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const [categories, setCategories] = useState<Option[]>(fallbackCategories);
+    const [statuses, setStatuses] = useState<Option[]>(fallbackStatuses);
     const [items, setItems] = useState<Ticket[]>([]);
     const [loadError, setLoadError] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+    const [query, setQuery] = useState("");
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [creating, setCreating] = useState(false);
     const [category, setCategory] = useState("system_error");
     const [subject, setSubject] = useState("");
     const [message, setMessage] = useState("");
@@ -92,10 +106,11 @@ export default function HelpDesk() {
 
     async function load() {
         const [meta, list] = await Promise.all([
-            api<{ categories: Option[] }>("/support/meta"),
+            api<{ categories: Option[]; statuses?: Option[] }>("/support/meta"),
             api<{ items: Ticket[] }>("/support/tickets"),
         ]);
         if (meta.categories?.length) setCategories(meta.categories);
+        if (meta.statuses?.length) setStatuses(meta.statuses);
         setItems(list.items ?? []);
     }
 
@@ -147,6 +162,8 @@ export default function HelpDesk() {
             setMessage("");
             setFiles([]);
             setSentSubject(sent);
+            setCreating(false);
+            setPage(0);
             await load();
         }, "Zgłoszenie zostało wysłane.");
         if (!ok) setFormError("");
@@ -163,50 +180,107 @@ export default function HelpDesk() {
         if (!ok) return;
     }
 
-    return <Stack spacing={3} sx={{ maxWidth: 980 }}>
+    const needle = query.trim().toLowerCase();
+    const filtered = items.filter((item) => {
+        if (statusFilter && item.status !== statusFilter) return false;
+        if (!needle) return true;
+        return [item.subject, item.categoryLabel, item.statusLabel, item.preview]
+            .some((value) => (value ?? "").toLowerCase().includes(needle));
+    });
+    const pageStart = page * rowsPerPage;
+    const visible = filtered.slice(pageStart, pageStart + rowsPerPage);
+    const columns = ["Temat", "Kategoria", "Status", "Aktualizacja"];
+
+    return <Stack spacing={3} sx={{ maxWidth: 1100 }}>
         <Box>
             <Typography variant="h4" component="h1">Pomoc</Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>Opisz problem. Zgłoszenie trafi do zespołu EventCater, a odpowiedź zobaczysz w tym samym wątku.</Typography>
         </Box>
         {loadError && <Alert severity="error">{loadError}</Alert>}
-        <Box component="form" onSubmit={submit} sx={{ p: { xs: 2, sm: 3 }, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-            <Stack spacing={2}>
-                <Typography variant="h6" component="h2">Nowe zgłoszenie</Typography>
-                {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
-                {sentSubject && <Alert severity="success" onClose={() => setSentSubject("")}>Zgłoszenie „{sentSubject}” jest na liście poniżej. Odpowiedź zespołu pojawi się w tym wątku.</Alert>}
-                <TextField select required label="Kategoria" value={category} onChange={(event) => setCategory(event.target.value)}>
-                    {categories.map((item) => <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>)}
-                </TextField>
-                <TextField required label="Temat" value={subject} onChange={(event) => setSubject(event.target.value)} inputProps={{ maxLength: 160, minLength: 3 }} />
-                <TextField label="Wiadomość" value={message} onChange={(event) => setMessage(event.target.value)} multiline minRows={4} inputProps={{ maxLength: 8000 }} placeholder="Co się stało i kiedy? Jeśli masz zrzut ekranu, możesz go dodać poniżej." />
-                <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <Button component="label" variant="outlined" disabled={busy || files.length >= 5}>Dodaj zrzut ekranu
-                        <input hidden type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple onChange={(event) => { addFiles(event.target.files); event.target.value = ""; }} />
-                    </Button>
-                    <Typography variant="caption" color="text.secondary">PNG, JPG lub WebP, najwyżej 5 plików po 8 MB.</Typography>
-                </Stack>
-                {previews.length > 0 && <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-                    {previews.map((item) => <Box key={item.url} sx={{ width: 96 }}>
-                        <Box component="img" alt={item.file.name} src={item.url} sx={{ width: 96, height: 72, objectFit: "cover", borderRadius: 1, border: "1px solid", borderColor: "divider" }} />
-                        <Button size="small" onClick={() => setFiles(files.filter((file) => file !== item.file))}>Usuń</Button>
-                    </Box>)}
-                </Stack>}
-                <Box><Button type="submit" variant="contained" disabled={busy}>Wyślij zgłoszenie</Button></Box>
-            </Stack>
-        </Box>
-        <Box>
-            <Typography variant="h6" component="h2" sx={{ mb: 1 }}>Moje zgłoszenia</Typography>
-            {items.length === 0 && <Typography color="text.secondary">Nie masz jeszcze zgłoszeń.</Typography>}
-            <Stack spacing={1}>
-                {items.map((item) => <Box key={item.uuid} component="button" type="button" onClick={async () => { setReply(""); setSelected(await api<Ticket>("/support/tickets/" + item.uuid).catch(() => item)); }} sx={{ textAlign: "left", p: 1.5, borderRadius: 1, border: "1px solid", borderColor: "divider", background: "transparent", cursor: "pointer" }}>
-                    <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "space-between" }}>
-                        <Typography fontWeight={650}>{item.subject}</Typography>
-                        <Chip size="small" label={item.statusLabel} color={statusColor[item.status] ?? "default"} />
+        {sentSubject && <Alert severity="success" onClose={() => setSentSubject("")}>Zgłoszenie „{sentSubject}” jest na liście poniżej. Odpowiedź zespołu pojawi się w tym wątku.</Alert>}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" }, justifyContent: "space-between" }}>
+            <Typography variant="h6" component="h2">Moje zgłoszenia</Typography>
+            <Button variant="contained" sx={{ alignSelf: { xs: "flex-end", sm: "center" } }} onClick={() => { setFormError(""); setCreating(true); }}>Utwórz zgłoszenie</Button>
+        </Stack>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField select size="small" label="Status" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(0); }} sx={{ minWidth: 240 }}>
+                <MenuItem value="">Wszystkie</MenuItem>
+                {statuses.map((item) => <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>)}
+            </TextField>
+            <TextField size="small" label="Szukaj" value={query} onChange={(event) => { setQuery(event.target.value); setPage(0); }} placeholder="Temat, kategoria lub status" inputProps={{ maxLength: 80 }} sx={{ minWidth: 260, flex: 1 }} />
+        </Stack>
+        <TableContainer sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+            <Table size="medium">
+                <TableHead>
+                    <TableRow>
+                        {columns.map((label) => <TableCell key={label} sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>{label}</TableCell>)}
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {visible.length === 0 && <TableRow><TableCell colSpan={columns.length}><Typography color="text.secondary" sx={{ py: 2 }}>{items.length === 0 ? "Nie masz jeszcze zgłoszeń." : "Brak zgłoszeń dla tego filtra."}</Typography></TableCell></TableRow>}
+                    {visible.map((item) => <TableRow
+                        key={item.uuid}
+                        hover
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Otwórz zgłoszenie ${item.subject}`}
+                        onClick={async () => { setReply(""); setSelected(await api<Ticket>("/support/tickets/" + item.uuid).catch(() => item)); }}
+                        onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setReply(""); void api<Ticket>("/support/tickets/" + item.uuid).then(setSelected).catch(() => setSelected(item)); } }}
+                        sx={{ cursor: "pointer" }}
+                    >
+                        <TableCell>
+                            <Typography fontWeight={650}>{item.subject}</Typography>
+                            {item.attachmentCount ? <Typography variant="caption" color="text.secondary">{item.attachmentCount} zał.</Typography> : null}
+                        </TableCell>
+                        <TableCell>{item.categoryLabel}</TableCell>
+                        <TableCell><Chip size="small" label={item.statusLabel} color={statusColor[item.status] ?? "default"} /></TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{warsaw(item.updatedAt)}</TableCell>
+                    </TableRow>)}
+                </TableBody>
+            </Table>
+        </TableContainer>
+        <TablePagination
+            component="div"
+            count={filtered.length}
+            page={filtered.length === 0 ? 0 : Math.min(page, Math.max(0, Math.ceil(filtered.length / rowsPerPage) - 1))}
+            onPageChange={(_, next) => setPage(next)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(event) => { setRowsPerPage(Number(event.target.value)); setPage(0); }}
+            rowsPerPageOptions={[10, 20, 50]}
+            labelRowsPerPage="Na stronie:"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} z ${count}`}
+            getItemAriaLabel={(type) => type === "next" ? "Następna strona" : type === "previous" ? "Poprzednia strona" : "Pierwsza strona"}
+        />
+        <Dialog open={creating} onClose={() => { if (!busy) setCreating(false); }} fullScreen={fullScreen} fullWidth maxWidth="sm">
+            <Box component="form" onSubmit={submit}>
+                <DialogTitle sx={{ backgroundColor: "#10261f", color: "#fff" }}>Nowe zgłoszenie</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ pt: 2 }}>
+                        {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
+                        <TextField select required label="Kategoria" value={category} onChange={(event) => setCategory(event.target.value)}>
+                            {categories.map((item) => <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>)}
+                        </TextField>
+                        <TextField required label="Temat" value={subject} onChange={(event) => setSubject(event.target.value)} inputProps={{ maxLength: 160, minLength: 3 }} />
+                        <TextField label="Wiadomość" value={message} onChange={(event) => setMessage(event.target.value)} multiline minRows={4} inputProps={{ maxLength: 8000 }} placeholder="Co się stało i kiedy? Jeśli masz zrzut ekranu, możesz go dodać poniżej." />
+                        <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
+                            <Button component="label" variant="outlined" disabled={busy || files.length >= 5}>Dodaj zrzut ekranu
+                                <input hidden type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple onChange={(event) => { addFiles(event.target.files); event.target.value = ""; }} />
+                            </Button>
+                            <Typography variant="caption" color="text.secondary">PNG, JPG lub WebP, najwyżej 5 plików po 8 MB.</Typography>
+                        </Stack>
+                        {previews.length > 0 && <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+                            {previews.map((item) => <Box key={item.url} sx={{ width: 96 }}>
+                                <Box component="img" alt={item.file.name} src={item.url} sx={{ width: 96, height: 72, objectFit: "cover", borderRadius: 1, border: "1px solid", borderColor: "divider" }} />
+                                <Button size="small" onClick={() => setFiles(files.filter((file) => file !== item.file))}>Usuń</Button>
+                            </Box>)}
+                        </Stack>}
                     </Stack>
-                    <Typography variant="body2" color="text.secondary">{item.categoryLabel} · {warsaw(item.updatedAt)}{item.attachmentCount ? ` · ${item.attachmentCount} zał.` : ""}</Typography>
-                </Box>)}
-            </Stack>
-        </Box>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: "flex-end", px: 3, pb: 2 }}>
+                    <Button type="submit" variant="contained" disabled={busy}>Wyślij zgłoszenie</Button>
+                </DialogActions>
+            </Box>
+        </Dialog>
         <Dialog open={!!selected} onClose={() => setSelected(null)} fullScreen={fullScreen} fullWidth maxWidth="md">
             <DialogTitle sx={{ backgroundColor: "#10261f", color: "#fff" }}>{selected?.subject}</DialogTitle>
             <DialogContent>
