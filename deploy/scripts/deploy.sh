@@ -86,8 +86,8 @@ echo "==> Migrating central DB"
 docker compose exec -u www-data -T service-company php bin/console doctrine:migrations:migrate --no-interaction
 
 echo "==> Migrating tenant DBs (dry-run list, then execute)"
-docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants || true
-docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants --execute || true
+docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants
+docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants --execute
 
 echo "==> Clearing Symfony cache"
 docker compose exec -u www-data -T service-company php bin/console cache:clear
