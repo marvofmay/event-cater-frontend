@@ -7,11 +7,13 @@ import { useTranslation } from "react-i18next";
 
 import Items from "./components/dashboard/Items";
 import LandingPage from "./components/landing/LandingPage";
+import { usePreferences } from "./context/preferencesContext";
 import { useUser } from "./context/userContext";
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
   const { isAuthenticated, loading, employee, tenant, roles } = useUser();
+  const { ready: preferencesReady } = usePreferences();
 
   const queryClient = useMemo(() => new QueryClient(), []);
 
@@ -19,7 +21,7 @@ const Home: React.FC = () => {
     ? `${employee.firstName} ${employee.lastName}`
     : "pracowniku techniczny systemu";
 
-  if (loading) {
+  if (loading || (isAuthenticated && !preferencesReady)) {
     return (
       <Box
         minHeight="100vh"
