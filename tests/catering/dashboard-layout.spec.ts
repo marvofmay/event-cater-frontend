@@ -51,3 +51,25 @@ test('personal dashboard order supports drag and drop, reload, arrows and restor
     await page.goto('/');
     await expect(tileLinks).toHaveText(['Firma', 'Notatki']);
 });
+
+test('home keeps the saved tile order from the first paint', async ({ page }) => {
+    const claims = { exp: Math.floor(Date.now() / 1000) + 3600, tenantSlug: 'mapa-smakow', tenantName: 'Mapa Smaków', modules: ['company', 'notes'], accesses: ['company_structure', 'notes'], permissions: ['company_structure.view', 'notes.list'] };
+    const token = [Buffer.from('{"alg":"none"}').toString('base64url'), Buffer.from(JSON.stringify(claims)).toString('base64url'), 'test'].join('.');
+    await page.addInitScript(value => localStorage.setItem('auth_token', value), token);
+    let releasePreferences = () => {};
+    const preferencesGate = new Promise<void>(resolve => { releasePreferences = resolve; });
+    await page.route('**/api/**', async route => {
+        const path = new URL(route.request().url()).pathname;
+        if (path === '/api/preferences') {
+            await preferencesGate;
+            return route.fulfill({ json: { data: { pageSizes: {}, dashboardOrder: ['notes', 'company'] } } });
+        }
+        return route.fulfill({ json: {} });
+    });
+
+    await page.goto('/');
+    await expect(page.getByRole('progressbar')).toBeVisible();
+    await expect(page.locator('a[href^="/module/"]')).toHaveCount(0);
+    releasePreferences();
+    await expect(page.getByRole('main').last().locator('a[href^="/module/"]')).toHaveText(['Notatki', 'Firma']);
+});
