@@ -19,32 +19,34 @@ export function LocationEditor({
   required?: boolean;
   disabled?: boolean;
 }) {
+  const field = (
+    key: keyof Location,
+    label: string,
+    options: { required?: boolean; multiline?: boolean; flex?: number; minWidth?: number } = {},
+  ) => (
+    <TextField
+      key={key}
+      disabled={disabled}
+      size="small"
+      fullWidth
+      label={label}
+      required={options.required}
+      value={value[key] ?? ""}
+      multiline={options.multiline}
+      onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+      sx={{ flex: options.flex, minWidth: options.minWidth ?? 0 }}
+    />
+  );
+
   return (
     <Stack gap={2}>
-      {(["venue", "street", "city", "postalCode", "instructions"] as const).map(
-        (key) => (
-          <TextField
-            key={key}
-            disabled={disabled}
-            size="small"
-            label={
-              {
-                venue: "Obiekt / sala",
-                street: "Ulica i numer",
-                city: "Miejscowość",
-                postalCode: "Kod pocztowy",
-                instructions: "Dojazd, rozładunek i dostęp do zaplecza",
-              }[key]
-            }
-            required={
-              required && ["street", "city", "postalCode"].includes(key)
-            }
-            value={value[key] ?? ""}
-            multiline={key === "instructions"}
-            onChange={(e) => onChange({ ...value, [key]: e.target.value })}
-          />
-        ),
-      )}
+      {field("venue", "Obiekt / sala")}
+      <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
+        {field("street", "Ulica i numer", { required, flex: 1.6, minWidth: 160 })}
+        {field("city", "Miejscowość", { required, flex: 1.2, minWidth: 140 })}
+        {field("postalCode", "Kod pocztowy", { required, flex: 0.7, minWidth: 120 })}
+      </Stack>
+      {field("instructions", "Dojazd, rozładunek i dostęp do zaplecza", { multiline: true })}
     </Stack>
   );
 }
