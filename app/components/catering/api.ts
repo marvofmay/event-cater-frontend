@@ -174,7 +174,10 @@ export function eventDateTime(
   timezone = "Europe/Warsaw",
 ): string | null {
   if (!value) return null;
-  const target = new Date(value + "Z").getTime();
+  const match = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?::\d{2})?$/.exec(value);
+  if (!match) throw new Error("Ta godzina nie istnieje w wybranej strefie czasowej.");
+  const wall = match[1];
+  const target = new Date(wall + "Z").getTime();
   let guess = target;
   for (let i = 0; i < 3; i++) {
     const seen = new Date(
@@ -182,7 +185,7 @@ export function eventDateTime(
     ).getTime();
     guess += target - seen;
   }
-  if (localDateTime(new Date(guess).toISOString(), timezone) !== value)
+  if (localDateTime(new Date(guess).toISOString(), timezone) !== wall)
     throw new Error("Ta godzina nie istnieje w wybranej strefie czasowej.");
   return new Date(guess).toISOString().replace(".000Z", "Z");
 }
