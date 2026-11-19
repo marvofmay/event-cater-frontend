@@ -8,7 +8,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
@@ -19,6 +25,11 @@ import NoticeImage from "./NoticeImage";
 import CoverCropDialog from "./CoverCropDialog";
 import { COVER_ASPECT, COVER_MAX_HEIGHT } from "./coverAspect";
 import NoticeCover from "./NoticeCover";
+
+function toLocalInput(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 
 type Props = {
   open: boolean;
@@ -38,6 +49,10 @@ export default function NoticeFormDialog({ open, notice, onClose, onSaved }: Pro
   const [cropSource, setCropSource] = useState<File | null>(null);
   const [gallery, setGallery] = useState<FileList | null>(null);
   const [removeImageUuids, setRemoveImageUuids] = useState<string[]>([]);
+  const [publishNow, setPublishNow] = useState(true);
+  const [publishAtLocal, setPublishAtLocal] = useState("");
+  const [active, setActive] = useState(true);
+  const [archived, setArchived] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -48,6 +63,12 @@ export default function NoticeFormDialog({ open, notice, onClose, onSaved }: Pro
     setCropSource(null);
     setGallery(null);
     setRemoveImageUuids([]);
+    const publishAt = notice?.publishAt ? new Date(notice.publishAt) : null;
+    const waiting = Boolean(publishAt && publishAt.getTime() > Date.now() && notice?.status !== "archived");
+    setPublishNow(!waiting);
+    setPublishAtLocal(waiting && publishAt ? toLocalInput(publishAt) : "");
+    setActive(notice?.active ?? true);
+    setArchived(Boolean(notice?.archivedAt));
   }, [open, notice]);
 
   useEffect(() => {
@@ -91,6 +112,37 @@ export default function NoticeFormDialog({ open, notice, onClose, onSaved }: Pro
               inputProps={{ maxLength: 20000 }}
               disabled={action.busy}
             />
+            <FormControl disabled={action.busy}>
+              <FormLabel id="notice-publish-mode">{t("info.columnPublishAt")}</FormLabel>
+              <RadioGroup
+                aria-labelledby="notice-publish-mode"
+                value={publishNow ? "now" : "schedule"}
+                onChange={(event) => setPublishNow(event.target.value === "now")}
+              >
+                <FormControlLabel value="now" control={<Radio />} label={t("info.publishNow")} />
+                <FormControlLabel value="schedule" control={<Radio />} label={t("info.publishSchedule")} />
+              </RadioGroup>
+            </FormControl>
+            {!publishNow && (
+              <TextField
+                type="datetime-local"
+                label={t("info.publishAt")}
+                value={publishAtLocal}
+                onChange={(event) => setPublishAtLocal(event.target.value)}
+                required
+                fullWidth
+                disabled={action.busy}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            )}
+            {notice && (
+              <Stack spacing={0.5}>
+                <FormControlLabel control={<Switch checked={active} onChange={(_, value) => setActive(value)} disabled={action.busy} />} label={t("info.active")} />
+                <Typography variant="caption" color="text.secondary">{t("info.activeHint")}</Typography>
+                <FormControlLabel control={<Switch checked={archived} onChange={(_, value) => setArchived(value)} disabled={action.busy} />} label={t("info.archived")} />
+                <Typography variant="caption" color="text.secondary">{t("info.archivedHint")}</Typography>
+              </Stack>
+            )}
             <Stack spacing={1}>
               <Typography variant="subtitle2">{notice ? t("info.formCoverReplace") : t("info.formCover")}</Typography>
               <Typography variant="caption" color="text.secondary">{t("info.formCoverHint")}</Typography>
@@ -187,7 +239,7 @@ export default function NoticeFormDialog({ open, notice, onClose, onSaved }: Pro
           <Button onClick={onClose} disabled={action.busy}>{t("info.cancel")}</Button>
           <Button
             variant="contained"
-            disabled={action.busy || !title.trim() || !body.trim() || (!notice && !cover)}
+            disabled={action.busy || !title.trim() || !body.trim() || (!notice && !cover) || (!publishNow && !publishAtLocal)}
             onClick={() =>
               action.run(async () => {
                 const form = new FormData();
@@ -198,6 +250,12 @@ export default function NoticeFormDialog({ open, notice, onClose, onSaved }: Pro
                   Array.from(gallery).forEach((file) => form.append("gallery[]", file));
                 }
                 removeImageUuids.forEach((uuid) => form.append("removeImageUuids[]", uuid));
+                form.append("publishNow", publishNow ? "1" : "0");
+                if (!publishNow) form.append("publishAt", new Date(publishAtLocal).toISOString());
+                if (notice) {
+                  form.append("active", active ? "1" : "0");
+                  form.append("archived", archived ? "1" : "0");
+                }
                 if (notice) {
                   await api("/company-notices/" + notice.uuid, "POST", form);
                 } else {
