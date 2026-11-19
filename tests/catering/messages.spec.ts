@@ -58,13 +58,13 @@ for (const width of [390, 1440]) {
         fail = false;
         await send.click();
         await expect(dialog).toHaveCount(0);
-        await expect(page.getByRole('tab', { name: 'Wysłane', exact: true })).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByRole('radio', { name: 'Wysłane', exact: true })).toHaveAttribute('aria-checked', 'true');
         await page.getByRole('button', { name: 'Podgląd: Zmiana godziny', exact: true }).click();
         await expect(page.getByRole('dialog').getByText('Odbiorcy i odczyty', { exact: true })).toBeVisible();
         await expect(page.getByRole('dialog').getByText('Anna Kowalska', { exact: true })).toBeVisible();
         expect(attempts).toBe(2);
         await page.getByRole('button', { name: 'Zamknij', exact: true }).click();
-        expect(await page.getByRole('tablist', { name: 'Skrzynka wiadomości' }).evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
+        expect(await page.getByRole('radiogroup', { name: 'Skrzynka wiadomości' }).evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
     });
 }
 

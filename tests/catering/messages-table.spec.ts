@@ -56,7 +56,7 @@ for (const width of [390, 1440]) {
         await expect(dialog).toHaveCount(0);
         expect(replyRequests).toBe(1);
         expect(recipientLookups).toBe(0);
-        await page.getByRole('tab', { name: 'Odebrane', exact: true }).click();
+        await page.getByRole('radio', { name: 'Odebrane', exact: true }).click();
         await page.getByRole('button', { name: 'Usuń: Plan pracy', exact: true }).click();
         dialog = page.getByRole('dialog');
         await expect(dialog.getByText(/Kopie u pozostałych osób/)).toBeVisible();

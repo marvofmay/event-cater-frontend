@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Alert, Box, Button, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, Paper, Stack, Switch, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tabs, TextField, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, Paper, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, TextField, Tooltip, Typography } from '@mui/material';
 import { Add, DeleteOutline, PreviewOutlined, Refresh, Reply } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/userContext';
@@ -9,6 +9,7 @@ import { useAction, useApi, useRemote } from '@/app/components/catering/api';
 import { MESSAGES_CHANGED, notifyMessagesChanged } from '@/app/hooks/messages/useUnreadMessagesCount';
 import MessageComposer, { ReplyContext } from './MessageComposer';
 import { useDebouncedText } from './useDebouncedText';
+import { SegmentedChoice } from '@/app/components/common/SegmentedChoice';
 
 interface MessageRow extends ReplyContext { createdAt: string; preview: string; readAt: string | null; recipientCount: number; replyToUuid?: string | null }
 interface MessageDetail extends MessageRow { content: string; isSender: boolean; isRecipient: boolean; recipients: { uuid: string; name: string; readAt: string | null }[] }
@@ -78,7 +79,7 @@ function MessagesWorkspace() {
             </Stack>
         </Stack>
         {canList && <>
-            <Tabs value={folder} onChange={(_, value) => { setFolder(value); setPage(1); }} aria-label="Skrzynka wiadomości" sx={{ mb: 2 }}><Tab value="inbox" label="Odebrane" /><Tab value="sent" label="Wysłane" /></Tabs>
+            <Box sx={{ mb: 2 }}><SegmentedChoice label="Skrzynka wiadomości" value={folder} options={[{ value: 'inbox', label: 'Odebrane' }, { value: 'sent', label: 'Wysłane' }]} onChange={(value) => { setFolder(value); setPage(1); }} /></Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} mb={2} alignItems={{ sm: 'center' }}>
                 <TextField fullWidth size="small" label="Szukaj w tytule lub treści" value={search} onChange={event => setSearch(event.target.value)} slotProps={{ htmlInput: { maxLength: 200 } }} />
                 {folder === 'inbox' && <FormControlLabel sx={{ flexShrink: 0 }} control={<Switch checked={unread} onChange={(_, value) => { setUnread(value); setPage(1); }} />} label="Tylko nieprzeczytane" />}
