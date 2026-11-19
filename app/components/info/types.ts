@@ -7,6 +7,8 @@ export type NoticeImageMeta = {
   sortOrder: number;
 };
 
+export type NoticeStatus = "published" | "scheduled" | "inactive" | "archived";
+
 export type CompanyNotice = {
   uuid: string;
   title: string;
@@ -14,6 +16,10 @@ export type CompanyNotice = {
   createdByName: string;
   createdAt: string;
   updatedAt: string;
+  publishAt: string;
+  active: boolean;
+  archivedAt: string | null;
+  status: NoticeStatus;
   cover: NoticeImageMeta | null;
   gallery: NoticeImageMeta[];
 };

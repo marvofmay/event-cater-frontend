@@ -18,6 +18,7 @@ import { useUser } from "@/app/context/userContext";
 import NoticeFormDialog from "./NoticeFormDialog";
 import NoticeImage from "./NoticeImage";
 import NoticeCover from "./NoticeCover";
+import NoticesManageTable from "./NoticesManageTable";
 import type { CompanyNotice } from "./types";
 
 function formatDate(value: string) {
@@ -34,15 +35,17 @@ function formatDate(value: string) {
 export default function CompanyNoticesBoard() {
   const { t } = useTranslation();
   const { hasPermission } = useUser();
-  const canManage = hasPermission("company_notices.create");
+  const canManage = hasPermission("company_notices.create") || hasPermission("company_notices.update") || hasPermission("company_notices.delete");
   const api = useApi();
-  const remote = useRemote<{ items: CompanyNotice[] }>("/company-notices");
+  const remote = useRemote<{ items: CompanyNotice[] }>(canManage ? null : "/company-notices");
   const action = useAction();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyNotice | null>(null);
   const [selected, setSelected] = useState<CompanyNotice | null>(null);
 
   const items = remote.data?.items ?? [];
+
+  if (canManage) return <NoticesManageTable />;
 
   return (
     <Box component="section" sx={{ width: "100%", maxWidth: 900, mx: "auto" }}>
