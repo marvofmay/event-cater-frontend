@@ -277,6 +277,7 @@ export default function HelpDesk() {
                     </Stack>
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: "flex-end", px: 3, pb: 2 }}>
+                    <Button type="button" onClick={() => { if (!busy) setCreating(false); }} disabled={busy}>Anuluj</Button>
                     <Button type="submit" variant="contained" disabled={busy}>Wyślij zgłoszenie</Button>
                 </DialogActions>
             </Box>
