@@ -206,23 +206,23 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
             sx={{
               width: "100%",
               tableLayout: "fixed",
-              "& .MuiTableCell-root": { py: 0.5, px: 1, verticalAlign: "middle" },
+              "& .MuiTableCell-root": { py: 0.5, px: 1, verticalAlign: "middle", overflow: "hidden" },
             }}
           >
             <TableHead>
               <TableRow>
                 {(kind === "equipment"
                   ? [
-                      ["Zdjęcie", "48px"],
-                      ["Kod", "9%"],
-                      ["Nazwa", "16%"],
-                      ["Nazwa slangowa", "12%"],
-                      ["Ilość posiadana", "8%"],
-                      ["Miejsce przechowywania", "18%"],
-                      ["Kategoria", "12%"],
-                      ["Jednostka", "7%"],
-                      ["Status", "8%"],
-                      ["Działania", "120px"],
+                      ["Zdjęcie", "6%"],
+                      ["Kod", "8%"],
+                      ["Nazwa", "13%"],
+                      ["Nazwa slangowa", "11%"],
+                      ["Ilość posiadana", "14%", "9.5rem"],
+                      ["Miejsce przechowywania", "16%", "11rem"],
+                      ["Kategoria", "10%"],
+                      ["Jednostka", "8%"],
+                      ["Status", "7%"],
+                      ["Działania", "7%"],
                     ]
                   : [
                       ["Kod", "12%"],
@@ -230,10 +230,10 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                       ["Kategoria", "22%"],
                       ["Jednostka", "12%"],
                       ["Status", "12%"],
-                      ["Działania", "120px"],
+                      ["Działania", "14%"],
                     ]
-                ).map(([label, width]) => (
-                  <TableCell key={label} sx={{ width, whiteSpace: "nowrap" }}>{label}</TableCell>
+                ).map(([label, width, minWidth]) => (
+                  <TableCell key={label} sx={{ width, minWidth, whiteSpace: "normal", lineHeight: 1.25, overflowWrap: "break-word" }}>{label}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
@@ -252,10 +252,10 @@ export function CatalogPage({ kind }: { kind: "equipment" | "supplies" }) {
                   {kind === "equipment" && (
                     <>
                       <TableCell sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.slangName || undefined}>{item.slangName || "-"}</TableCell>
-                      <TableCell>{item.stockQuantity ?? 0} {unitLabels[item.unit]}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{item.stockQuantity ?? 0} {unitLabels[item.unit]}</TableCell>
                       <TableCell>
                         <Tooltip title={item.storageLocation ?? "Nie przypisano miejsca"}>
-                          <Typography variant="body2" noWrap>{item.storageLocation || "-"}</Typography>
+                          <Typography variant="body2" noWrap sx={{ maxWidth: "100%" }}>{item.storageLocation || "-"}</Typography>
                         </Tooltip>
                       </TableCell>
                     </>
