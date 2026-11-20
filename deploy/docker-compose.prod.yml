@@ -137,6 +137,16 @@ services:
         condition: service_started
       redis:
         condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "php -r 'exit(@file_get_contents(\"http://127.0.0.1/\") === false ? 1 : 0);'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     networks:
       - eventcater-net
 
@@ -159,7 +169,14 @@ services:
       # Host 3010 — unikamy kolizji z innymi appkami na :3000
       - "127.0.0.1:3010:3000"
     depends_on:
-      - service-company
+      service-company:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     networks:
       - eventcater-net
       - aestio_default

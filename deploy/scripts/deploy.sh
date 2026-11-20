@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Update EventCater on the droplet after git changes.
+# Zero-downtime style: build while old app serves, then recreate only app services.
 # Run from anywhere as marcin:
 #   bash /home/marcin/apps/eventcater/frontend/deploy/scripts/deploy.sh
 
@@ -103,58 +104,59 @@ else:
 PY
 fi
 
-echo "==> Stopping previous stack (clear orphans / name conflicts)"
-docker compose --env-file .env down --remove-orphans || true
-
-# Fixed container_name values from docker-compose.prod.yml — remove leftovers explicitly.
-# (compose down can miss containers from another project name / interrupted recreate.)
-for name in \
-  eventcater-mercure \
-  eventcater-frontend \
-  eventcater-api \
-  eventcater-db \
-  eventcater-redis \
-  eventcater-rabbitmq \
-  eventcater-worker \
-  eventcater-deadlines \
-  eventcater-trials
-do
-  docker rm -f "${name}" >/dev/null 2>&1 || true
-done
-# Anything else still matching the prefix (including compose rename leftovers).
-docker ps -aq --filter "name=eventcater" | xargs -r docker rm -f >/dev/null 2>&1 || true
-
-echo "==> Rebuilding and restarting"
-if ! docker compose --env-file .env up -d --build --remove-orphans; then
-  echo "==> Compose up failed — clearing eventcater containers once more and retrying"
-  docker ps -aq --filter "name=eventcater" | xargs -r docker rm -f >/dev/null 2>&1 || true
-  docker compose --env-file .env up -d --build --remove-orphans
-fi
-
-# Safety net if external network was missing from an older compose file
-docker network connect aestio_default eventcater-frontend 2>/dev/null || true
-docker network connect aestio_default eventcater-mercure 2>/dev/null || true
-
-echo "==> Waiting for API (service-company / eventcater-api)"
-api_ready=0
-for _ in $(seq 1 30); do
-  if docker compose --env-file .env ps --status running --services 2>/dev/null | grep -qx 'service-company'; then
-    api_ready=1
-    break
+# Recreate one compose service; on name conflict remove only that container and retry.
+recreate_service() {
+  local service="$1"
+  local container_name="${2:-}"
+  if docker compose --env-file .env up -d --no-deps --force-recreate --remove-orphans "${service}"; then
+    return 0
   fi
-  # Ghost-container race: recreate API only and retry.
-  docker rm -f eventcater-api >/dev/null 2>&1 || true
-  docker compose --env-file .env up -d --no-deps service-company >/dev/null 2>&1 || true
-  sleep 3
-done
-if [[ "${api_ready}" -ne 1 ]]; then
-  echo "!! API container failed to start. Recent logs:"
-  docker compose --env-file .env logs --tail=80 service-company || true
-  docker ps -a --filter name=eventcater || true
-  exit 1
-fi
+  if [[ -n "${container_name}" ]]; then
+    echo "==> Recreate ${service} failed — removing ${container_name} and retrying"
+    docker rm -f "${container_name}" >/dev/null 2>&1 || true
+  fi
+  docker compose --env-file .env up -d --no-deps --force-recreate --remove-orphans "${service}"
+}
 
-echo "==> Migrating central DB"
+wait_container_healthy() {
+  local container_name="$1"
+  local label="$2"
+  local attempts="${3:-60}"
+  echo "==> Waiting for ${label} healthy (${container_name})"
+  for _ in $(seq 1 "${attempts}"); do
+    if ! docker inspect "${container_name}" >/dev/null 2>&1; then
+      sleep 2
+      continue
+    fi
+    local health state
+    health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "${container_name}" 2>/dev/null || true)"
+    if [[ -n "${health}" ]]; then
+      [[ "${health}" == "healthy" ]] && return 0
+    else
+      state="$(docker inspect -f '{{.State.Status}}' "${container_name}" 2>/dev/null || echo missing)"
+      [[ "${state}" == "running" ]] && return 0
+    fi
+    sleep 2
+  done
+  echo "!! ${label} did not become healthy. Recent logs:"
+  docker logs --tail=80 "${container_name}" 2>/dev/null || true
+  return 1
+}
+
+echo "==> Ensuring data services are up (DB / Redis / RabbitMQ stay online across deploys)"
+docker compose --env-file .env up -d service-company-db redis rabbitmq
+
+echo "==> Waiting for MySQL"
+wait_container_healthy eventcater-db "MySQL" 60
+
+echo "==> Building images (old API/frontend keep serving traffic)"
+docker compose --env-file .env build
+
+echo "==> Rolling recreate: API (brief blip; frontend still up)"
+recreate_service service-company eventcater-api
+wait_container_healthy eventcater-api "API" 90
+
+echo "==> Migrating central DB (new API image)"
 docker compose exec -u www-data -T service-company php bin/console doctrine:migrations:migrate --no-interaction
 
 echo "==> Migrating tenant DBs (dry-run list, then execute)"
@@ -168,9 +170,49 @@ if [[ "${tenant_migrate_status}" -ne 0 ]]; then
   echo "!! Some tenant migrations failed (exit ${tenant_migrate_status}). Stack stays up — fix broken tenants separately."
 fi
 
+echo "==> Rolling recreate: Mercure, frontend, workers"
+recreate_service mercure eventcater-mercure
+recreate_service frontend eventcater-frontend
+recreate_service worker eventcater-worker
+recreate_service worker-deadlines eventcater-deadlines
+recreate_service worker-trials eventcater-trials
+
+# Safety net if external network was missing from an older compose file
+docker network connect aestio_default eventcater-frontend 2>/dev/null || true
+docker network connect aestio_default eventcater-mercure 2>/dev/null || true
+
+wait_container_healthy eventcater-frontend "frontend" 60
+
+echo "==> HTTP healthchecks"
+api_ok=0
+fe_ok=0
+for _ in $(seq 1 30); do
+  if docker compose exec -T service-company \
+    php -r 'exit(@file_get_contents("http://127.0.0.1/") === false ? 1 : 0);' 2>/dev/null; then
+    api_ok=1
+  fi
+  if curl -fsS -o /dev/null --max-time 5 "http://127.0.0.1:3010/" 2>/dev/null; then
+    fe_ok=1
+  fi
+  if [[ "${api_ok}" -eq 1 && "${fe_ok}" -eq 1 ]]; then
+    break
+  fi
+  sleep 2
+done
+if [[ "${api_ok}" -ne 1 ]]; then
+  echo "!! API HTTP healthcheck failed. Recent logs:"
+  docker compose --env-file .env logs --tail=80 service-company || true
+  exit 1
+fi
+if [[ "${fe_ok}" -ne 1 ]]; then
+  echo "!! Frontend HTTP healthcheck failed. Recent logs:"
+  docker compose --env-file .env logs --tail=80 frontend || true
+  exit 1
+fi
+
 echo "==> Clearing Symfony cache"
 docker compose exec -u www-data -T service-company php bin/console cache:clear
 docker compose exec -u root -T service-company \
   bash -c 'chown -R www-data:www-data /var/www/html/var && chmod -R 2775 /var/www/html/var' || true
 
-echo "==> Done. Check: docker compose ps && curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/"
+echo "==> Done (rolling deploy). Check: docker compose ps && curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3010/"

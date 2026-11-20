@@ -117,6 +117,20 @@ Maile idą ze skrzynki `PASSWORD_RESET_SENDER` (smtp.home.pl), nie z Brevo. Work
 
 ## 5. Aktualizacje
 
+### Zero-downtime (rolling deploy)
+
+`deploy.sh` **nie** robi `docker compose down` całego stacku. Kolejność:
+
+1. `git pull` + patchy (Doctrine strip, trial)
+2. DB / Redis / RabbitMQ zostają włączone (bez recreate)
+3. `docker compose build` — stare kontenery API/front nadal serwują ruch
+4. recreate tylko `service-company` (krótki blip API)
+5. migracje central + tenanci na nowym API
+6. recreate Mercure, frontend, workers
+7. healthcheck HTTP (API + `127.0.0.1:3010`) — fail = exit 1 w CI
+
+Caddy nadal celuje w stałe nazwy `eventcater-frontend` / `eventcater-mercure`. Pełne blue-green (dwa stacki) nie jest używane — na jednym droplecie to wystarcza do uniknięcia minutowego downtime przy buildzie.
+
 ### Automatycznie (CI/CD)
 
 Po merge do `main` (frontend) lub `master` (backend) GitHub Actions uruchamia testy/build, a przy sukcesie łączy się po SSH z dropletem i odpala `deploy.sh`.
