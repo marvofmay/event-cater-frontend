@@ -21,7 +21,7 @@ export default function NoticeCover({ noticeUuid, imageUuid, alt, maxHeight = CO
         display: "flex",
         justifyContent: "center",
         width: "100%",
-        bgcolor: "#1e293b",
+        bgcolor: "#1a2a24",
       }}
     >
       <NoticeImage

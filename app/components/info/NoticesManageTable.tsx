@@ -5,10 +5,6 @@ import {
   Box,
   Button,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Stack,
   Table,
@@ -28,9 +24,8 @@ import moment from "moment";
 import { useTranslation } from "react-i18next";
 import { useAction, useApi, useRemote } from "@/app/components/catering/api";
 import { useUser } from "@/app/context/userContext";
-import NoticeCover from "./NoticeCover";
+import NoticeDetailDialog from "./NoticeDetailDialog";
 import NoticeFormDialog from "./NoticeFormDialog";
-import NoticeImage from "./NoticeImage";
 import type { CompanyNotice, NoticeStatus } from "./types";
 
 const filters: { value: NoticeStatus; label: string }[] = [
@@ -208,26 +203,15 @@ export default function NoticesManageTable() {
           labelDisplayedRows={({ from, to, count }) => from + "-" + to + " z " + count}
         />
       )}
-      {selected && (
-        <Dialog open onClose={() => setSelected(null)} fullWidth maxWidth="md">
-          <DialogTitle sx={{ backgroundColor: "#34495e", color: "white", fontSize: "1.2rem", fontWeight: "bold" }}>{selected.title}</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ pt: 2 }}>
-              {selected.cover && <NoticeCover noticeUuid={selected.uuid} imageUuid={selected.cover.uuid} alt={selected.title} maxHeight={360} />}
-              <Typography variant="caption" color="text.secondary">{statusLabel(selected.status)} - {t("info.columnPublishAt")}: {stamp(selected.publishAt)}</Typography>
-              <Typography sx={{ whiteSpace: "pre-wrap" }}>{selected.body}</Typography>
-              {selected.gallery.length > 0 && (
-                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 1 }}>
-                  {selected.gallery.map((image) => (
-                    <NoticeImage key={image.uuid} noticeUuid={selected.uuid} imageUuid={image.uuid} alt={image.fileName} height={140} objectFit="contain" />
-                  ))}
-                </Box>
-              )}
-            </Stack>
-          </DialogContent>
-          <DialogActions><Button onClick={() => setSelected(null)}>{t("info.close")}</Button></DialogActions>
-        </Dialog>
-      )}
+      <NoticeDetailDialog
+        notice={selected}
+        onClose={() => setSelected(null)}
+        metaLine={
+          selected
+            ? statusLabel(selected.status) + " · " + t("info.columnPublishAt") + ": " + stamp(selected.publishAt)
+            : undefined
+        }
+      />
       {(canCreate || canUpdate) && (
         <NoticeFormDialog open={formOpen} notice={editing} onClose={() => setFormOpen(false)} onSaved={remote.reload} />
       )}

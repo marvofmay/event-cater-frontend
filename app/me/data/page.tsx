@@ -94,34 +94,34 @@ const InnerDataContent: React.FC = () => {
                       </Typography>
                     </Box>
                   ) : (
-                    <Box className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-                      <Box className="p-4 bg-gray-100 rounded-md shadow">
+                    <Box className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0">
+                      <Box className="p-4 bg-gray-100 rounded-md shadow min-w-0 overflow-hidden">
                         <Typography variant="h6" className="mb-2 text-center">
                           {t("userProfile.data.main")}
                         </Typography>
                         <MainData data={userData} />
                       </Box>
-                      <Box className="p-4 bg-gray-100 rounded-md shadow">
+                      <Box className="p-4 bg-gray-100 rounded-md shadow min-w-0 overflow-hidden">
                         <Typography variant="h6" className="mb-2 text-center">
                           {t("userProfile.data.employment")}
                         </Typography>
                         <EmploymentData data={userData?.employee?.employment} />
                       </Box>
-                      <Box className="p-4 bg-gray-100 rounded-md shadow">
+                      <Box className="p-4 bg-gray-100 rounded-md shadow min-w-0 overflow-hidden">
                         <Typography variant="h6" className="mb-2 text-center">
                           {t("userProfile.data.avatar")}
                         </Typography>
                         <AvatarForm data={userData?.employee?.avatar} />
                       </Box>
 
-                      <Box className="p-4 bg-gray-100 rounded-md shadow">
+                      <Box className="p-4 bg-gray-100 rounded-md shadow min-w-0 overflow-hidden">
                         <Typography variant="h6" className="mb-2 text-center">
                           {t("userProfile.data.address")}
                         </Typography>
                         <AddressData data={userData?.employee?.address} />
                       </Box>
 
-                      <Box className="p-4 bg-gray-100 rounded-md shadow">
+                      <Box className="p-4 bg-gray-100 rounded-md shadow min-w-0 overflow-hidden">
                         <Typography variant="h6" className="mb-2 text-center">
                           {t("userProfile.data.contact")}
                         </Typography>
