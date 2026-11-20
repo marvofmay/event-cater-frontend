@@ -84,6 +84,25 @@ fi
 
 cp -f frontend/deploy/docker-compose.prod.yml "${APP_ROOT}/docker-compose.yml"
 
+# Doctrine Bundle 3 rejects these keys (they surface as entity_managers.default errors).
+echo "==> Stripping obsolete Doctrine ORM keys from doctrine.yaml"
+FILE="${APP_ROOT}/backend/config/packages/doctrine.yaml"
+if [[ -f "${FILE}" ]]; then
+  DOCTRINE_YAML="${FILE}" python3 - <<'PY'
+from pathlib import Path
+import os, re
+p = Path(os.environ["DOCTRINE_YAML"])
+text = p.read_text()
+text2 = re.sub(r"(?m)^[ \t]*auto_generate_proxy_classes:.*\n", "", text)
+text2 = re.sub(r"(?m)^[ \t]*enable_lazy_ghost_objects:.*\n", "", text2)
+if text2 != text:
+    p.write_text(text2)
+    print("removed obsolete doctrine ORM keys")
+else:
+    print("doctrine.yaml already clean")
+PY
+fi
+
 echo "==> Stopping previous stack (clear orphans / name conflicts)"
 docker compose --env-file .env down --remove-orphans || true
 
