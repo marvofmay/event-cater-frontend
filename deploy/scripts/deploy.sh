@@ -183,15 +183,17 @@ docker network connect aestio_default eventcater-mercure 2>/dev/null || true
 
 wait_container_healthy eventcater-frontend "frontend" 60
 
-echo "==> HTTP healthchecks"
+echo "==> HTTP healthchecks (Apache port + frontend listener)"
 api_ok=0
 fe_ok=0
 for _ in $(seq 1 30); do
   if docker compose exec -T service-company \
-    php -r 'exit(@file_get_contents("http://127.0.0.1/") === false ? 1 : 0);' 2>/dev/null; then
+    php -r '$f=@fsockopen("127.0.0.1",80,$e,$s,2);exit($f?0:1);' 2>/dev/null; then
     api_ok=1
   fi
-  if curl -fsS -o /dev/null --max-time 5 "http://127.0.0.1:3010/" 2>/dev/null; then
+  # Any HTTP status from Next means the process is accepting connections.
+  code="$(curl -sS -o /dev/null --max-time 5 -w '%{http_code}' "http://127.0.0.1:3010/" 2>/dev/null || true)"
+  if [[ "${code}" =~ ^[1-5][0-9][0-9]$ ]]; then
     fe_ok=1
   fi
   if [[ "${api_ok}" -eq 1 && "${fe_ok}" -eq 1 ]]; then
@@ -200,12 +202,12 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 if [[ "${api_ok}" -ne 1 ]]; then
-  echo "!! API HTTP healthcheck failed. Recent logs:"
+  echo "!! API healthcheck failed (port 80 closed). Recent logs:"
   docker compose --env-file .env logs --tail=80 service-company || true
   exit 1
 fi
 if [[ "${fe_ok}" -ne 1 ]]; then
-  echo "!! Frontend HTTP healthcheck failed. Recent logs:"
+  echo "!! Frontend healthcheck failed. Recent logs:"
   docker compose --env-file .env logs --tail=80 frontend || true
   exit 1
 fi

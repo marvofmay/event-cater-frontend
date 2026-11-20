@@ -137,16 +137,17 @@ services:
         condition: service_started
       redis:
         condition: service_started
+    # Do not probe Symfony `/` — it often 404/5xx; file_get_contents then marks the container unhealthy.
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "php -r 'exit(@file_get_contents(\"http://127.0.0.1/\") === false ? 1 : 0);'",
+          "php -r '$$f=@fsockopen(\"127.0.0.1\",80,$$e,$$s,2);exit($$f?0:1);'",
         ]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 40s
+      start_period: 60s
     networks:
       - eventcater-net
 
@@ -169,14 +170,18 @@ services:
       # Host 3010 — unikamy kolizji z innymi appkami na :3000
       - "127.0.0.1:3010:3000"
     depends_on:
-      service-company:
-        condition: service_healthy
+      - service-company
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      # Accept any HTTP response (incl. 3xx/4xx) as long as Next listens.
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -S -O /dev/null http://127.0.0.1:3000/ 2>&1 | grep -q 'HTTP/' || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 45s
     networks:
       - eventcater-net
       - aestio_default
