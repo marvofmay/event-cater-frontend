@@ -6,22 +6,30 @@
 
 set -euo pipefail
 
-# Serialize deploys when frontend and backend CI finish around the same time.
-exec 9>/tmp/eventcater-deploy.lock
-flock -w 1800 9 || { echo "Another deploy in progress"; exit 1; }
-
 APP_ROOT="${APP_ROOT:-/home/marcin/apps/eventcater}"
 FRONTEND_REF="${FRONTEND_REF:-main}"
 BACKEND_REF="${BACKEND_REF:-master}"
 
+# CI/SSH always starts whatever deploy.sh is already on disk. Pull frontend first and
+# re-exec so the rest of this run uses the newly pulled script (healthchecks, etc.).
+if [[ "${DEPLOY_BOOTSTRAPPED:-0}" != "1" ]]; then
+  echo "==> Bootstrapping deploy.sh from origin/${FRONTEND_REF}"
+  cd "${APP_ROOT}"
+  git -C frontend fetch --all --prune
+  git -C frontend checkout -f "${FRONTEND_REF}"
+  git -C frontend reset --hard "origin/${FRONTEND_REF}"
+  git -C frontend clean -fd
+  export DEPLOY_BOOTSTRAPPED=1
+  exec bash "${APP_ROOT}/frontend/deploy/scripts/deploy.sh" "$@"
+fi
+
+# Serialize deploys when frontend and backend CI finish around the same time.
+exec 9>/tmp/eventcater-deploy.lock
+flock -w 1800 9 || { echo "Another deploy in progress"; exit 1; }
+
 cd "${APP_ROOT}"
 
-echo "==> Pulling frontend (${FRONTEND_REF})"
-git -C frontend fetch --all --prune
-git -C frontend checkout -f "${FRONTEND_REF}"
-# Droplet checkout must match GitHub; discard local drift from previous deploys.
-git -C frontend reset --hard "origin/${FRONTEND_REF}"
-git -C frontend clean -fd
+echo "==> Frontend already at origin/${FRONTEND_REF} (bootstrap)"
 
 echo "==> Pulling backend (${BACKEND_REF})"
 git -C backend fetch --all --prune

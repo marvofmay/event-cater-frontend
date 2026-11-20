@@ -127,7 +127,9 @@ Maile idą ze skrzynki `PASSWORD_RESET_SENDER` (smtp.home.pl), nie z Brevo. Work
 4. recreate tylko `service-company` (krótki blip API)
 5. migracje central + tenanci na nowym API
 6. recreate Mercure, frontend, workers
-7. healthcheck HTTP (API + `127.0.0.1:3010`) — fail = exit 1 w CI
+7. healthcheck (API port 80 + frontend `:3010`) — fail = exit 1 w CI
+
+Skrypt po `git pull` robi `exec` siebie samego, żeby CI nie kończył deployu starą kopią `deploy.sh` z dysku.
 
 Caddy nadal celuje w stałe nazwy `eventcater-frontend` / `eventcater-mercure`. Pełne blue-green (dwa stacki) nie jest używane — na jednym droplecie to wystarcza do uniknięcia minutowego downtime przy buildzie.
 
