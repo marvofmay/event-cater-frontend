@@ -17,13 +17,17 @@ cd "${APP_ROOT}"
 
 echo "==> Pulling frontend (${FRONTEND_REF})"
 git -C frontend fetch --all --prune
-git -C frontend checkout "${FRONTEND_REF}"
-git -C frontend pull --ff-only origin "${FRONTEND_REF}"
+git -C frontend checkout -f "${FRONTEND_REF}"
+# Droplet checkout must match GitHub; discard local drift from previous deploys.
+git -C frontend reset --hard "origin/${FRONTEND_REF}"
+git -C frontend clean -fd
 
 echo "==> Pulling backend (${BACKEND_REF})"
 git -C backend fetch --all --prune
-git -C backend checkout "${BACKEND_REF}"
-git -C backend pull --ff-only origin "${BACKEND_REF}"
+git -C backend checkout -f "${BACKEND_REF}"
+# Trial patch below dirties the tree; always reset before pull or ff-only fails.
+git -C backend reset --hard "origin/${BACKEND_REF}"
+git -C backend clean -fd -e .env -e 'config/jwt' -e 'config/jwt/*'
 
 # Trial patch lives in the frontend deploy package until it lands in the backend repo.
 if [[ -x frontend/deploy/scripts/apply-trial-backend.sh ]]; then
@@ -31,6 +35,7 @@ if [[ -x frontend/deploy/scripts/apply-trial-backend.sh ]]; then
   # Copy patch files without rebuild — deploy continues with full compose rebuild.
   PATCH_ROOT="${APP_ROOT}/frontend/deploy/backend-trial"
   BACKEND="${APP_ROOT}/backend"
+  # Migrations for trial/SaaS columns are already on backend master — still copy for older droplets.
   cp -f "${PATCH_ROOT}/migrations/Version20261109150000.php" "${BACKEND}/migrations/"
   cp -f "${PATCH_ROOT}/migrations/Version20261112170000.php" "${BACKEND}/migrations/"
   cp -f "${PATCH_ROOT}/migrations/Version20261113100000.php" "${BACKEND}/migrations/"
