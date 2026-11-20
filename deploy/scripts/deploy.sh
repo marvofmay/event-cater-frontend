@@ -79,8 +79,16 @@ fi
 
 cp -f frontend/deploy/docker-compose.prod.yml "${APP_ROOT}/docker-compose.yml"
 
+echo "==> Stopping previous stack (clear orphans / name conflicts)"
+docker compose --env-file .env down --remove-orphans || true
+# Leftover containers with fixed names (or compose rename prefixes) block --force-recreate.
+while IFS= read -r id; do
+  [[ -n "$id" ]] || continue
+  docker rm -f "$id" >/dev/null 2>&1 || true
+done < <(docker ps -aq --filter "name=eventcater-" 2>/dev/null || true)
+
 echo "==> Rebuilding and restarting"
-docker compose --env-file .env up -d --build --force-recreate
+docker compose --env-file .env up -d --build --force-recreate --remove-orphans
 
 # Safety net if external network was missing from an older compose file
 docker network connect aestio_default eventcater-frontend 2>/dev/null || true
