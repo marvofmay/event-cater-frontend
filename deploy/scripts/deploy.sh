@@ -81,18 +81,54 @@ cp -f frontend/deploy/docker-compose.prod.yml "${APP_ROOT}/docker-compose.yml"
 
 echo "==> Stopping previous stack (clear orphans / name conflicts)"
 docker compose --env-file .env down --remove-orphans || true
-# Leftover containers with fixed names (or compose rename prefixes) block --force-recreate.
-while IFS= read -r id; do
-  [[ -n "$id" ]] || continue
-  docker rm -f "$id" >/dev/null 2>&1 || true
-done < <(docker ps -aq --filter "name=eventcater-" 2>/dev/null || true)
+
+# Fixed container_name values from docker-compose.prod.yml — remove leftovers explicitly.
+# (compose down can miss containers from another project name / interrupted recreate.)
+for name in \
+  eventcater-mercure \
+  eventcater-frontend \
+  eventcater-api \
+  eventcater-db \
+  eventcater-redis \
+  eventcater-rabbitmq \
+  eventcater-worker \
+  eventcater-deadlines \
+  eventcater-trials
+do
+  docker rm -f "${name}" >/dev/null 2>&1 || true
+done
+# Anything else still matching the prefix (including compose rename leftovers).
+docker ps -aq --filter "name=eventcater" | xargs -r docker rm -f >/dev/null 2>&1 || true
 
 echo "==> Rebuilding and restarting"
-docker compose --env-file .env up -d --build --force-recreate --remove-orphans
+if ! docker compose --env-file .env up -d --build --remove-orphans; then
+  echo "==> Compose up failed — clearing eventcater containers once more and retrying"
+  docker ps -aq --filter "name=eventcater" | xargs -r docker rm -f >/dev/null 2>&1 || true
+  docker compose --env-file .env up -d --build --remove-orphans
+fi
 
 # Safety net if external network was missing from an older compose file
 docker network connect aestio_default eventcater-frontend 2>/dev/null || true
 docker network connect aestio_default eventcater-mercure 2>/dev/null || true
+
+echo "==> Waiting for API (service-company / eventcater-api)"
+api_ready=0
+for _ in $(seq 1 30); do
+  if docker compose --env-file .env ps --status running --services 2>/dev/null | grep -qx 'service-company'; then
+    api_ready=1
+    break
+  fi
+  # Ghost-container race: recreate API only and retry.
+  docker rm -f eventcater-api >/dev/null 2>&1 || true
+  docker compose --env-file .env up -d --no-deps service-company >/dev/null 2>&1 || true
+  sleep 3
+done
+if [[ "${api_ready}" -ne 1 ]]; then
+  echo "!! API container failed to start. Recent logs:"
+  docker compose --env-file .env logs --tail=80 service-company || true
+  docker ps -a --filter name=eventcater || true
+  exit 1
+fi
 
 echo "==> Migrating central DB"
 docker compose exec -u www-data -T service-company php bin/console doctrine:migrations:migrate --no-interaction
