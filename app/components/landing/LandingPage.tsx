@@ -38,7 +38,7 @@ const LandingPage = () => {
         <div className="ec-hero-inner">
           <p className="ec-brand ec-reveal">EventCater</p>
           <h1 className="ec-reveal ec-reveal-delay ec-hero-title">
-            System dla cateringu wydarzeń
+            System dla cateringu eventowego
           </h1>
           <p className="ec-lede ec-reveal ec-reveal-delay-2">
             System dla firm, które obsługują przyjęcia, eventy i serwis wyjazdowy:

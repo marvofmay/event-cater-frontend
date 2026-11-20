@@ -5,6 +5,10 @@
 
 set -euo pipefail
 
+# Serialize deploys when frontend and backend CI finish around the same time.
+exec 9>/tmp/eventcater-deploy.lock
+flock -w 1800 9 || { echo "Another deploy in progress"; exit 1; }
+
 APP_ROOT="${APP_ROOT:-/home/marcin/apps/eventcater}"
 FRONTEND_REF="${FRONTEND_REF:-main}"
 BACKEND_REF="${BACKEND_REF:-master}"

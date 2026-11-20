@@ -117,6 +117,24 @@ Maile idą ze skrzynki `PASSWORD_RESET_SENDER` (smtp.home.pl), nie z Brevo. Work
 
 ## 5. Aktualizacje
 
+### Automatycznie (CI/CD)
+
+Po merge do `main` (frontend) lub `master` (backend) GitHub Actions uruchamia testy/build, a przy sukcesie łączy się po SSH z dropletem i odpala `deploy.sh`.
+
+W **obu** repozytoriach GitHub → Settings → Secrets and variables → Actions dodaj:
+
+| Secret | Opis |
+|--------|------|
+| `DROPLET_HOST` | Publiczne IP / hostname dropleta |
+| `DROPLET_USER` | Użytkownik SSH, np. `marcin` |
+| `DROPLET_SSH_KEY` | Prywatny klucz SSH (konto z Dockerem i dostępem do `/home/marcin/apps/eventcater`) |
+
+Na droplecie klucz publiczny musi być w `~/.ssh/authorized_keys`. Deploy jest serializowany (`flock`), więc równoległy merge FE+BE nie zepsuje rebuildu.
+
+Workflowy: frontend `.github/workflows/ci.yml`, backend `.github/workflows/symfony.yaml` (job `deploy`).
+
+### Ręcznie
+
 ```bash
 bash /home/marcin/apps/eventcater/frontend/deploy/scripts/deploy.sh
 ```

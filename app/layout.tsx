@@ -28,7 +28,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-    title: "EventCater - system dla cateringu wydarzeń",
+    title: "EventCater - system dla cateringu eventowego",
     description:
         "System dla firm cateringowych obsługujących wydarzenia na miejscu i w terenie: wydarzenia, kuchnia, kompletacja i zespół w jednym systemie.",
     icons: {
