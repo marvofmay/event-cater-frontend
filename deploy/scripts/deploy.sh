@@ -99,7 +99,14 @@ docker compose exec -u www-data -T service-company php bin/console doctrine:migr
 
 echo "==> Migrating tenant DBs (dry-run list, then execute)"
 docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants
-docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants --execute
+# One broken tenant (e.g. incomplete demo DB) must not abort the whole release.
+set +e
+docker compose exec -u www-data -T service-company php bin/console app:saas:migrate-tenants --execute --continue-on-error
+tenant_migrate_status=$?
+set -e
+if [[ "${tenant_migrate_status}" -ne 0 ]]; then
+  echo "!! Some tenant migrations failed (exit ${tenant_migrate_status}). Stack stays up — fix broken tenants separately."
+fi
 
 echo "==> Clearing Symfony cache"
 docker compose exec -u www-data -T service-company php bin/console cache:clear
